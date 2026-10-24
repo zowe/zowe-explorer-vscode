@@ -34,6 +34,7 @@ import {
 } from "@zowe/zowe-explorer-api";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
+import { ReadOnlyManagement } from "../../../../src/management/ReadOnlyManagement";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 import { Profiles } from "../../../../src/configuration/Profiles";
 import { AuthUtils } from "../../../../src/utils/AuthUtils";
@@ -1555,6 +1556,222 @@ describe("DatasetFSProvider", () => {
                 })
             ).rejects.toThrow("was opened in read-only mode");
             expect(lookupParentDirectorySpy).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("read-only rules and overrides", () => {
+        let mockMvsApi: Record<string, Mock>;
+        const resetReadOnly = (): void => {
+            (ReadOnlyManagement as any).overrides.clear();
+            (ReadOnlyManagement as any).ruleCache = undefined;
+        };
+        const makeReadOnly = (...paths: string[]): MockInstance =>
+            vi.spyOn(ReadOnlyManagement, "isReadOnly").mockImplementation((uri: vscode.Uri) => paths.includes(uri.path));
+
+        beforeEach(() => {
+            mockMvsApi = {
+                uploadFromBuffer: vi.fn().mockResolvedValue({ apiResponse: { etag: "NEWETAG" } }),
+                dataSet: vi.fn().mockResolvedValue({
+                    success: true,
+                    apiResponse: { items: [{ dsorg: "PO", dsname: testEntries.pds.name, lrecl: 80, recfm: "FB" }] },
+                }),
+                deleteDataSet: vi.fn(),
+                renameDataSet: vi.fn(),
+                renameDataSetMember: vi.fn(),
+            };
+            vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue(mockMvsApi as any);
+            resetReadOnly();
+        });
+
+        afterEach(() => {
+            resetReadOnly();
+            vi.restoreAllMocks();
+        });
+
+        describe("writeFile", () => {
+            it("rejects saving a read-only data set", async () => {
+                makeReadOnly(testUris.ps.path);
+                const session = { ...testEntries.session, entries: new Map([["USER.DATA.PS", { ...testEntries.ps }]]) };
+                vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(session);
+                await expect(
+                    DatasetFSProvider.instance.writeFile(testUris.ps, new Uint8Array([1]), { create: false, overwrite: true })
+                ).rejects.toThrow("USER.DATA.PS is read-only.");
+                expect(mockMvsApi.uploadFromBuffer).not.toHaveBeenCalled();
+            });
+
+            it("rejects saving a read-only member", async () => {
+                makeReadOnly(testUris.pdsMember.path);
+                const pdsEntry = { ...testEntries.pds, entries: new Map([["MEMBER1", { ...testEntries.pdsMember }]]) };
+                vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(pdsEntry);
+                await expect(
+                    DatasetFSProvider.instance.writeFile(testUris.pdsMember, new Uint8Array([1]), { create: false, overwrite: true })
+                ).rejects.toThrow("USER.DATA.PDS(MEMBER1) is read-only.");
+                expect(mockMvsApi.uploadFromBuffer).not.toHaveBeenCalled();
+            });
+
+            it("names the member when saving a member that inherits read-only from its PDS", async () => {
+                ReadOnlyManagement.setReadOnly(testUris.pds, true);
+                const pdsEntry = { ...testEntries.pds, entries: new Map([["MEMBER1", { ...testEntries.pdsMember }]]) };
+                vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(pdsEntry);
+                await expect(
+                    DatasetFSProvider.instance.writeFile(testUris.pdsMember, new Uint8Array([1]), { create: false, overwrite: true })
+                ).rejects.toThrow("USER.DATA.PDS(MEMBER1) is read-only.");
+            });
+
+            it("rejects creating a member in a read-only PDS", async () => {
+                makeReadOnly(testUris.pds.path);
+                const pdsEntry = { ...testEntries.pds, entries: new Map() };
+                vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(pdsEntry);
+                await expect(
+                    DatasetFSProvider.instance.writeFile(testUris.pdsMember, new Uint8Array(), { create: true, overwrite: true })
+                ).rejects.toThrow("USER.DATA.PDS is read-only.");
+                expect(pdsEntry.entries.has("MEMBER1")).toBe(false);
+                expect(mockMvsApi.uploadFromBuffer).not.toHaveBeenCalled();
+            });
+
+            it("rejects creating a data set in a read-only profile", async () => {
+                makeReadOnly(testUris.session.path);
+                const session = { ...testEntries.session, entries: new Map() };
+                vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(session);
+                await expect(DatasetFSProvider.instance.writeFile(testUris.ps, new Uint8Array(), { create: true, overwrite: true })).rejects.toThrow(
+                    "sestest is read-only."
+                );
+                expect(session.entries.size).toBe(0);
+                expect(mockMvsApi.uploadFromBuffer).not.toHaveBeenCalled();
+            });
+
+            it("allows saving an existing writable member in a read-only PDS", async () => {
+                makeReadOnly(testUris.pds.path);
+                const memberEntry = { ...testEntries.pdsMember, wasAccessed: true } as DsEntry;
+                const pdsEntry = { ...testEntries.pds, entries: new Map([["MEMBER1", memberEntry]]) };
+                vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(pdsEntry);
+                const uploadEntrySpy = vi
+                    .spyOn(DatasetFSProvider.instance as any, "uploadEntry")
+                    .mockResolvedValue({ success: true, apiResponse: { etag: "NEWETAG" } });
+                const contents = new Uint8Array([1, 2, 3]);
+                await DatasetFSProvider.instance.writeFile(testUris.pdsMember, contents, { create: false, overwrite: true });
+                expect(uploadEntrySpy).toHaveBeenCalledWith(memberEntry, contents, testUris.pdsMember, false, undefined);
+            });
+
+            it("checks the cache-only write after a member is created like any other new member", async () => {
+                ReadOnlyManagement.setReadOnly(testUris.pds, true);
+                const pdsEntry = { ...testEntries.pds, entries: new Map() };
+                vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(pdsEntry);
+                await expect(
+                    DatasetFSProvider.instance.writeFile(testUris.pdsMember.with({ query: "skipUpload=true" }), new Uint8Array(), {
+                        create: true,
+                        overwrite: true,
+                    })
+                ).rejects.toThrow("USER.DATA.PDS is read-only.");
+                expect(pdsEntry.entries.has("MEMBER1")).toBe(false);
+            });
+
+            it("rejects edits to a read-only data set in the conflict view", async () => {
+                makeReadOnly(testUris.ps.path);
+                const session = { ...testEntries.session, entries: new Map([["USER.DATA.PS", { ...testEntries.ps }]]) };
+                vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(session);
+                await expect(
+                    DatasetFSProvider.instance.writeFile(testUris.ps.with({ query: "inDiff=true" }), new Uint8Array([4, 5, 6]), {
+                        create: false,
+                        overwrite: true,
+                    })
+                ).rejects.toThrow("USER.DATA.PS is read-only.");
+                expect(mockMvsApi.uploadFromBuffer).not.toHaveBeenCalled();
+            });
+        });
+
+        describe("delete", () => {
+            it("rejects deleting a read-only data set", async () => {
+                makeReadOnly(testUris.ps.path);
+                await expect(DatasetFSProvider.instance.delete(testUris.ps, { recursive: false })).rejects.toThrow("USER.DATA.PS is read-only.");
+                expect(mockMvsApi.deleteDataSet).not.toHaveBeenCalled();
+            });
+
+            it("rejects deleting a member that inherits read-only from its PDS", async () => {
+                ReadOnlyManagement.setReadOnly(testUris.pds, true);
+                await expect(DatasetFSProvider.instance.delete(testUris.pdsMember, { recursive: false })).rejects.toThrow(
+                    "USER.DATA.PDS(MEMBER1) is read-only."
+                );
+                expect(mockMvsApi.deleteDataSet).not.toHaveBeenCalled();
+            });
+
+            it("deletes a writable member of a read-only PDS and removes its override", async () => {
+                ReadOnlyManagement.setReadOnly(testUris.pds, true);
+                ReadOnlyManagement.setReadOnly(testUris.pdsMember, false);
+                const member = { ...testEntries.pdsMember };
+                const pdsEntry = { ...testEntries.pds, entries: new Map([["MEMBER1", member]]), size: 1 };
+                vi.spyOn(DatasetFSProvider.instance as any, "lookup").mockReturnValue(member);
+                vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(pdsEntry);
+                vi.spyOn(DatasetFSProvider.instance as any, "fireSoon").mockImplementation((() => undefined) as any);
+
+                await DatasetFSProvider.instance.delete(testUris.pdsMember, { recursive: false });
+
+                expect(mockMvsApi.deleteDataSet).toHaveBeenCalledWith(member.metadata.dsName, expect.anything());
+                expect(pdsEntry.entries.has("MEMBER1")).toBe(false);
+                // A new member with the same name starts out read-only like the rest of the PDS
+                expect(ReadOnlyManagement.isReadOnly(testUris.pdsMember)).toBe(true);
+            });
+
+            it("rejects deleting a data set that inherits read-only from its profile", async () => {
+                ReadOnlyManagement.setReadOnly(testUris.session, true);
+                await expect(DatasetFSProvider.instance.delete(testUris.pds, { recursive: true })).rejects.toThrow("USER.DATA.PDS is read-only.");
+                expect(mockMvsApi.deleteDataSet).not.toHaveBeenCalled();
+            });
+        });
+
+        describe("rename", () => {
+            it("rejects renaming a read-only data set", async () => {
+                makeReadOnly(testUris.ps.path);
+                await expect(
+                    DatasetFSProvider.instance.rename(testUris.ps, testUris.ps.with({ path: "/sestest/USER.DATA.PS2" }), { overwrite: false })
+                ).rejects.toThrow("USER.DATA.PS is read-only.");
+                expect(mockMvsApi.renameDataSet).not.toHaveBeenCalled();
+            });
+
+            it("rejects renaming a data set to a read-only name", async () => {
+                makeReadOnly("/sestest/ZXP.PUBLIC.PS");
+                await expect(
+                    DatasetFSProvider.instance.rename(testUris.ps, testUris.ps.with({ path: "/sestest/ZXP.PUBLIC.PS" }), { overwrite: false })
+                ).rejects.toThrow("ZXP.PUBLIC.PS is read-only.");
+                expect(mockMvsApi.renameDataSet).not.toHaveBeenCalled();
+            });
+
+            it("rejects renaming a member that inherits read-only from its PDS", async () => {
+                ReadOnlyManagement.setReadOnly(testUris.pds, true);
+                await expect(
+                    DatasetFSProvider.instance.rename(testUris.pdsMember, testUris.pdsMember.with({ path: "/sestest/USER.DATA.PDS/MEMBER2" }), {
+                        overwrite: false,
+                    })
+                ).rejects.toThrow("USER.DATA.PDS(MEMBER1) is read-only.");
+                expect(mockMvsApi.renameDataSetMember).not.toHaveBeenCalled();
+            });
+
+            it("renames a writable member of a read-only PDS and keeps it writable under its new name", async () => {
+                ReadOnlyManagement.setReadOnly(testUris.pds, true);
+                ReadOnlyManagement.setReadOnly(testUris.pdsMember, false);
+                const newUri = testUris.pdsMember.with({ path: "/sestest/USER.DATA.PDS/MEMBER2" });
+                const member = { ...testEntries.pdsMember, metadata: new DsEntryMetadata({ profile: testProfile, path: "/USER.DATA.PDS/MEMBER1" }) };
+                const pdsEntry = { ...testEntries.pds, entries: new Map([["MEMBER1", member]]) };
+                vi.spyOn(DatasetFSProvider.instance as any, "lookup").mockImplementation((uri: Uri) =>
+                    uri.path.endsWith("MEMBER2") ? (null as any) : member
+                );
+                vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(pdsEntry);
+
+                await DatasetFSProvider.instance.rename(testUris.pdsMember, newUri, { overwrite: false });
+
+                expect(mockMvsApi.renameDataSetMember).toHaveBeenCalledWith("USER.DATA.PDS", "MEMBER1", "MEMBER2");
+                expect(ReadOnlyManagement.isReadOnly(newUri)).toBe(false);
+                expect(ReadOnlyManagement.isReadOnly(testUris.pdsMember)).toBe(true);
+            });
+
+            it("rejects renaming a writable member to a name that is read-only", async () => {
+                const newUri = testUris.pdsMember.with({ path: "/sestest/USER.DATA.PDS/PRODJOB" });
+                makeReadOnly(newUri.path);
+                await expect(DatasetFSProvider.instance.rename(testUris.pdsMember, newUri, { overwrite: false })).rejects.toThrow(
+                    "USER.DATA.PDS(PRODJOB) is read-only."
+                );
+                expect(mockMvsApi.renameDataSetMember).not.toHaveBeenCalled();
+            });
         });
     });
 

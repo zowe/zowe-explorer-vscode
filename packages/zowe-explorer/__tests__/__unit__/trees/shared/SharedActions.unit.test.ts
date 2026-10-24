@@ -40,6 +40,7 @@ import { SharedActions } from "../../../../src/trees/shared/SharedActions";
 import { IconUtils } from "../../../../src/icons/IconUtils";
 import { IconGenerator } from "../../../../src/icons/IconGenerator";
 import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProviders";
+import { ReadOnlyManagement } from "../../../../src/management/ReadOnlyManagement";
 import { TreeViewUtils } from "../../../../src/utils/TreeViewUtils";
 import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
 import { ZoweExplorerExtender } from "../../../../src/extending/ZoweExplorerExtender";
@@ -1194,5 +1195,30 @@ describe("Shared Actions Unit Tests - Function updateSchemaCommand", () => {
         expect(blockMocks.guiSpy).toHaveBeenCalled();
         expect(blockMocks.opCancelledSpy).toHaveBeenCalledWith("Operation cancelled");
         expect(blockMocks.updateSpy).not.toHaveBeenCalled();
+    });
+});
+
+describe("Shared Actions Unit Tests - Function toggleNodeReadOnly", () => {
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    it("does nothing for a node that cannot be made read-only", async () => {
+        vi.spyOn(ReadOnlyManagement, "isEligibleNode").mockReturnValue(false);
+        const setReadOnlySpy = vi.spyOn(ReadOnlyManagement, "setReadOnly").mockResolvedValue(undefined);
+        await SharedActions.toggleNodeReadOnly({} as IZoweTreeNode, true);
+        expect(setReadOnlySpy).not.toHaveBeenCalled();
+    });
+
+    it.each([true, false])("sets the node's read-only state to %s and refreshes the node", async (readOnly) => {
+        const resourceUri = vscode.Uri.from({ scheme: "zowe-ds", path: "/sestest/USER.DATA.PDS/MEMBER1" });
+        const node = { resourceUri } as IZoweTreeNode;
+        const nodeDataChanged = vi.fn();
+        vi.spyOn(ReadOnlyManagement, "isEligibleNode").mockReturnValue(true);
+        const setReadOnlySpy = vi.spyOn(ReadOnlyManagement, "setReadOnly").mockResolvedValue(undefined);
+        vi.spyOn(SharedTreeProviders, "getProviderForNode").mockReturnValue({ nodeDataChanged } as any);
+        await SharedActions.toggleNodeReadOnly(node, readOnly);
+        expect(setReadOnlySpy).toHaveBeenCalledWith(resourceUri, readOnly);
+        expect(nodeDataChanged).toHaveBeenCalledWith(node);
     });
 });

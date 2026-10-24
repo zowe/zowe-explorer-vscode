@@ -42,6 +42,7 @@ import { SettingsConfig } from "../../configuration/SettingsConfig";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 import { ConfigRedactManagement } from "../../management/ConfigRedactManagement";
 import { LocalFileManagement } from "../../management/LocalFileManagement";
+import { ReadOnlyManagement } from "../../management/ReadOnlyManagement";
 import { ProfileManagement } from "../../management/ProfileManagement";
 import { ZoweLogger } from "../../tools/ZoweLogger";
 import { LoggerUtils } from "../../utils/LoggerUtils";
@@ -314,6 +315,10 @@ export class SharedInit {
                     });
                     ZoweLogger.info(`z/OSMF queue timeout set to ${queueTimeout} milliseconds.`);
                 }
+                if (e.affectsConfiguration(Constants.SETTINGS_READ_ONLY_RULES)) {
+                    await SharedTreeProviders.ds?.refresh();
+                    await SharedTreeProviders.uss?.refresh();
+                }
             })
         );
 
@@ -482,6 +487,33 @@ export class SharedInit {
                 vscode.commands.registerCommand("zowe.setupRemoteWorkspaceFolders", async (profileType?: string) => {
                     await this.setupRemoteWorkspaceFolders(undefined, profileType);
                 })
+            );
+
+            ReadOnlyManagement.initialize(context);
+            context.subscriptions.push(
+                ReadOnlyManagement.onDidChange(() => {
+                    for (const [scheme, provider] of [
+                        [ZoweScheme.DS, DatasetFSProvider.instance],
+                        [ZoweScheme.USS, UssFSProvider.instance],
+                    ] as const) {
+                        const events = vscode.workspace.textDocuments
+                            .filter((doc) => (doc.uri.scheme as ZoweScheme) === scheme)
+                            .map((doc) => ({ type: vscode.FileChangeType.Changed, uri: doc.uri }));
+                        if (events.length > 0) {
+                            provider.fireSoon(...events);
+                        }
+                    }
+                })
+            );
+            context.subscriptions.push(
+                vscode.commands.registerCommand("zowe.readOnly.makeReadOnly", async (node: IZoweTreeNode) =>
+                    SharedActions.toggleNodeReadOnly(node, true)
+                )
+            );
+            context.subscriptions.push(
+                vscode.commands.registerCommand("zowe.readOnly.makeReadWrite", async (node: IZoweTreeNode) =>
+                    SharedActions.toggleNodeReadOnly(node, false)
+                )
             );
 
             // initialize the Constants.filesToCompare array during initialization

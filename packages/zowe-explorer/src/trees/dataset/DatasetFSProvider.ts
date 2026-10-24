@@ -41,6 +41,7 @@ import { IZosFilesResponse, IZosmfListResponse } from "@zowe/zos-files-for-zowe-
 import { Profiles } from "../../configuration/Profiles";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 import { ZoweLogger } from "../../tools/ZoweLogger";
+import { ReadOnlyManagement } from "../../management/ReadOnlyManagement";
 import dayjs from "dayjs";
 import { DatasetUtils } from "./DatasetUtils";
 import { AuthUtils } from "../../utils/AuthUtils";
@@ -255,7 +256,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
                     if (queryParams.has("conflict")) {
                         return { ...memberStat, permissions: vscode.FilePermission.Readonly };
                     }
-                    return FsAbstractUtils.applyReadOnlyPermission(uri, memberStat);
+                    return ReadOnlyManagement.applyPermission(uri, memberStat);
                 }
             }
             throw vscode.FileSystemError.FileNotFound(uri);
@@ -266,7 +267,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
             checkLocal: () => !isVisibleEditor && !!this.lookup(uri, true),
             execute: () => this.statImplementation(uri),
         });
-        return FsAbstractUtils.applyReadOnlyPermission(uri, stat);
+        return ReadOnlyManagement.applyPermission(uri, stat);
     }
 
     private async fetchEntriesForProfile(uri: vscode.Uri, uriInfo: UriFsInfo, pattern: string): Promise<FilterEntry> {
@@ -966,6 +967,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         // Track whether this entry is new (not previously in the local member list).
         // This determines whether to fire a Created or Changed notification.
         const isNew = !entry;
+        // Creating a member or data set adds an entry to its PDS or profile, so that must not be read-only either
+        ReadOnlyManagement.throwIfReadOnly(uri, { checkParent: isNew });
 
         if (isNew) {
             const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
@@ -1115,6 +1118,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     }
 
     public async delete(uri: vscode.Uri, _options: { readonly recursive: boolean }): Promise<void> {
+        ReadOnlyManagement.throwIfReadOnly(uri);
         const entry = this.lookup(uri, false) as DsEntry | PdsEntry;
         const parent = this.lookupParentDirectory(uri);
         let fullName: string = "";
@@ -1155,11 +1159,13 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         parent.entries.delete(entry.name);
         parent.size -= 1;
+        ReadOnlyManagement.removeOverrides(uri);
 
         this.fireSoon({ type: vscode.FileChangeType.Deleted, uri });
     }
 
     public async rename(oldUri: vscode.Uri, newUri: vscode.Uri, options: { readonly overwrite: boolean }): Promise<void> {
+        ReadOnlyManagement.throwIfCannotRename(oldUri, newUri);
         const newUriEntry = this.lookup(newUri, true);
         if (!options.overwrite && newUriEntry) {
             throw vscode.FileSystemError.FileExists(`Rename failed: ${path.posix.basename(newUri.path)} already exists`);
@@ -1208,6 +1214,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
 
         parentDir.entries.delete(entry.name);
         entry.name = newName;
+        ReadOnlyManagement.moveOverrides(oldUri, newUri);
 
         // Build the new path using the previous path and new file/folder name.
         const newPath = path.posix.join(entry.metadata.path, "..", newName);

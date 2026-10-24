@@ -770,6 +770,16 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.readOnly.makeReadOnly",
+        "title": "%readOnly.makeReadOnly%",
+        "category": "Zowe Explorer"
+      },
+      {
+        "command": "zowe.readOnly.makeReadWrite",
+        "title": "%readOnly.makeReadWrite%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.diff.useLocalContent",
         "title": "%diff.overwrite%",
         "icon": "$(check)"
@@ -1060,6 +1070,16 @@
           "group": "099_zowe_ussModification:@1"
         },
         {
+          "when": "view == zowe.uss.explorer && viewItem =~ /_writable$/ && !listMultiSelection",
+          "command": "zowe.readOnly.makeReadOnly",
+          "group": "099_zowe_ussModification:@0"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem =~ /_readonly$/ && !listMultiSelection",
+          "command": "zowe.readOnly.makeReadWrite",
+          "group": "099_zowe_ussModification:@0"
+        },
+        {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession|favorite|profile_fav))/ && !listMultiSelection",
           "command": "zowe.uss.renameNode",
           "group": "099_zowe_ussModification:@3"
@@ -1282,6 +1302,16 @@
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^fileError.*/",
           "command": "zowe.ds.showFileErrorDetails",
+          "group": "099_zowe_dsModification@0"
+        },
+        {
+          "when": "view == zowe.ds.explorer && viewItem =~ /_writable$/ && !listMultiSelection",
+          "command": "zowe.readOnly.makeReadOnly",
+          "group": "099_zowe_dsModification@0"
+        },
+        {
+          "when": "view == zowe.ds.explorer && viewItem =~ /_readonly$/ && !listMultiSelection",
+          "command": "zowe.readOnly.makeReadWrite",
           "group": "099_zowe_dsModification@0"
         },
         {
@@ -1793,6 +1823,14 @@
           "when": "never"
         },
         {
+          "command": "zowe.readOnly.makeReadOnly",
+          "when": "never"
+        },
+        {
+          "command": "zowe.readOnly.makeReadWrite",
+          "when": "never"
+        },
+        {
           "command": "zowe.jobs.cancelJob",
           "when": "never"
         },
@@ -1875,6 +1913,30 @@
       "type": "object",
       "title": "%configuration.title%",
       "properties": {
+        "zowe.readOnly.rules": {
+          "type": "array",
+          "default": [],
+          "markdownDescription": "%zowe.readOnly.rules%",
+          "scope": "window",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "profile": {
+                "type": "string",
+                "description": "%zowe.readOnly.rules.profile%"
+              },
+              "pattern": {
+                "type": "string",
+                "description": "%zowe.readOnly.rules.pattern%"
+              },
+              "uss": {
+                "type": "string",
+                "description": "%zowe.readOnly.rules.uss%"
+              }
+            }
+          }
+        },
         "zowe.ds.paginate.dataSetsPerPage": {
           "default": 100,
           "type": "integer",

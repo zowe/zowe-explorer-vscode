@@ -192,6 +192,12 @@
   "compareWithSelected": "Compare with Selected",
   "compareWithSelectedReadOnly": "Compare with Selected (Read-Only)",
   "openWithEncoding": "Open with Encoding",
+  "readOnly.makeReadOnly": "Make Read-Only",
+  "readOnly.makeReadWrite": "Make Writable",
+  "zowe.readOnly.rules": "Rules for opening data sets and z/OS Unix files in read-only mode. Each rule can have:\n- `profile`: Apply to the whole profile. \n- `pattern`: Data set mask, where `%` matches one character, `*` matches within a qualifier and `**` matches any qualifiers.\n- `uss`: Unix path glob, e.g. `/prod/**`.\n\nStart a `pattern` or `uss` with `!` to make matches writable again. Rules are checked in order and the last matching rule wins, so `[{ \"uss\": \"/**\" }, { \"uss\": \"!/u/myuser/**\" }]` makes everything read-only except your home directory.\nA rule with a profile and a pattern or uss rule applies for that rule only, so `[{ \"profile\": \"zosmf\" }, { \"pattern\": \"PROD.**\" }]` sets that pattern read-only only in the zosmf profile.\nYou can add as many rules as you'd like.\n\nRight click a profile, data set or file and select **Make Writable** to override this setting for it in the current session.",
+  "zowe.readOnly.rules.profile": "Profile name the rule applies to.",
+  "zowe.readOnly.rules.pattern": "Data set mask. Start with ! to make matching data sets writable.",
+  "zowe.readOnly.rules.uss": "Unix path glob, e.g. /prod/**. Start with ! to make matching paths writable.",
   "pdsSearchFor": "Search PDS Members",
   "filteredDataSetsSearchFor": "Search Filtered Data Sets",
   "copyExternalLink": "Copy External Link",
@@ -210,5 +216,5 @@
   "zowe.zowex.responseTimeout": "Response timeout in seconds before the originating request is forcibly timed out. Set to a higher value if responses are expected to take longer to complete.",
   "zowe.zowex.experimentalNativeSsh": "Use an experimental native SSH client for improved performance. Not yet fully tested.",
   "zowe.zowex.defaultHandshakeTimeout": "Time in milliseconds to wait for the SSH handshake to complete.",
-  "zowe.confirmSshServerDeploy": "Require user confirmation before connecting with an SSH profile"
+  "zowe.confirmSshServerDeploy": "Require user confirmation before automatically installing or updating the SSH server"
 }
