@@ -789,11 +789,11 @@ describe("Test src/shared/extension", () => {
             const dummyWatcher: any = {
                 subscribeUser: (_event, cb) => {
                     onVaultUpdatedCallback = cb;
-                    return { close: () => { } } as any;
+                    return { close: () => {} } as any;
                 },
                 subscribeShared: (_event, cb) => {
                     onCredentialManagerUpdatedCallback = cb;
-                    return { close: () => { } } as any;
+                    return { close: () => {} } as any;
                 },
             };
             const spyWatcher = vi.spyOn(imperative.EventOperator, "getWatcher").mockReturnValue(dummyWatcher);
