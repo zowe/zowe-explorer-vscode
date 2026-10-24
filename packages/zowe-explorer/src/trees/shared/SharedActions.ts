@@ -26,6 +26,7 @@ import { SharedTreeProviders } from "./SharedTreeProviders";
 import { ZoweExplorerExtender } from "../../extending/ZoweExplorerExtender";
 import type { ZoweTreeProvider } from "../ZoweTreeProvider";
 import { ProfilesUtils } from "../../utils/ProfilesUtils";
+import { ReadOnlyManagement } from "../../management/ReadOnlyManagement";
 
 export class SharedActions {
     private static refreshInProgress = false;
@@ -414,5 +415,17 @@ export class SharedActions {
 
         const profileTypeConfigurations = Constants.PROFILES_CACHE.getConfigArray();
         ProfilesUtils.updateSchema(profileInfo, profileTypeConfigurations, updateProjectSchema);
+    }
+
+    /**
+     * Flip between the tree node being read-only or writable
+     */
+    public static async toggleNodeReadOnly(node: IZoweTreeNode, readOnly: boolean): Promise<void> {
+        ZoweLogger.trace("SharedActions.toggleNodeReadOnly called.");
+        if (!ReadOnlyManagement.isEligibleNode(node)) {
+            return;
+        }
+        await ReadOnlyManagement.setReadOnly(node.resourceUri, readOnly);
+        SharedTreeProviders.getProviderForNode(node)?.nodeDataChanged?.(node);
     }
 }

@@ -41,6 +41,7 @@ import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister
 import { IconGenerator } from "../../icons/IconGenerator";
 import { ZoweTreeProvider } from "../ZoweTreeProvider";
 import { ZoweLogger } from "../../tools/ZoweLogger";
+import { ReadOnlyManagement } from "../../management/ReadOnlyManagement";
 import { TreeViewUtils } from "../../utils/TreeViewUtils";
 import { SharedContext } from "../shared/SharedContext";
 import { SharedUtils } from "../shared/SharedUtils";
@@ -299,15 +300,27 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 Gui.errorMessage(vscode.l10n.t(message));
                 return;
             }
+
+            // 4. Read-only check: a move deletes the source and creates the destination, so neither can be read-only
+            const destUri = vscode.Uri.from({
+                scheme: ZoweScheme.DS,
+                path: path.posix.join("/", target.resourceUri.path, SharedUtils.getNodeProperty(node, "label")),
+            });
+            if (
+                (await ReadOnlyManagement.showErrorIfReadOnly(node.resourceUri)) ||
+                (await ReadOnlyManagement.showErrorIfReadOnly(destUri, { checkParent: true }))
+            ) {
+                return;
+            }
         }
 
-        // 4. Overwrite prompt (name collision only)
+        // 5. Overwrite prompt (name collision only)
         const overwrite = await SharedUtils.handleDragAndDropOverwrite(target, this.draggedNodes);
         if (!overwrite) {
             return;
         }
 
-        // 5. Move logic
+        // 6. Move logic
         const movingMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Moving MVS files...")}`);
         const parentsToUpdate = new Set<IZoweDatasetTreeNode>();
 
@@ -350,6 +363,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         ZoweLogger.trace("DatasetTree.rename called.");
         await Profiles.getInstance().checkCurrentProfile(node.getProfile(), node);
         if (await TreeViewUtils.errorForUnsavedResource(node)) {
+            return;
+        }
+        if (await ReadOnlyManagement.showErrorIfReadOnly(node.resourceUri)) {
             return;
         }
 

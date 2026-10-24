@@ -81,6 +81,46 @@ export class FsAbstractUtils {
     }
 
     /**
+     * Checks whether the given URI requests read-only access through the readonly=true parameter
+     * @param uri The URI to check
+     * @returns true if the URI is  read-only
+     */
+    public static isReadOnlyUri(uri: vscode.Uri): boolean {
+        return !!uri?.query && new URLSearchParams(uri.query).get("readonly") === "true";
+    }
+
+    /**
+     * Marks the given file stat as read-only if the URI requests read-only access
+     * @param uri The URI that the stat was requested for
+     * @param stat The file stat to return to VS Code
+     * @returns A copy of the stat with read-only permissions, or the original stat if the URI is not read-only
+     */
+    public static applyReadOnlyPermission<T extends vscode.FileStat>(uri: vscode.Uri, stat: T): T {
+        if (stat == null || !FsAbstractUtils.isReadOnlyUri(uri)) {
+            return stat;
+        }
+        return { ...stat, permissions: vscode.FilePermission.Readonly };
+    }
+
+    /**
+     * Throws a NoPermissions filesystem serror if the given URI requests read-only access.
+     * Use as a precheck when performing a modify operation on the URI
+     * @param uri The URI to check
+     * @throws vscode.FileSystemError.NoPermissions if the URI is read-only
+     */
+    public static throwIfReadOnly(uri: vscode.Uri): void {
+        if (FsAbstractUtils.isReadOnlyUri(uri)) {
+            throw vscode.FileSystemError.NoPermissions(
+                vscode.l10n.t({
+                    message: "{0} was opened in read-only mode and cannot be modified.",
+                    args: [posix.basename(uri.path)],
+                    comment: ["File name"],
+                })
+            );
+        }
+    }
+
+    /**
      * Executes the provided API getter and translates "missing API/type" failures
      * into a `FileSystemError.Unavailable` error for users and extenders.
      *

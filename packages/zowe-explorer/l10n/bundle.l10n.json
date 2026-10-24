@@ -223,6 +223,7 @@
   "Added support for loading credential manager options from the imperative.json file. Added a credentialManagerOptions object in the JSON object in imperative.json to specify options for the current credential manager.": "Added support for loading credential manager options from the imperative.json file. Added a credentialManagerOptions object in the JSON object in imperative.json to specify options for the current credential manager.",
   "Added support for logging in to multiple API ML instances per team config file. <a>#2264</a>": "Added support for logging in to multiple API ML instances per team config file. <a>#2264</a>",
   "Added support for logging in to multiple API ML instances per team configuration file. <a>#2264</a>": "Added support for logging in to multiple API ML instances per team configuration file. <a>#2264</a>",
+  "Added support for opening data sets and USS files in read-only mode by adding the readonly=true query parameter to their resource URI. <a>#2297</a>": "Added support for opening data sets and USS files in read-only mode by adding the readonly=true query parameter to their resource URI. <a>#2297</a>",
   "Added support for pasting at top-level of USS tree (if filtered), and optimized copy/paste operations to avoid using local paths when possible. <a>#2041</a>": "Added support for pasting at top-level of USS tree (if filtered), and optimized copy/paste operations to avoid using local paths when possible. <a>#2041</a>",
   "Added support for resolving aliases in the Zowe data set tree and when using the Zowe data set filesystem provider. <a>#4438</a> & <a>#4489</a>": "Added support for resolving aliases in the Zowe data set tree and when using the Zowe data set filesystem provider. <a>#4438</a> & <a>#4489</a>",
   "Added support for resolving data set aliases when using SSH profiles. <a>#4489</a>": "Added support for resolving data set aliases when using SSH profiles. <a>#4489</a>",
@@ -232,6 +233,7 @@
   "Added the \"Copy Name\" option to VSAM data sets. <a>#3466</a>": "Added the \"Copy Name\" option to VSAM data sets. <a>#3466</a>",
   "Added the Issue UNIX Commands feature. <a>#1326</a>": "Added the Issue UNIX Commands feature. <a>#1326</a>",
   "Added the JOBS context menu option to download all spool files in binary format. <a>#2060</a>": "Added the JOBS context menu option to download all spool files in binary format. <a>#2060</a>",
+  "Added the Make Read-Only and Make Writable commands on profiles, data sets and z/OS Unix files for overriding the default read-only rules. Resources overriden as read-only or writable only persist for the current session. <a>#2297</a>": "Added the Make Read-Only and Make Writable commands on profiles, data sets and z/OS Unix files for overriding the default read-only rules. Resources overriden as read-only or writable only persist for the current session. <a>#2297</a>",
   "Added the ability to list all datasets, even those with Imperative Errors. <a>#235</a> & <a>#2036</a>": "Added the ability to list all datasets, even those with Imperative Errors. <a>#235</a> & <a>#2036</a>",
   "Added the ability to open a data set from text selected in an Editor tab. <a>#3679</a>": "Added the ability to open a data set from text selected in an Editor tab. <a>#3679</a>",
   "Added the ability to poll on active jobs in the current filtered jobs tree. If an active job completes while polling, a notification that the job has completed displays. <a>#3472</a>": "Added the ability to poll on active jobs in the current filtered jobs tree. If an active job completes while polling, a notification that the job has completed displays. <a>#3472</a>",
@@ -241,6 +243,7 @@
   "Added the notifyFileChanged method to IZoweExplorerFileApi (the file API returned by getFileApi()) so extenders that save to the mainframe outside of Zowe Explorer's filesystem provider can invalidate the cached entry and trigger VS Code to re-read the file from the mainframe. <a>#4481</a>": "Added the notifyFileChanged method to IZoweExplorerFileApi (the file API returned by getFileApi()) so extenders that save to the mainframe outside of Zowe Explorer's filesystem provider can invalidate the cached entry and trigger VS Code to re-read the file from the mainframe. <a>#4481</a>",
   "Added the onResourceChanged function to the ZoweExplorerApiRegister class to allow extenders to subscribe to any changes to Zowe resources (Data Sets, USS files/folders, Jobs, etc.). See the <a>FileSystemProvider wiki page</a> for more information on Zowe resources.": "Added the onResourceChanged function to the ZoweExplorerApiRegister class to allow extenders to subscribe to any changes to Zowe resources (Data Sets, USS files/folders, Jobs, etc.). See the <a>FileSystemProvider wiki page</a> for more information on Zowe resources.",
   "Added the option for secure credential storage to be enable in Theia environment.": "Added the option for secure credential storage to be enable in Theia environment.",
+  "Added the zowe.readOnly.rules setting to define rules for opening data sets and z/OS Unix files in read-only mode. <a>#2297</a>": "Added the zowe.readOnly.rules setting to define rules for opening data sets and z/OS Unix files in read-only mode. <a>#2297</a>",
   "Added the zowe.settings.historyGroupByHost setting to group filter search history by host instead of sharing one list across all profiles, and the zowe.settings.maxSearchHistory setting to configure the maximum number of entries kept in filter search history. <a>#4477</a>": "Added the zowe.settings.historyGroupByHost setting to group filter search history by host instead of sharing one list across all profiles, and the zowe.settings.maxSearchHistory setting to configure the maximum number of entries kept in filter search history. <a>#4477</a>",
   "Added two new options to download a single spool file from a Job in plain text or in binary format. <a>#2060</a>": "Added two new options to download a single spool file from a Job in plain text or in binary format. <a>#2060</a>",
   "Added two new settings, zowe.ds.default.sort and zowe.jobs.default.sort, that allow you to change the default sorting order of datasets and jobs when you open them. <a>#3369</a>": "Added two new settings, zowe.ds.default.sort and zowe.jobs.default.sort, that allow you to change the default sorting order of datasets and jobs when you open them. <a>#3369</a>",
@@ -2627,6 +2630,12 @@
   "{0} download was cancelled.": "{0} download was cancelled.",
   "{0} download was cancelled. {1} of {2} item(s) were downloaded.": "{0} download was cancelled. {1} of {2} item(s) were downloaded.",
   "{0} downloaded successfully.": "{0} downloaded successfully.",
+  "{0} is read-only./Data set, member or USS path": {
+    "message": "{0} is read-only.",
+    "comment": [
+      "Data set, member or USS path"
+    ]
+  },
   "{0} location/Node type": {
     "message": "{0} location",
     "comment": [

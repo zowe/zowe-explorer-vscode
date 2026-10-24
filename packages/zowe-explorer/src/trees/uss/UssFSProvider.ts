@@ -34,6 +34,7 @@ import { USSFileStructure } from "./USSFileStructure";
 import { Profiles } from "../../configuration/Profiles";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 import { ZoweLogger } from "../../tools/ZoweLogger";
+import { ReadOnlyManagement } from "../../management/ReadOnlyManagement";
 import { AuthUtils } from "../../utils/AuthUtils";
 import { ProfilesUtils } from "../../utils/ProfilesUtils";
 import dayjs = require("dayjs");
@@ -229,7 +230,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const entry = result as UssDirectory | UssFile;
 
         if (!entry || !entry.metadata || !entry.metadata.path) {
-            return result;
+            return ReadOnlyManagement.applyPermission(uri, result);
         }
 
         const uriInfo = this._getInfoFromUri(uri);
@@ -237,10 +238,10 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const entryPath = entry.metadata.path.replace(/\/+/g, "/");
         const reqPath = uriInfo.path.replace(/\/+/g, "/");
         if (entryPath !== reqPath) {
-            return this.lookup(uri, false);
+            return ReadOnlyManagement.applyPermission(uri, this.lookup(uri, false));
         }
 
-        return result;
+        return ReadOnlyManagement.applyPermission(uri, result);
     }
 
     /**
@@ -250,6 +251,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * @returns Whether the move operation was successful
      */
     public async move(oldUri: vscode.Uri, newUri: vscode.Uri): Promise<boolean> {
+        ReadOnlyManagement.throwIfReadOnly(oldUri);
+        ReadOnlyManagement.throwIfReadOnly(newUri, { checkParent: true });
         const info = this._getInfoFromUri(newUri);
         const ussApi = ZoweExplorerApiRegister.getUssApi(info.profile);
 
@@ -280,6 +283,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             throw err;
         }
         await this._relocateEntry(oldUri, newUri, info.path);
+        ReadOnlyManagement.moveOverrides(oldUri, newUri);
         return true;
     }
 
@@ -770,6 +774,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         content: Uint8Array,
         options: { create: boolean; overwrite: boolean; noStatusMsg?: boolean }
     ): Promise<void> {
+        FsAbstractUtils.throwIfReadOnly(uri);
         const fileName = path.posix.basename(uri.path);
         const parentDir = this.lookupParentDirectory(uri);
 
@@ -786,6 +791,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         // This determines whether to fire a Created or Changed notification.
         const isNew = !entry;
+        // Creating a file adds an entry to its directory, so that must not be read-only either
+        ReadOnlyManagement.throwIfReadOnly(uri, { checkParent: isNew });
 
         if (isNew) {
             entry = new UssFile(fileName);
@@ -877,6 +884,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * - `overwrite` - Overwrites the file if the new URI already exists
      */
     public async rename(oldUri: vscode.Uri, newUri: vscode.Uri, options: { overwrite: boolean }): Promise<void> {
+        ReadOnlyManagement.throwIfCannotRename(oldUri, newUri);
         const entry = this.lookup(oldUri, false) as UssDirectory | UssFile;
         const parentDir = this.lookupParentDirectory(oldUri);
         const newName = path.posix.basename(newUri.path);
@@ -939,6 +947,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             this._updateChildPaths(entry);
         }
         parentDir.entries.set(newName, entry);
+        ReadOnlyManagement.moveOverrides(oldUri, newUri);
         this.fireSoon({ type: vscode.FileChangeType.Deleted, uri: oldUri }, { type: vscode.FileChangeType.Created, uri: newUri });
     }
 
@@ -947,6 +956,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * @param uri The URI that points to the file/folder to delete
      */
     public async delete(uri: vscode.Uri, _options: { recursive: boolean }): Promise<void> {
+        ReadOnlyManagement.throwIfReadOnly(uri);
         const { entryToDelete, parent, parentUri } = this._getDeleteInfo(uri);
 
         // Wait for any ongoing authentication process to complete
@@ -979,6 +989,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         parent.entries.delete(entryToDelete.name);
         parent.mtime = Date.now();
         parent.size -= 1;
+        ReadOnlyManagement.removeOverrides(uri);
 
         this.fireSoon({ type: vscode.FileChangeType.Changed, uri: parentUri }, { uri, type: vscode.FileChangeType.Deleted });
     }
@@ -1031,6 +1042,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         destination: vscode.Uri,
         options: { readonly overwrite: boolean; readonly tree: USSFileStructure.UssFileTree }
     ): Promise<void> {
+        ReadOnlyManagement.throwIfReadOnly(destination, { checkParent: true });
         const destInfo = this._getInfoFromUri(destination);
         const sourceInfo = this._getInfoFromUri(source);
 
