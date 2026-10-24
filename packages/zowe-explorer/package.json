@@ -890,16 +890,6 @@
       ],
       "view/item/context": [
         {
-          "when": "view == zowe.uss.explorer && viewItem =~ /_writable$/ && !listMultiSelection",
-          "command": "zowe.readOnly.makeReadOnly",
-          "group": "000_zowe_ussMainframeInteraction@0"
-        },
-        {
-          "when": "view == zowe.uss.explorer && viewItem =~ /_readonly$/ && !listMultiSelection",
-          "command": "zowe.readOnly.makeReadWrite",
-          "group": "000_zowe_ussMainframeInteraction@0"
-        },
-        {
           "when": "viewItem =~ /^(?!.*_fav.*)ussSession.*/ && !listMultiSelection",
           "command": "zowe.uss.fullPath",
           "group": "inline"
@@ -1080,6 +1070,16 @@
           "group": "099_zowe_ussModification:@1"
         },
         {
+          "when": "view == zowe.uss.explorer && viewItem =~ /_writable$/ && !listMultiSelection",
+          "command": "zowe.readOnly.makeReadOnly",
+          "group": "099_zowe_ussModification:@0"
+        },
+        {
+          "when": "view == zowe.uss.explorer && viewItem =~ /_readonly$/ && !listMultiSelection",
+          "command": "zowe.readOnly.makeReadWrite",
+          "group": "099_zowe_ussModification:@0"
+        },
+        {
           "when": "view == zowe.uss.explorer && viewItem =~ /^(?!(ussSession|favorite|profile_fav))/ && !listMultiSelection",
           "command": "zowe.uss.renameNode",
           "group": "099_zowe_ussModification:@3"
@@ -1133,16 +1133,6 @@
           "when": "view == zowe.ds.explorer && viewItem =~ /^session.*_fav.*/ && !listMultiSelection",
           "command": "zowe.removeFavorite",
           "group": "inline"
-        },
-        {
-          "when": "view == zowe.ds.explorer && viewItem =~ /_writable$/ && !listMultiSelection",
-          "command": "zowe.readOnly.makeReadOnly",
-          "group": "000_zowe_dsMainframeInteraction@0"
-        },
-        {
-          "when": "view == zowe.ds.explorer && viewItem =~ /_readonly$/ && !listMultiSelection",
-          "command": "zowe.readOnly.makeReadWrite",
-          "group": "000_zowe_dsMainframeInteraction@0"
         },
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^(member.*|ds.*)/",
@@ -1312,6 +1302,16 @@
         {
           "when": "view == zowe.ds.explorer && viewItem =~ /^fileError.*/",
           "command": "zowe.ds.showFileErrorDetails",
+          "group": "099_zowe_dsModification@0"
+        },
+        {
+          "when": "view == zowe.ds.explorer && viewItem =~ /_writable$/ && !listMultiSelection",
+          "command": "zowe.readOnly.makeReadOnly",
+          "group": "099_zowe_dsModification@0"
+        },
+        {
+          "when": "view == zowe.ds.explorer && viewItem =~ /_readonly$/ && !listMultiSelection",
+          "command": "zowe.readOnly.makeReadWrite",
           "group": "099_zowe_dsModification@0"
         },
         {

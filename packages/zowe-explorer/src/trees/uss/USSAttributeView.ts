@@ -13,6 +13,7 @@ import { Types, Gui, handleError, MainframeInteraction, IZoweUSSTreeNode, WebVie
 import { ExtensionContext } from "vscode";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 import { SharedContext } from "../shared/SharedContext";
+import { ReadOnlyManagement } from "../../management/ReadOnlyManagement";
 import * as vscode from "vscode";
 import * as fs from "fs";
 
@@ -64,7 +65,7 @@ export class USSAttributeView extends WebView {
                 await this.panel.webview.postMessage({
                     attributes: await this.ussNode.getAttributes(),
                     name: this.ussNode.fullPath,
-                    readonly: this.ussApi.updateAttributes == null,
+                    readonly: this.ussApi.updateAttributes == null || ReadOnlyManagement.isReadOnly(this.ussNode.resourceUri),
                 });
                 break;
             case "update-attributes":
@@ -95,6 +96,9 @@ export class USSAttributeView extends WebView {
     private async updateAttributes(message: any): Promise<void> {
         if (!this.ussApi.updateAttributes || !("attrs" in message)) {
             // Block the webview from making update requests if the API doesn't exist or if "attrs" is not present in the message object.
+            return;
+        }
+        if (await ReadOnlyManagement.showErrorIfReadOnly(this.ussNode.resourceUri)) {
             return;
         }
 

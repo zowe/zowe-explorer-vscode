@@ -10,22 +10,24 @@
  */
 
 import * as vscode from "vscode";
-import { FsAbstractUtils, IZoweTreeNode, ZoweScheme } from "@zowe/zowe-explorer-api";
+import { FsAbstractUtils, Gui, IZoweTreeNode, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { SharedContext } from "../trees/shared/SharedContext";
 import { Constants } from "../configuration/Constants";
 import { SettingsConfig } from "../configuration/SettingsConfig";
 
 interface ReadOnlyRule {
     profile?: string; // Mark whole profile read-only
-    pattern?: string; // Data set pattern
-    uss?: string; // USS path glob
+    pattern?: string; // Data set pattern, prefix with ! to make matching data sets writable
+    uss?: string; // USS path glob, prefix with ! to make matching paths writable
 }
 
 // Cached rule to avoid having to re-read in the setting for every file opened/tree node created or refreshed
 interface CachedReadOnlyRule {
     profile?: string;
     matchesDs?: (dsName: string, member?: string) => boolean;
+    dsNegated?: boolean;
     uss?: RegExp;
+    ussNegated?: boolean;
 }
 
 /**
@@ -34,7 +36,7 @@ interface CachedReadOnlyRule {
  * Whether it is opened in read-only is decided in order by:
  * 1. If there is a readonly=true query parameter on the filesystem URI
  * 2. If a read-only/writable override is on the resource or one of its parents (e.g. a member or its PDS or its profile)
- * 3. If a matching rule is set in the zowe.readOnly.rules setting
+ * 3. The last matching rule in the zowe.readOnly.rules setting, where a rule prefixed with ! makes matches writable again
  */
 export class ReadOnlyManagement {
     private static overrides = new Map<string, boolean>(); // pattern, is read-only?
@@ -75,6 +77,102 @@ export class ReadOnlyManagement {
         return ReadOnlyManagement.matchesRule(uri);
     }
 
+    /**
+     * Throws a NoPermissions error if the resource is read-only
+     * @param uri The resource being modified
+     * @param opts.checkParent Also check the PDS, directory or profile the resource is being added to, for operations that create a new entry
+     * such as creating, pasting, uploading or moving into it.
+     */
+    public static throwIfReadOnly(uri: vscode.Uri, opts?: { checkParent?: boolean }): void {
+        if (!ReadOnlyManagement.isSupportedUri(uri)) {
+            return;
+        }
+        // Gives a more specific error for files opened from a readonly=true link
+        FsAbstractUtils.throwIfReadOnly(uri);
+        const parent = opts?.checkParent ? ReadOnlyManagement.getParentUri(uri) : undefined;
+        const readOnlyUri = [parent, uri].find((u) => u != null && ReadOnlyManagement.isReadOnly(u));
+        if (readOnlyUri != null) {
+            throw vscode.FileSystemError.NoPermissions(
+                vscode.l10n.t({
+                    message: "{0} is read-only.",
+                    args: [ReadOnlyManagement.getDisplayName(readOnlyUri)],
+                    comment: ["Data set, member or USS path"],
+                })
+            );
+        }
+    }
+
+    /**
+     * Throws a NoPermissions error if a resource cannot be renamed.
+     * - The resource itself must be writable
+     * - When it stays in the same PDS or directory, an override that made it writable moves with it to the new name, so only a resource without its own override is also checked under its new name (e.g. renaming into a protected name)
+     * - When it moves to another PDS or directory, the new location is checked as if the resource was being created there
+     */
+    public static throwIfCannotRename(oldUri: vscode.Uri, newUri: vscode.Uri): void {
+        if (!ReadOnlyManagement.isSupportedUri(oldUri) || !ReadOnlyManagement.isSupportedUri(newUri)) {
+            return;
+        }
+        ReadOnlyManagement.throwIfReadOnly(oldUri);
+        const oldParent = ReadOnlyManagement.getParentUri(oldUri);
+        const newParent = ReadOnlyManagement.getParentUri(newUri);
+        const isSameParent = oldParent != null && newParent != null && ReadOnlyManagement.getKey(oldParent) === ReadOnlyManagement.getKey(newParent);
+        if (!isSameParent) {
+            ReadOnlyManagement.throwIfReadOnly(newUri, { checkParent: true });
+        } else if (!ReadOnlyManagement.overrides.has(ReadOnlyManagement.getKey(oldUri))) {
+            ReadOnlyManagement.throwIfReadOnly(newUri);
+        }
+    }
+
+    /**
+     * Moves the overrides on a renamed or moved resource (and anything beneath it) to its new location
+     */
+    public static moveOverrides(oldUri: vscode.Uri, newUri: vscode.Uri): void {
+        if (!ReadOnlyManagement.isSupportedUri(oldUri) || !ReadOnlyManagement.isSupportedUri(newUri)) {
+            return;
+        }
+        const oldKey = ReadOnlyManagement.getKey(oldUri);
+        const newKey = ReadOnlyManagement.getKey(newUri);
+        const moved = [...ReadOnlyManagement.overrides.entries()].filter(([key]) => key === oldKey || key.startsWith(`${oldKey}/`));
+        for (const [key] of moved) {
+            ReadOnlyManagement.overrides.delete(key);
+        }
+        for (const [key, readOnly] of moved) {
+            ReadOnlyManagement.overrides.set(newKey + key.substring(oldKey.length), readOnly);
+        }
+        if (moved.length > 0) {
+            ReadOnlyManagement.notifyChanged();
+        }
+    }
+
+    /**
+     * Removes the overrides on a deleted resource and anything beneath it
+     */
+    public static removeOverrides(uri: vscode.Uri): void {
+        if (!ReadOnlyManagement.isSupportedUri(uri)) {
+            return;
+        }
+        const key = ReadOnlyManagement.getKey(uri);
+        for (const existing of [...ReadOnlyManagement.overrides.keys()]) {
+            if (existing === key || existing.startsWith(`${key}/`)) {
+                ReadOnlyManagement.overrides.delete(existing);
+            }
+        }
+    }
+
+    /**
+     * Shows an error if the resource is read-only, for actions to check before prompting the user or changing anything on the mainframe.
+     * @returns true if the resource is read-only and the action should stop
+     */
+    public static async showErrorIfReadOnly(uri: vscode.Uri, opts?: { checkParent?: boolean }): Promise<boolean> {
+        try {
+            ReadOnlyManagement.throwIfReadOnly(uri, opts);
+            return false;
+        } catch (err) {
+            await Gui.errorMessage((err as Error).message);
+            return true;
+        }
+    }
+
     public static applyPermission<T extends vscode.FileStat>(uri: vscode.Uri, stat: T): T {
         if (stat == null || stat.type !== vscode.FileType.File || !ReadOnlyManagement.isReadOnly(uri)) {
             return stat;
@@ -89,7 +187,6 @@ export class ReadOnlyManagement {
      * - If a user wants to always set a certain file as read-only or writable, they should define that in their zowe.readOnly.rules setting
      * - If overrides were persistent across sessions, users may be confused why some files are read-only and some aren't
      *   e.g. if browsing a data set without wanting to accidentally change it
-     *- But perhaps zowe.readOnly.rules should support pattern negation too?
      */
     public static setReadOnly(uri: vscode.Uri, readOnly: boolean): void {
         const key = ReadOnlyManagement.getKey(uri);
@@ -150,6 +247,25 @@ export class ReadOnlyManagement {
         return node2;
     }
 
+    private static getParentUri(uri: vscode.Uri): vscode.Uri | undefined {
+        const segments = uri.path.split("/").filter(Boolean);
+        if (segments.length < 2) {
+            return undefined;
+        }
+        return uri.with({ path: `/${segments.slice(0, -1).join("/")}`, query: "" });
+    }
+
+    private static getDisplayName(uri: vscode.Uri): string {
+        const [profile, ...rest] = ReadOnlyManagement.getSegments(uri);
+        if (rest.length === 0) {
+            return profile;
+        }
+        if ((uri.scheme as ZoweScheme) === ZoweScheme.DS) {
+            return rest.length > 1 ? `${rest[0]}(${rest[1]})` : rest[0];
+        }
+        return `/${rest.join("/")}`;
+    }
+
     private static getKey(uri: vscode.Uri): string {
         return `${uri.scheme}:/${ReadOnlyManagement.getSegments(uri).join("/")}`;
     }
@@ -179,33 +295,61 @@ export class ReadOnlyManagement {
     private static getReadOnlyRules(): CachedReadOnlyRule[] {
         if (ReadOnlyManagement.ruleCache == null) {
             const rules = SettingsConfig.getDirectValue<ReadOnlyRule[]>(Constants.SETTINGS_READ_ONLY_RULES);
-            ReadOnlyManagement.ruleCache = (Array.isArray(rules) ? rules : [])
-                .filter((rule) => rule != null && (rule.profile != null || rule.pattern != null || rule.uss != null))
-                .map((rule) => ({
+            ReadOnlyManagement.ruleCache = [];
+            for (const rule of Array.isArray(rules) ? rules : []) {
+                if (rule == null) {
+                    continue;
+                }
+                const pattern = ReadOnlyManagement.parseNegation(rule.pattern);
+                const uss = ReadOnlyManagement.parseNegation(rule.uss);
+                const cachedRule: CachedReadOnlyRule = {
                     profile: rule.profile,
-                    matchesDs: rule.pattern != null ? ReadOnlyManagement.compileDsPattern(rule.pattern) : undefined,
-                    uss: rule.uss != null ? ReadOnlyManagement.ussGlobToRegex(rule.uss) : undefined,
-                }));
+                    matchesDs: pattern.value ? ReadOnlyManagement.compileDsPattern(pattern.value) : undefined,
+                    dsNegated: pattern.negated,
+                    uss: uss.value ? ReadOnlyManagement.ussGlobToRegex(uss.value) : undefined,
+                    ussNegated: uss.negated,
+                };
+                const isProfileOnly = rule.profile != null && rule.pattern == null && rule.uss == null;
+                // Skip empty rules, and rules whose patterns are blank or only "!"
+                if (isProfileOnly || cachedRule.matchesDs != null || cachedRule.uss != null) {
+                    ReadOnlyManagement.ruleCache.push(cachedRule);
+                }
+            }
         }
         return ReadOnlyManagement.ruleCache;
+    }
+
+    private static parseNegation(pattern: string | undefined): { value?: string; negated: boolean } {
+        const trimmed = typeof pattern === "string" ? pattern.trim() : undefined;
+        if (!trimmed) {
+            return { negated: false };
+        }
+        if (trimmed.startsWith("!")) {
+            return { value: trimmed.substring(1).trim(), negated: true };
+        }
+        return { value: trimmed, negated: false };
     }
 
     private static matchesRule(uri: vscode.Uri): boolean {
         const [profile, ...rest] = ReadOnlyManagement.getSegments(uri);
         const isDs = (uri.scheme as ZoweScheme) === ZoweScheme.DS;
-        return ReadOnlyManagement.getReadOnlyRules().some((rule) => {
+        let readOnly = false;
+        for (const rule of ReadOnlyManagement.getReadOnlyRules()) {
             if (rule.profile != null && rule.profile !== profile) {
-                return false;
+                continue;
             }
             if (rule.matchesDs == null && rule.uss == null) {
                 // Profile only rules cover everything in the profile
-                return true;
+                readOnly = true;
+            } else if (isDs) {
+                if (rule.matchesDs != null && rest.length > 0 && rule.matchesDs(rest[0], rest[1])) {
+                    readOnly = !rule.dsNegated;
+                }
+            } else if (rule.uss != null && rule.uss.test(`/${rest.join("/")}`)) {
+                readOnly = !rule.ussNegated;
             }
-            if (isDs) {
-                return rule.matchesDs != null && rest.length > 0 && rule.matchesDs(rest[0], rest[1]);
-            }
-            return rule.uss != null && rule.uss.test(`/${rest.join("/")}`);
-        });
+        }
+        return readOnly;
     }
 
     private static escapeRegex(text: string): string {
