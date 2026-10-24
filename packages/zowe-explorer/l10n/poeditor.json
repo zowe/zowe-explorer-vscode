@@ -871,7 +871,7 @@
   "Added the \"Copy Name\" option to VSAM data sets. <a>#3466</a>": "",
   "Added the Issue UNIX Commands feature. <a>#1326</a>": "",
   "Added the JOBS context menu option to download all spool files in binary format. <a>#2060</a>": "",
-  "Added the Make Read-Only and Make Writable commands on profiles, data sets and files for overriding the default read-only rules. Resources overriden as read-only or writable only persist for the current session. <a>#2297</a>": "",
+  "Added the Make Read-Only and Make Writable commands on profiles, data sets and z/OS Unix files for overriding the default read-only rules. Resources overriden as read-only or writable only persist for the current session. <a>#2297</a>": "",
   "Added the ability to list all datasets, even those with Imperative Errors. <a>#235</a> & <a>#2036</a>": "",
   "Added the ability to open a data set from text selected in an Editor tab. <a>#3679</a>": "",
   "Added the ability to poll on active jobs in the current filtered jobs tree. If an active job completes while polling, a notification that the job has completed displays. <a>#3472</a>": "",
