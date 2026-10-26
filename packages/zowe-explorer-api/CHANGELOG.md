@@ -17,6 +17,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### Bug fixes
 
+- Fixed SSO logout to use an explicitly selected base profile's API ML token without requiring a registered service API. [#4137](https://github.com/zowe/zowe-explorer-vscode/issues/4137)
 - Fixed an issue where the `ProfilesCache.requireKeyring` function could return an erroneous `undefined` error instead of reporting when the Secrets SDK failed to load, causing callers to treat an unavailable credential manager as available. [#4360](https://github.com/zowe/zowe-explorer-vscode/issues/4360)
 - Removed `PLX` from the `.pli` entry in `DS_EXTENSION_MAP`, so data sets with a `PLX` qualifier no longer get a PL/I file extension. [#3801](https://github.com/zowe/zowe-explorer-vscode/issues/3801)
 

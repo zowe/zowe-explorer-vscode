@@ -1153,9 +1153,11 @@ export class Profiles extends ProfilesCache {
             }
             let logoutOk: boolean;
             const zeRegister = ZoweExplorerApiRegister.getInstance();
+            const isBaseProfile = serviceProfile.type === "base";
 
             // this will handle extenders
             if (
+                !isBaseProfile &&
                 serviceProfile.type !== "zosmf" &&
                 serviceProfile.profile != null &&
                 !serviceProfile.profile.tokenType?.startsWith(imperative.SessConstants.TOKEN_TYPE_APIML)
@@ -1164,7 +1166,9 @@ export class Profiles extends ProfilesCache {
             } else {
                 logoutOk = await ZoweVsCodeExtension.ssoLogout({
                     serviceProfile,
-                    defaultTokenType: zeRegister?.getCommonApi(serviceProfile).getTokenTypeName(),
+                    defaultTokenType: isBaseProfile
+                        ? imperative.SessConstants.TOKEN_TYPE_APIML
+                        : zeRegister?.getCommonApi(serviceProfile).getTokenTypeName(),
                     profileNode: node,
                     zeRegister,
                     zeProfiles: this,
