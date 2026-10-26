@@ -239,8 +239,10 @@ export class SshClientCache extends vscode.Disposable {
                                 );
                             }
                         } else {
-                            // The user appears to have write access
-                            await deployWithProgress(sessionHandle, serverPath);
+                            if (!(await this.confirmServerDeployment()) || !(await deployWithProgress(sessionHandle, serverPath))) {
+                                newClient?.dispose();
+                                throw new vscode.CancellationError();
+                            }
                             newClient?.dispose();
                             newClient = await this.buildClient(session, clientId, {
                                 serverPath,
@@ -268,6 +270,27 @@ export class SshClientCache extends vscode.Disposable {
         }
 
         return this.mClientSessionMap.get(clientId)?.client as ZSshClient;
+    }
+
+    private async confirmServerDeployment(): Promise<boolean> {
+        const config = vscode.workspace.getConfiguration("zowe");
+        if (!config.get<boolean>("confirmSshServerDeploy", true)) {
+            return true;
+        }
+
+        const connectButton = vscode.l10n.t("Connect");
+        const connectDontAskButton = vscode.l10n.t("Connect, don't ask me again");
+        const selection = await Gui.showMessage(
+            vscode.l10n.t("The SSH server must be installed or updated on z/OS UNIX before connecting. Would you like to proceed?"),
+            { items: [vscode.l10n.t("Cancel"), connectButton, connectDontAskButton] }
+        );
+        if (selection === connectDontAskButton) {
+            await config.update("confirmSshServerDeploy", false, vscode.ConfigurationTarget.Global);
+        } else if (selection !== connectButton) {
+            imperative.Logger.getAppLogger().info("User declined SSH server deployment");
+            return false;
+        }
+        return true;
     }
 
     public end(hostOrProfile: string | imperative.IProfileLoaded, opts: ZSshRestartOptions = SshClientCache.mNoRestart): void {

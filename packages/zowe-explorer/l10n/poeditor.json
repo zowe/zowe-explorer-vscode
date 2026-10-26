@@ -633,7 +633,7 @@
     "Time in milliseconds to wait for the SSH handshake to complete.": ""
   },
   "zowe.confirmSshServerDeploy": {
-    "Require user confirmation before connecting with an SSH profile": ""
+    "Require user confirmation before automatically installing or updating the SSH server": ""
   },
   "#### Connecting to a host": "",
   "#### Copy across LPAR updates": "",
@@ -1313,6 +1313,7 @@
   "Fixed an issue that would allow multiple member-filter on a single dataset search. <a>#2037</a>": "",
   "Fixed an issue to review inconsistent capitalization across translation strings. <a>#2935</a>": "",
   "Fixed an issue when renaming a data set or member where new extension suffix was not detected. <a>#4142</a>": "",
+  "Fixed an issue where UNIX commands were always wrapped in an SSH_TTY terminal redirect, even for profiles that do not use SSH. <a>#4564</a>": "",
   "Fixed an issue where VS Code did not provide all context menu options for a profile node after a multi-select operation. <a>#2108</a>": "",
   "Fixed an issue where Zowe Explorer displayed a \"No Zowe client configurations\" prompt when a project user configuration existed but no global configuration was present. <a>#3168</a>": "",
   "Fixed an issue where Zowe Explorer failed to activate if a VS Code workspace is opened and contains an invalid directory path. Now, invalid directory paths are ignored by Zowe Explorer and only valid paths are treated as project-level directories. <a>#4271</a>": "",
