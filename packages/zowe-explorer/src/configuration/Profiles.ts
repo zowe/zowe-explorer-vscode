@@ -943,7 +943,13 @@ export class Profiles extends ProfilesCache {
             serviceProfile = this.loadNamedProfile(label.trim());
         }
         const allowedLoginMethod: string = this.getAllowedLoginMethod(serviceProfile);
-
+        if (
+            allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_BASIC ||
+            allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_CERT_PEM
+        ) {
+            // Direct auth uses credentials or certificates without getting a token.
+            return false;
+        }
         const zeInstance = ZoweExplorerApiRegister.getInstance();
         try {
             loginTokenType = zeInstance.getCommonApi(serviceProfile).getTokenTypeName();
@@ -960,11 +966,7 @@ export class Profiles extends ProfilesCache {
         }
         try {
             let loginOk = false;
-            if (
-                loginTokenType &&
-                (allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_BASIC ||
-                    !loginTokenType.startsWith(imperative.SessConstants.TOKEN_TYPE_APIML))
-            ) {
+            if (loginTokenType && !loginTokenType.startsWith(imperative.SessConstants.TOKEN_TYPE_APIML)) {
                 loginOk = await ZoweVsCodeExtension.directConnectLogin(serviceProfile, zeInstance, node);
             } else {
                 loginOk = await ZoweVsCodeExtension.ssoLogin({
