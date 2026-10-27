@@ -52,6 +52,7 @@ import { UssFSProvider } from "../../../src/trees/uss/UssFSProvider";
 import { JobFSProvider } from "../../../src/trees/job/JobFSProvider";
 import { DatasetFSProvider } from "../../../src/trees/dataset/DatasetFSProvider";
 import { Constants } from "../../../src/configuration/Constants";
+import { Definitions } from "../../../src/configuration/Definitions";
 import { ProfilesUtils } from "../../../src/utils/ProfilesUtils";
 import { AuthUtils } from "../../../src/utils/AuthUtils";
 import { FilterDescriptor } from "../../../src/management/FilterManagement";
@@ -1653,6 +1654,20 @@ describe("Profiles Unit Tests - function disableValidationContext", () => {
         await Profiles.getInstance().disableValidationContext(testNode);
         expect(prevContext).toBe(testNode.contextValue);
     });
+
+    it("should append the noValidate suffix when the node has no validation suffix yet", async () => {
+        createGlobalMocks();
+        const testNode = createMockNode("test", Constants.DS_SESSION_CONTEXT);
+        Profiles.getInstance().disableValidationContext(testNode);
+        expect(testNode.contextValue).toEqual(Constants.DS_SESSION_CONTEXT + Constants.NO_VALIDATE_SUFFIX);
+    });
+
+    it("should strip a stale validation status from the context value", async () => {
+        createGlobalMocks();
+        const testNode = createMockNode("test", Constants.DS_SESSION_CONTEXT + "_Active");
+        Profiles.getInstance().disableValidationContext(testNode);
+        expect(testNode.contextValue).toEqual(Constants.DS_SESSION_CONTEXT + Constants.NO_VALIDATE_SUFFIX);
+    });
 });
 
 describe("Profiles Unit Tests - function enableValidationContext", () => {
@@ -2764,7 +2779,13 @@ describe("Profiles Unit Tests - function disableValidation", () => {
         vi.spyOn(SharedTreeProviders, "getSessionForAllTrees").mockReturnValue([globalMocks.testNode]);
         expect(globalMocks.testNode.contextValue).toEqual(Constants.DS_SESSION_CONTEXT);
         expect(Profiles.getInstance().disableValidation(globalMocks.testNode)).toEqual(globalMocks.testNode);
-        expect(globalMocks.testNode.contextValue).toEqual(Constants.DS_SESSION_CONTEXT + Constants.VALIDATE_SUFFIX);
+        expect(globalMocks.testNode.contextValue).toEqual(Constants.DS_SESSION_CONTEXT + Constants.NO_VALIDATE_SUFFIX);
+        expect(Profiles.getInstance().getExplicitValidationSetting("test")).toBe(false);
+        expect(Profiles.getInstance().profilesValidationSetting).toContainEqual({ name: "test", setting: false });
+        expect(ZoweLocalStorage.globalState.update).toHaveBeenCalledWith(
+            Definitions.LocalStorageKey.PROFILE_VALIDATION_SETTINGS,
+            expect.arrayContaining([{ name: "test", setting: false }])
+        );
     });
 
     it("should disable validation for the profile on the current tree", () => {
@@ -2774,7 +2795,16 @@ describe("Profiles Unit Tests - function disableValidation", () => {
         expect(globalMocks.testNode.contextValue).toEqual(Constants.DS_SESSION_CONTEXT);
         expect(Profiles.getInstance().disableValidation(globalMocks.testNode)).toEqual(globalMocks.testNode);
         expect(disableValidationContextSpy).toHaveBeenCalledTimes(1);
-        expect(globalMocks.testNode.contextValue).toEqual(Constants.DS_SESSION_CONTEXT + Constants.VALIDATE_SUFFIX);
+        expect(globalMocks.testNode.contextValue).toEqual(Constants.DS_SESSION_CONTEXT + Constants.NO_VALIDATE_SUFFIX);
+    });
+
+    it("should disable validation on the clicked node when it is not present in any tree", () => {
+        const globalMocks = createGlobalMocks();
+        vi.spyOn(SharedTreeProviders, "getSessionForAllTrees").mockReturnValue([]);
+        expect(globalMocks.testNode.contextValue).toEqual(Constants.DS_SESSION_CONTEXT);
+        expect(Profiles.getInstance().disableValidation(globalMocks.testNode)).toEqual(globalMocks.testNode);
+        expect(globalMocks.testNode.contextValue).toEqual(Constants.DS_SESSION_CONTEXT + Constants.NO_VALIDATE_SUFFIX);
+        expect(Profiles.getInstance().getExplicitValidationSetting("test")).toBe(false);
     });
 });
 
@@ -2794,6 +2824,12 @@ describe("Profiles Unit Tests - function enableValidation", () => {
         expect(globalMocks.testNode.contextValue).toEqual(Constants.DS_SESSION_CONTEXT);
         expect(Profiles.getInstance().enableValidation(globalMocks.testNode)).toEqual(globalMocks.testNode);
         expect(globalMocks.testNode.contextValue).toEqual(Constants.DS_SESSION_CONTEXT + Constants.VALIDATE_SUFFIX);
+        expect(Profiles.getInstance().getExplicitValidationSetting("test")).toBe(true);
+        expect(Profiles.getInstance().profilesValidationSetting).toContainEqual({ name: "test", setting: true });
+        expect(ZoweLocalStorage.globalState.update).toHaveBeenCalledWith(
+            Definitions.LocalStorageKey.PROFILE_VALIDATION_SETTINGS,
+            expect.arrayContaining([{ name: "test", setting: true }])
+        );
     });
 
     it("should enable validation for the profile on the current tree", () => {
@@ -2804,6 +2840,58 @@ describe("Profiles Unit Tests - function enableValidation", () => {
         expect(Profiles.getInstance().enableValidation(globalMocks.testNode)).toEqual(globalMocks.testNode);
         expect(enableValidationContextSpy).toHaveBeenCalledTimes(1);
         expect(globalMocks.testNode.contextValue).toEqual(Constants.DS_SESSION_CONTEXT + Constants.VALIDATE_SUFFIX);
+    });
+});
+
+describe("Profiles Unit Tests - explicit validation settings", () => {
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    it("should upsert an explicit validation setting and persist it", () => {
+        createGlobalMocks();
+        const profiles = Profiles.getInstance();
+        profiles.setExplicitValidationSetting("test", false);
+        profiles.setExplicitValidationSetting("test", false);
+        profiles.setExplicitValidationSetting("test2", true);
+        expect(profiles.explicitValidationSettings).toEqual([
+            { name: "test", setting: false },
+            { name: "test2", setting: true },
+        ]);
+        expect(profiles.profilesValidationSetting).toEqual([
+            { name: "test", setting: false },
+            { name: "test2", setting: true },
+        ]);
+        expect(profiles.getExplicitValidationSetting("test")).toBe(false);
+        expect(profiles.getExplicitValidationSetting("test2")).toBe(true);
+        expect(profiles.getExplicitValidationSetting("unknown")).toBeUndefined();
+        expect(ZoweLocalStorage.globalState.update).toHaveBeenLastCalledWith(Definitions.LocalStorageKey.PROFILE_VALIDATION_SETTINGS, [
+            { name: "test", setting: false },
+            { name: "test2", setting: true },
+        ]);
+    });
+
+    it("should load persisted settings from local storage", () => {
+        createGlobalMocks();
+        vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue([
+            { name: "test", setting: false },
+            { name: "invalid", setting: "nope" },
+        ] as any);
+        const profiles = Profiles.getInstance();
+        profiles.loadPersistedValidationSettings();
+        expect(profiles.explicitValidationSettings).toEqual([{ name: "test", setting: false }]);
+        expect(profiles.profilesValidationSetting).toEqual([{ name: "test", setting: false }]);
+        expect(profiles.getExplicitValidationSetting("test")).toBe(false);
+    });
+
+    it("should default to empty settings when nothing is persisted", () => {
+        createGlobalMocks();
+        vi.spyOn(ZoweLocalStorage, "getValue").mockReturnValue(undefined as any);
+        const profiles = Profiles.getInstance();
+        profiles.explicitValidationSettings = [{ name: "test", setting: false }];
+        profiles.loadPersistedValidationSettings();
+        expect(profiles.explicitValidationSettings).toEqual([]);
+        expect(profiles.profilesValidationSetting).toEqual([]);
     });
 });
 

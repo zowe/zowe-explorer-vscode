@@ -341,6 +341,7 @@ export function createInstanceOfProfile(profile: imperative.IProfileLoaded) {
         disableValidationContext: vi.fn(),
         disableValidation: vi.fn(),
         getProfileSetting: vi.fn(),
+        getExplicitValidationSetting: vi.fn(),
         resetValidationSettings: vi.fn(),
         getValidSession: vi.fn(),
         editSession: vi.fn(),
