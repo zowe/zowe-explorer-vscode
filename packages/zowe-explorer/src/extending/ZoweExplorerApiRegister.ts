@@ -13,6 +13,10 @@ import * as vscode from "vscode";
 import * as zowex from "zowex-for-zowe-explorer";
 import {
     BaseProvider,
+    getSessionCredentialsFromProfile,
+    type MergedProfileProperties,
+    type CredentialSelectionDefaults,
+    type SessionCredentials,
     DataSetAttributesProvider,
     IApiExplorerExtender,
     MainframeInteraction,
@@ -33,6 +37,11 @@ import { ProfilesUtils } from "../utils/ProfilesUtils";
  */
 export class ZoweExplorerApiRegister implements Types.IApiRegisterClient {
     public static ZoweExplorerApiRegisterInst: ZoweExplorerApiRegister;
+    /** Stateless selection from merged profile contents; returns no live Session or credential cache. */
+    public getSessionCredentialsFromProfile(profile: MergedProfileProperties, defaults?: CredentialSelectionDefaults): SessionCredentials {
+        return getSessionCredentialsFromProfile(profile, defaults);
+    }
+
     private static eventMap: Record<ZoweScheme | string, vscode.Event<vscode.FileChangeEvent[]>> = {};
 
     public onProfileUpdatedEmitter: vscode.EventEmitter<imperative.IProfileLoaded> = new vscode.EventEmitter();

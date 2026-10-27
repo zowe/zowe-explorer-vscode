@@ -12,6 +12,7 @@
 import { FileDecoration, Uri } from "vscode";
 import { ICreateDataSetOptions } from "@zowe/zos-files-for-zowe-sdk";
 import type { IApiExplorerExtender, IRegisterClient } from "./extend";
+import type { MergedProfileProperties, CredentialSelectionDefaults, SessionCredentials } from "./profiles/SessionCredentials";
 import type { IZoweDatasetTreeNode, IZoweJobTreeNode, IZoweTreeNode, IZoweUSSTreeNode, IZoweTree, ZosEncoding } from "./tree";
 
 export namespace Types {
@@ -44,6 +45,12 @@ export namespace Types {
     };
 
     export type IApiRegisterClient = IRegisterClient & {
+        /**
+         * Selects credentials without prompting or writing configuration.
+         * @param profile The full merged property bag, including inherited/base-profile properties,
+         * `authOrder`, and all available credentials. Secure values must already be resolved by the caller.
+         */
+        getSessionCredentialsFromProfile?(profile: MergedProfileProperties, defaults?: CredentialSelectionDefaults): SessionCredentials;
         /**
          * Lookup of an API for the generic extender API.
          * @returns the registered API instance

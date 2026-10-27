@@ -24,3 +24,18 @@ export * from "./utils";
 export * from "./Types";
 export * from "./fs";
 export * as imperative from "@zowe/imperative";
+
+export { getSessionCredentialsFromProfile } from "./profiles/SessionCredentials";
+export type {
+    MergedProfileProperties,
+    ConnectionAuth,
+    BasicAuthCredential,
+    TokenCredential,
+    BearerCredential,
+    PemCertificateCredential,
+    CertificateAccountCredential,
+    CertificateCredential,
+    NoCredential,
+    SessionCredentials,
+    CredentialSelectionDefaults,
+} from "./profiles/SessionCredentials";
