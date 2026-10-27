@@ -28,9 +28,11 @@ import {
     AuthHandler,
     IFileSystemEntry,
     ConflictViewSelection,
+    MainframeInteraction,
 } from "@zowe/zowe-explorer-api";
 import { IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
 import { USSFileStructure } from "./USSFileStructure";
+import { USSUtils } from "./USSUtils";
 import { Profiles } from "../../configuration/Profiles";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 import { ZoweLogger } from "../../tools/ZoweLogger";
@@ -48,6 +50,13 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * directory that was empty when it was listed still reports the entries that appear in it later.
      */
     private readonly listedDirectories = new WeakSet<UssDirectory>();
+    /**
+     * Whether each symbolic link that was resolved while listing a directory points to a directory,
+     * keyed by profile name and link path, along with the link's mtime when it was resolved
+     * (i.e. caching to reduce number of requests to resolve shared symlinks)
+     */
+    private readonly symlinkTargetCache = new Map<string, { mtime: unknown; isDirectory: boolean }>();
+
     private static _instance: UssFSProvider;
     private constructor() {
         super();
@@ -296,89 +305,22 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         await ProfilesUtils.awaitExtenderType(uri, Profiles.getInstance());
 
         let response: IZosFilesResponse;
-        let symlinkResponse: IZosFilesResponse = null;
+        const ussApi = ZoweExplorerApiRegister.getUssApi(loadedProfile);
 
         await AuthUtils.retryRequest(profile, async () => {
-            const ussApi = ZoweExplorerApiRegister.getUssApi(loadedProfile);
+            response = await ussApi.fileList(ussPath);
 
-            // First call with follow mode to get the directory listing
-            response = await ussApi.fileList(ussPath, { symlinks: false, name: "*" });
-
-            // Only attempt symlink detection when listing directory contents (not for stat calls on individual files)
-            // keepRelative=true is used by stat() for individual file lookups, so skip symlink detection in that case
-            if (!keepRelative) {
-                // Log the response for debugging
-                ZoweLogger.trace(
-                    `[UssFSProvider] listFiles response for ${ussPath}: success=${String(response.success)}, ` +
-                        `itemCount=${String(response.apiResponse?.items?.length ?? 0)}`
-                );
-
-                // Only attempt symlink detection if this is a directory (has multiple items)
-                // Files return a single item, directories return multiple items
-                const isDirectory = response.success && response.apiResponse?.items?.length > 1;
-
-                if (isDirectory) {
-                    // Try to call with report mode to detect which items are symlinks
-                    // name: "*" is required as symlinks option requires at least one filter parameter
-                    // This may fail if there are broken symlinks in the directory, so we handle errors gracefully
-                    try {
-                        symlinkResponse = await ussApi.fileList(ussPath, { symlinks: true, name: "*" });
-                    } catch (symlinkErr) {
-                        // If report mode fails (e.g., broken symlinks cause readlink() errors),
-                        // log the error and continue without symlink detection
-                        const errMsg = symlinkErr instanceof Error ? symlinkErr.message : String(symlinkErr);
-                        ZoweLogger.warn(`[UssFSProvider] Failed to detect symlinks in ${ussPath}: ${errMsg}`);
-                        symlinkResponse = null;
-                    }
-                }
-            }
-
-            if (response.success && !keepRelative && !this.exists(uri)) {
-                const rawItems = response.apiResponse?.items ?? [];
-                const uriBasename = path.posix.basename(uri.path);
-                // Classic z/OSMF responses include a "." entry (mode "d") as the first item.
-                // Some extenders omit that entry and return only child entries. In that case,
-                // detect a directory listing by verifying that the response represents the
-                // directory itself (not a child file with a matching name).
-                //
-                // Edge case: A directory may contain a file whose name matches the URI basename.
-                // For example, listing /u/users/ibmuser/temp (directory) might return a child
-                // file named "temp". We distinguish by checking: if there's no "." entry and
-                // only a single item that is a non-directory file matching the basename, then
-                // fileList was called on that file. Otherwise, it's a directory listing.
-                const hasSelfEntry = rawItems.some((item) => item.name === ".");
-                const isSingleFileMatch =
-                    rawItems.length === 1 &&
-                    (rawItems[0].name === uriBasename || rawItems[0].name === ussPath) &&
-                    !(rawItems[0].mode as string | undefined)?.startsWith("d");
-                const isDirectoryResponse =
-                    (hasSelfEntry && (rawItems.find((item) => item.name === ".")?.mode as string | undefined)?.startsWith("d")) ||
-                    (rawItems.length > 0 && !hasSelfEntry && !isSingleFileMatch) ||
-                    (rawItems.length === 0 && !hasSelfEntry); // Handle empty directories;
-                if (isDirectoryResponse) {
-                    this._createDirectoryRecursive(uri);
-                }
+            // If the listed path is a directory, create an entry for it so that its children can be added
+            if (response.success && !keepRelative && !this.exists(uri) && USSUtils.isDirectoryListing(response.apiResponse?.items ?? [], ussPath)) {
+                this._createDirectoryRecursive(uri);
             }
         });
 
-        // Merge symlink information: mark items that were symlinks in the report response
-        const symlinkNames = new Set<string>();
-        if (symlinkResponse?.success && symlinkResponse.apiResponse?.items) {
-            for (const item of symlinkResponse.apiResponse.items) {
-                // Symlinks have mode starting with 'l'
-                if (item.mode?.startsWith("l")) {
-                    symlinkNames.add(item.name as string);
-                }
-            }
-        }
+        let items = (response.apiResponse?.items ?? []).filter(keepRelative ? Boolean : (it): boolean => !/^\.{1,3}$/.test(it.name as string));
 
-        // Add isSymlink property to items that were detected as symlinks
-        const items = (response.apiResponse?.items ?? [])
-            .filter(keepRelative ? Boolean : (it: Record<string, unknown>): boolean => !/^\.{1,3}$/.test(it.name as string))
-            .map((item: Record<string, unknown>) => ({
-                ...item,
-                isSymlink: symlinkNames.has(item.name as string),
-            }));
+        if (!keepRelative) {
+            items = await this.resolveSymlinks(ussApi, profile.name, ussPath, items);
+        }
 
         return {
             ...response,
@@ -387,6 +329,60 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                 items,
             },
         };
+    }
+
+    /**
+     * Determines whether each symbolic link in a list of USS items points to a directory, so that it can be treated as a folder.
+     * Listing the path of a link lists its target, so the result shows whether the target is a directory or a file.
+     * A link that cannot be listed, such as a link whose target does not exist, is treated as a file.
+     * A link that is unchanged since it was last resolved reuses the cached result instead of being listed again.
+     */
+    private async resolveSymlinks(
+        ussApi: MainframeInteraction.IUss,
+        profileName: string,
+        parentPath: string,
+        items: Record<string, unknown>[]
+    ): Promise<Record<string, unknown>[]> {
+        const resolved = [...items];
+        const unresolved: { index: number; linkPath: string; cacheKey: string; mtime: unknown }[] = [];
+        for (const [index, item] of items.entries()) {
+            if (!USSUtils.isSymlinkItem(item)) {
+                continue;
+            }
+            const name = item.name as string;
+            const linkPath = name.startsWith("/") ? name : path.posix.join(parentPath, name);
+            const cacheKey = `${profileName}:${linkPath}`;
+            const cached = this.symlinkTargetCache.get(cacheKey);
+            if (item.mtime != null && cached?.mtime === item.mtime) {
+                resolved[index] = { ...item, isSymlink: true, isSymlinkToDirectory: cached.isDirectory };
+            } else {
+                unresolved.push({ index, linkPath, cacheKey, mtime: item.mtime });
+            }
+        }
+
+        await Promise.all(
+            unresolved.map(async ({ index, linkPath, cacheKey, mtime }) => {
+                let isSymlinkToDirectory = false;
+                try {
+                    const linkResp = await ussApi.fileList(linkPath);
+                    isSymlinkToDirectory = linkResp.success && USSUtils.isDirectoryListing(linkResp.apiResponse?.items ?? [], linkPath);
+                    // Changing a link's target replaces the link, which changes its mtime, so the mtime tells us when to resolve it again
+                    if (linkResp.success && mtime != null) {
+                        this.symlinkTargetCache.set(cacheKey, { mtime, isDirectory: isSymlinkToDirectory });
+                    } else {
+                        this.symlinkTargetCache.delete(cacheKey);
+                    }
+                } catch (err) {
+                    // A broken link is not cached, since creating its target does not change the link's mtime
+                    this.symlinkTargetCache.delete(cacheKey);
+                    const errMsg = err instanceof Error ? err.message : String(err);
+                    ZoweLogger.warn(`[UssFSProvider] Could not resolve the target of symbolic link ${linkPath}: ${errMsg}`);
+                }
+                resolved[index] = { ...items[index], isSymlink: true, isSymlinkToDirectory };
+            })
+        );
+
+        return resolved;
     }
 
     private _createDirectoryRecursive(uri: vscode.Uri): void {
@@ -475,7 +471,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             const itemName = item.name as string;
             staleEntryNames.delete(itemName);
 
-            const isDirectory = item.mode?.startsWith("d") ?? false;
+            const isDirectory = USSUtils.isDirectoryItem(item);
             const newEntryType = isDirectory ? vscode.FileType.Directory : vscode.FileType.File;
             // skip over existing entries if they are the same type
             const existingEntry = entry.entries.get(itemName);
@@ -490,7 +486,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             }
 
             // create new entries for any files/folders that aren't in the provider
-            const UssType = item.mode?.startsWith("d") ? UssDirectory : UssFile;
+            const UssType = isDirectory ? UssDirectory : UssFile;
             const newEntry = new UssType(itemName);
             newEntry.metadata = { ...entry.metadata, path: path.posix.join(entry.metadata.path, itemName) };
 
@@ -1095,8 +1091,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         const hasCopyApi = api.copy != null;
 
         // Get the up-to-date list of files in the destination directory
-        // Use symlinks: false to follow symlinks, allowing proper resolution of symlinked directories
-        const apiResponse = await api.fileList(path.posix.join(destInfo.path), { symlinks: false, name: "*" });
+        const apiResponse = await api.fileList(path.posix.join(destInfo.path));
         if (!apiResponse.success) {
             throw vscode.FileSystemError.Unavailable(
                 vscode.l10n.t({

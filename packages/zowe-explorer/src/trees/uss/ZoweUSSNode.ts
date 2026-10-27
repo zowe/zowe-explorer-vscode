@@ -101,6 +101,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         if (opts.contextOverride) {
             this.contextValue = opts.contextOverride;
         }
+        if (opts.isSymlink) {
+            this.contextValue += Constants.SYMLINK_SUFFIX;
+        }
 
         const icon = IconGenerator.getIconByNode(this);
         if (icon) {
@@ -313,7 +316,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             }
 
             let ussNode = existingItems[`${itemParentPath}/${itemName}`];
-            const isSymlink = item.isSymlink === true;
 
             // The child node already exists. Use that node for the list instead, and update the file attributes in case they've changed
             if (ussNode != null) {
@@ -324,14 +326,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                     perms: item.mode,
                     owner: item.user,
                 });
-                // Update symlink context if needed
-                if (isSymlink && !ussNode.contextValue.includes(Constants.SYMLINK_SUFFIX)) {
-                    ussNode.contextValue += Constants.SYMLINK_SUFFIX;
-                    const icon = IconGenerator.getIconByNode(ussNode);
-                    if (icon) {
-                        ussNode.iconPath = icon.path;
-                    }
-                }
                 // Re-listing this node means its descendants are out of date too
                 ussNode.dirty = true;
                 responseNodes.push(ussNode);
@@ -339,7 +333,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 continue;
             }
 
-            const isDir = item.mode.startsWith("d");
+            // A symbolic link to a directory is listed like a directory, so it can be expanded
+            const isDir = USSUtils.isDirectoryItem(item);
             const collapseState = isDir ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None;
             ussNode = new ZoweUSSNode({
                 label: itemName,
@@ -348,12 +343,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 parentPath: itemParentPath,
                 profile: cachedProfile,
                 encoding: isDir ? undefined : this.getEncodingInMap(`${itemParentPath}/${itemName}`),
+                isSymlink: item.isSymlink === true,
             });
-
-            // Add symlink suffix to context if this item is a symlink
-            if (isSymlink) {
-                ussNode.contextValue += Constants.SYMLINK_SUFFIX;
-            }
 
             if (isDir) {
                 // Create an entry for the USS folder if it doesn't exist.
@@ -377,15 +368,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 perms: item.mode,
                 owner: item.user,
             });
-
-            // Update icon for symlink nodes
-            if (isSymlink) {
-                const icon = IconGenerator.getIconByNode(ussNode);
-                if (icon) {
-                    ussNode.iconPath = icon.path;
-                }
-            }
-
             responseNodes.push(ussNode);
         }
 

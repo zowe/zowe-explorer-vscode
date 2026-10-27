@@ -58,7 +58,7 @@ export class Constants {
     public static readonly USS_TEXT_FILE_CONTEXT = "textFile";
     public static readonly USS_FAV_TEXT_FILE_CONTEXT = "textFile_fav";
     public static readonly USS_BINARY_FILE_CONTEXT = "binaryFile";
-    public static readonly SYMLINK_SUFFIX = "_symlink";
+    public static readonly SYMLINK_SUFFIX = Constants.CONTEXT_PREFIX + "symlink";
     public static readonly JOBS_SESSION_CONTEXT = "server";
     public static readonly JOBS_JOB_CONTEXT = "job";
     public static readonly JOBS_SPOOL_CONTEXT = "spool";

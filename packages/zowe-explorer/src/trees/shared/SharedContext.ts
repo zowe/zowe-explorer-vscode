@@ -451,6 +451,15 @@ export class SharedContext {
     }
 
     /**
+     * Helper function which identifies if the node is an ALIAS data set
+     * @param node
+     * @return true if an ALIAS data set, false otherwise
+     */
+    public static isAlias(node: TreeItem): boolean {
+        return new RegExp(Constants.DS_ALIAS_SUFFIX).test(node.contextValue);
+    }
+
+    /**
      * Helper function create the favorite version of a node
      * @param node
      * @return If not a favorite an extended contextValue with _fav.

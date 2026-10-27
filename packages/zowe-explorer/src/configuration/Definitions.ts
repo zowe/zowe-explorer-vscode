@@ -132,6 +132,7 @@ export namespace Definitions {
         parentPath?: string;
         encoding?: ZosEncoding;
         etag?: string;
+        isSymlink?: boolean;
     }
     export interface IZoweProviders {
         ds: Types.IZoweDatasetTreeType;
