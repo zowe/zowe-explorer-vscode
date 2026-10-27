@@ -296,6 +296,31 @@ describe("ZoweExplorerApiRegister unit testing", () => {
         expect(ZEApiRegister.getDataSetAttrProvider()).toBeDefined();
     });
 
+    describe("getSessionCredentialsFromProfile", () => {
+        beforeEach(() => {
+            vi.restoreAllMocks();
+        });
+        afterEach(() => {
+            vi.restoreAllMocks();
+        });
+
+        it.each([
+            { authOrder: undefined, defaultAuthOrder: ["token", "basic"] as const },
+            { authOrder: "token,basic", defaultAuthOrder: ["basic"] as const },
+        ])("selects credentials through the public API with authOrder=$authOrder", ({ authOrder, defaultAuthOrder }) => {
+            const profile = Object.freeze({ user: "u", password: "p", tokenType: "apimlAuthenticationToken", tokenValue: "token", authOrder });
+            const selectSpy = vi.spyOn(imperative.AuthOrder, "addCredsToSession").mockImplementationOnce((session) => {
+                Object.assign(session, { type: "token", tokenType: "apimlAuthenticationToken", tokenValue: "token" });
+            });
+
+            const selected = ZoweExplorerApiRegister.getInstance().getSessionCredentialsFromProfile(profile, { defaultAuthOrder });
+
+            expect(selected).toEqual({ type: "token", tokenType: "apimlAuthenticationToken", tokenValue: "token" });
+            expect(Object.isFrozen(selected)).toBe(true);
+            expect(selectSpy).toHaveBeenCalledWith(expect.any(Object), { $0: "zowe", _: [], ...profile, authOrder: "token,basic" });
+        });
+    });
+
     describe("getFileApi", () => {
         it("returns the same object on repeated calls (memoized)", () => {
             const register = ZoweExplorerApiRegister.getInstance();
