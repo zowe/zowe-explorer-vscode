@@ -38,6 +38,9 @@ import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProv
 import { USSFileStructure } from "../../../../src/trees/uss/USSFileStructure";
 import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
 import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
+import { SharedContext } from "../../../../src/trees/shared/SharedContext";
+import { IconGenerator } from "../../../../src/icons/IconGenerator";
+import { IconUtils } from "../../../../src/icons/IconUtils";
 
 vi.mock("fs");
 
@@ -1246,6 +1249,97 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
         expect(globalMocks.FileSystemProvider.createDirectory).toHaveBeenCalled();
         expect(createEntrySpy).toHaveBeenCalled();
 
+        createEntrySpy.mockRestore();
+    });
+
+    it("Tests that getChildren() treats a symlink to a directory as a folder", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const parentNode = new ZoweUSSNode({
+            label: "testDir",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.rootNode,
+            session: globalMocks.session,
+            profile: globalMocks.profileOne,
+            parentPath: "/u",
+        });
+        vi.spyOn(parentNode as any, "getUssFiles").mockResolvedValueOnce({
+            success: true,
+            apiResponse: {
+                items: [{ name: "dirLink", mode: "lrwxrwxrwx", isSymlink: true, isSymlinkToDirectory: true }],
+            },
+        });
+
+        parentNode.dirty = true;
+        const [child] = await parentNode.getChildren();
+
+        expect(child.label).toBe("dirLink");
+        expect(child.collapsibleState).toBe(vscode.TreeItemCollapsibleState.Collapsed);
+        expect(child.contextValue).toBe(Constants.USS_DIR_CONTEXT + Constants.SYMLINK_SUFFIX);
+        expect(SharedContext.isFolder(child)).toBe(true);
+        expect(SharedContext.isSymlink(child)).toBe(true);
+        expect(child.command).toBeUndefined();
+        expect(child.iconPath).toBe(IconGenerator.getIconById(IconUtils.IconId.symlinkFolder).path);
+        expect(globalMocks.FileSystemProvider.createDirectory).toHaveBeenCalledWith(child.resourceUri);
+    });
+
+    it("Tests that getChildren() treats a symlink to a file as an openable file", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const parentNode = new ZoweUSSNode({
+            label: "testDir",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.rootNode,
+            session: globalMocks.session,
+            profile: globalMocks.profileOne,
+            parentPath: "/u",
+        });
+        vi.spyOn(parentNode as any, "getUssFiles").mockResolvedValueOnce({
+            success: true,
+            apiResponse: {
+                items: [{ name: "fileLink", mode: "lrwxrwxrwx", isSymlink: true, isSymlinkToDirectory: false }],
+            },
+        });
+        const createEntrySpy = vi.spyOn(UssFSProvider.instance, "createEntry").mockImplementation((() => undefined) as any);
+
+        parentNode.dirty = true;
+        const [child] = await parentNode.getChildren();
+
+        expect(child.collapsibleState).toBe(vscode.TreeItemCollapsibleState.None);
+        expect(child.contextValue).toBe(Constants.USS_TEXT_FILE_CONTEXT + Constants.SYMLINK_SUFFIX);
+        expect(SharedContext.isSymlink(child)).toBe(true);
+        expect(child.command).toEqual({ command: "vscode.open", title: "", arguments: [child.resourceUri] });
+        expect(child.iconPath).toBe(IconGenerator.getIconById(IconUtils.IconId.symlinkFile).path);
+        expect(createEntrySpy).toHaveBeenCalledWith(child.resourceUri, "file");
+        createEntrySpy.mockRestore();
+    });
+
+    it("Tests that regular files and folders are not marked as symlinks", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const parentNode = new ZoweUSSNode({
+            label: "testDir",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.rootNode,
+            session: globalMocks.session,
+            profile: globalMocks.profileOne,
+            parentPath: "/u",
+        });
+        vi.spyOn(parentNode as any, "getUssFiles").mockResolvedValueOnce({
+            success: true,
+            apiResponse: {
+                items: [
+                    { name: "aDir", mode: "drwxrwxrwx" },
+                    { name: "aFile.txt", mode: "-rwxrwxrwx" },
+                ],
+            },
+        });
+        const createEntrySpy = vi.spyOn(UssFSProvider.instance, "createEntry").mockImplementation((() => undefined) as any);
+
+        parentNode.dirty = true;
+        const children = await parentNode.getChildren();
+
+        expect(children.map((c) => SharedContext.isSymlink(c))).toEqual([false, false]);
         createEntrySpy.mockRestore();
     });
 

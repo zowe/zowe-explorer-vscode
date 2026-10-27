@@ -82,9 +82,7 @@ export class Icon {
         path: Icon.getIconPathInResources("folder-open.svg"),
         check: (node) => {
             const parentCheck = Icon.folder.check(node);
-            return (
-                parentCheck && !node.contextValue.includes(Constants.DS_ALIAS_SUFFIX) && node.collapsibleState === TreeItemCollapsibleState.Expanded
-            );
+            return parentCheck && !Icon.isLink(node) && node.collapsibleState === TreeItemCollapsibleState.Expanded;
         },
     };
 
@@ -197,15 +195,22 @@ export class Icon {
         id: IconUtils.IconId.symlinkFile,
         type: IconUtils.IconHierarchyType.derived,
         path: Icon.getIconPathInResources("file-symlink-file.svg"),
-        check: (node) => Icon.document.check(node) && node.contextValue.includes(Constants.DS_ALIAS_SUFFIX),
+        check: (node) => (Icon.document.check(node) || Icon.documentBinary.check(node)) && Icon.isLink(node),
     };
 
     public static symlinkDirectory: IconUtils.IIconItem = {
         id: IconUtils.IconId.symlinkFolder,
         type: IconUtils.IconHierarchyType.derived,
         path: Icon.getIconPathInResources("file-symlink-directory.svg"),
-        check: (node) => Icon.folder.check(node) && node.contextValue.includes(Constants.DS_ALIAS_SUFFIX),
+        check: (node) => Icon.folder.check(node) && Icon.isLink(node),
     };
+
+    /**
+     * Checks whether a node is a data set alias or a symlink, which share the same link icons
+     */
+    private static isLink(node: IconUtils.TreeNode): boolean {
+        return SharedContext.isAlias(node) || SharedContext.isSymlink(node);
+    }
 
     /**
      * Retrieve array with all available icons for extension

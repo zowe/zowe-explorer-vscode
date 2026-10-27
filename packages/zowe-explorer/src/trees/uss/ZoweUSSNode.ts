@@ -101,6 +101,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         if (opts.contextOverride) {
             this.contextValue = opts.contextOverride;
         }
+        if (opts.isSymlink) {
+            this.contextValue += Constants.SYMLINK_SUFFIX;
+        }
 
         const icon = IconGenerator.getIconByNode(this);
         if (icon) {
@@ -330,7 +333,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 continue;
             }
 
-            const isDir = item.mode.startsWith("d");
+            // A symbolic link to a directory is listed like a directory, so it can be expanded
+            const isDir = USSUtils.isDirectoryItem(item);
             const collapseState = isDir ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None;
             ussNode = new ZoweUSSNode({
                 label: itemName,
@@ -339,6 +343,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 parentPath: itemParentPath,
                 profile: cachedProfile,
                 encoding: isDir ? undefined : this.getEncodingInMap(`${itemParentPath}/${itemName}`),
+                isSymlink: item.isSymlink === true,
             });
 
             if (isDir) {

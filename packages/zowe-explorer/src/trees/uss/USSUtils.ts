@@ -125,4 +125,41 @@ export class USSUtils {
             resolve({ ...nodes, apiResponse: { ...(nodes.apiResponse ?? {}), items: filter_list } });
         });
     }
+
+    /**
+     * Checks whether a USS list item is a symbolic link, based on its permissions mode
+     * @param item An item from a USS file list response
+     */
+    public static isSymlinkItem(item: Record<string, unknown>): boolean {
+        return typeof item.mode === "string" && item.mode.startsWith("l");
+    }
+
+    /**
+     * Checks whether a USS list item should be treated as a directory, either a real directory or a symbolic link that was resolved to one
+     * @param item An item from a USS file list response
+     */
+    public static isDirectoryItem(item: Record<string, unknown>): boolean {
+        return (typeof item.mode === "string" && item.mode.startsWith("d")) || item.isSymlinkToDirectory === true;
+    }
+
+    /**
+     * Checks whether a USS file list response describes the contents of a directory, rather than a single file
+     * Classic z/OSMF responses include a "." entry for the directory itself, but some extenders only return children
+     * In that case, a single non-directory item named after the listed path is the file itself
+     * A directory may still contain one child file, which is why the name is compared
+     * For example, listing the directory /u/users/ibmuser/temp may return a child file named "temp" alongside its other children
+     * @param items The items of a USS file list response
+     * @param listedPath The USS path that was listed
+     */
+    public static isDirectoryListing(items: Record<string, unknown>[], listedPath: string): boolean {
+        const selfEntry = items.find((item) => item.name === ".");
+        if (selfEntry) {
+            return USSUtils.isDirectoryItem(selfEntry);
+        }
+        const isSingleFileMatch =
+            items.length === 1 &&
+            (items[0].name === path.posix.basename(listedPath) || items[0].name === listedPath) &&
+            !USSUtils.isDirectoryItem(items[0]);
+        return !isSingleFileMatch;
+    }
 }
