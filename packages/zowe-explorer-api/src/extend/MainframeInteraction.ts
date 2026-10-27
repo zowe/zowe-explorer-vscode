@@ -96,7 +96,7 @@ export namespace MainframeInteraction {
          *     as well as the list of results in apiResponse.items with
          *     minimal properties name, mode.
          */
-        fileList(ussFilePath: string): Promise<zosfiles.IZosFilesResponse>;
+        fileList(ussFilePath: string, options?: zosfiles.IUSSListOptions): Promise<zosfiles.IZosFilesResponse>;
 
         /**
          * Check th USS chtag to see if a file requires conversion.

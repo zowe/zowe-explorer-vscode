@@ -114,8 +114,11 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
      * An implementation of the Zowe Explorer USS API interface for zOSMF.
      */
     export class UssApi extends CommonApi implements MainframeInteraction.IUss {
-        public fileList(ussFilePath: string): Promise<zosfiles.IZosFilesResponse> {
-            return zosfiles.List.fileList(this.getSession(), ussFilePath, { responseTimeout: this.profile?.profile?.responseTimeout });
+        public fileList(ussFilePath: string, options?: zosfiles.IUSSListOptions): Promise<zosfiles.IZosFilesResponse> {
+            return zosfiles.List.fileList(this.getSession(), ussFilePath, {
+                responseTimeout: this.profile?.profile?.responseTimeout,
+                ...options,
+            });
         }
 
         public isFileTagBinOrAscii(ussFilePath: string): Promise<boolean> {
