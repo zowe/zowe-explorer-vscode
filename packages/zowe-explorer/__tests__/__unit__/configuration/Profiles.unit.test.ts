@@ -1264,8 +1264,8 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "token" }, isUsingApiml: undefined } as any);
         vi.spyOn(Profiles.getInstance(), "ssoLogin").mockRejectedValue(false);
         await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).rejects.toThrow(
-            "The session provided to checkCurrentProfile has no isUsingApiml function." +
-                "The extension providing the session must be updated to implement isUsingApiml() on the session object."
+            "The session provided to checkCurrentProfile has no isUsingApiml function. " +
+                "The extension providing the session must be updated to implement isUsingApiml() on the session object"
         );
     });
     it("should not prompt for password if a valid private key is provided", async () => {
