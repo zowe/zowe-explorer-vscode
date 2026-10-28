@@ -1305,6 +1305,51 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "unverified" });
         expect(errorHandlingSpy).toHaveBeenCalledTimes(1);
     });
+    it.each([imperative.SessConstants.AUTH_TYPE_TOKEN, imperative.SessConstants.AUTH_TYPE_BEARER])(
+        "should use SSO login instead of prompting for credentials if no credentials are stored and authOrder starts with %s",
+        async (authType) => {
+            const globalMocks = createGlobalMocks();
+            environmentSetup(globalMocks);
+            setupProfilesCheck(globalMocks);
+            vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: null, authTypeOrder: [authType, "basic"] } } as any);
+            vi.spyOn(imperative.AuthOrder, "addCredsToSession").mockImplementation((() => undefined) as any);
+            vi.spyOn(Profiles.getInstance(), "validateProfiles").mockResolvedValue({ status: "active", name: "sestest" });
+            const ssoLoginSpy = vi.spyOn(Profiles.getInstance(), "ssoLogin").mockResolvedValueOnce(true);
+            const promptCredentialsSpy = vi.spyOn(Profiles.getInstance(), "promptCredentials");
+            vi.spyOn(Profiles.getInstance(), "loadNamedProfile").mockReturnValueOnce(globalMocks.testProfile);
+
+            await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "active" });
+            expect(ssoLoginSpy).toHaveBeenCalledTimes(1);
+            expect(promptCredentialsSpy).not.toHaveBeenCalled();
+        }
+    );
+    it("should show as inactive if no credentials are stored, authOrder starts with token, and SSO login is unsuccessful", async () => {
+        const globalMocks = createGlobalMocks();
+        environmentSetup(globalMocks);
+        setupProfilesCheck(globalMocks);
+        vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: null, authTypeOrder: ["token", "basic"] } } as any);
+        vi.spyOn(imperative.AuthOrder, "addCredsToSession").mockImplementation((() => undefined) as any);
+        vi.spyOn(Profiles.getInstance(), "ssoLogin").mockResolvedValueOnce(false);
+        vi.spyOn(Profiles.getInstance(), "loadNamedProfile").mockReturnValueOnce(globalMocks.testProfile);
+        const promptCredentialsSpy = vi.spyOn(Profiles.getInstance(), "promptCredentials");
+
+        await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "inactive" });
+        expect(promptCredentialsSpy).not.toHaveBeenCalled();
+    });
+    it("should prompt for credentials if no credentials are stored and authOrder does not start with token or bearer", async () => {
+        const globalMocks = createGlobalMocks();
+        environmentSetup(globalMocks);
+        setupProfilesCheck(globalMocks);
+        vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: null, authTypeOrder: ["basic", "token"] } } as any);
+        vi.spyOn(imperative.AuthOrder, "addCredsToSession").mockImplementation((() => undefined) as any);
+        vi.spyOn(Profiles.getInstance(), "validateProfiles").mockResolvedValue({ status: "active", name: "sestest" });
+        const ssoLoginSpy = vi.spyOn(Profiles.getInstance(), "ssoLogin");
+        const promptCredentialsSpy = vi.spyOn(Profiles.getInstance(), "promptCredentials").mockResolvedValueOnce(["sestest", "12345"]);
+
+        await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "active" });
+        expect(promptCredentialsSpy).toHaveBeenCalledTimes(1);
+        expect(ssoLoginSpy).not.toHaveBeenCalled();
+    });
     it("should not prompt for password if a valid private key is provided", async () => {
         const globalMocks = await createGlobalMocks();
         setupProfilesCheck(globalMocks);
