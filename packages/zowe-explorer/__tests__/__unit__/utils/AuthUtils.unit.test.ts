@@ -109,6 +109,7 @@ describe("AuthUtils", () => {
                     ssoLogin: vi.fn(),
                     promptCredentials: vi.fn(),
                     profileHasSecureToken: vi.fn().mockResolvedValue(false),
+                    getAllowedLoginMethod: () => imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT,
                 } as any,
                 configurable: true,
             });
@@ -143,6 +144,7 @@ describe("AuthUtils", () => {
                     ssoLogin: vi.fn(),
                     promptCredentials: vi.fn(),
                     profileHasSecureToken: vi.fn().mockResolvedValue(false),
+                    getAllowedLoginMethod: () => imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT,
                 } as any,
                 configurable: true,
             });
@@ -172,6 +174,7 @@ describe("AuthUtils", () => {
                     ssoLogin: vi.fn(),
                     promptCredentials: vi.fn(),
                     profileHasSecureToken: vi.fn().mockResolvedValue(hasSecureToken),
+                    getAllowedLoginMethod: () => imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT,
                 } as any,
                 configurable: true,
             });
@@ -242,7 +245,10 @@ describe("AuthUtils", () => {
         ])("returns %s for session type %s with secure token %s", async (sessType, hasSecureToken, expected) => {
             const profile = { name: "aProfile", type: "zosmf" } as any;
             const profilesCacheMock = new MockedProperty(Constants, "PROFILES_CACHE", {
-                value: { profileHasSecureToken: vi.fn().mockResolvedValue(hasSecureToken) } as any,
+                value: {
+                    getAllowedLoginMethod: () => imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT,
+                    profileHasSecureToken: vi.fn().mockResolvedValue(hasSecureToken),
+                } as any,
                 configurable: true,
             });
             vi.spyOn(AuthHandler, "sessTypeFromProfile").mockReturnValue(sessType as any);
@@ -1569,6 +1575,8 @@ describe("AuthUtils", () => {
                 value: {
                     loadNamedProfile: loadNamedProfileMock,
                     promptCredentials: vi.fn().mockImplementation((() => undefined) as any),
+                    getAllowedLoginMethod: () => imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT,
+                    profileHasSecureToken: vi.fn().mockResolvedValue(false),
                 } as any,
                 configurable: true,
             });
