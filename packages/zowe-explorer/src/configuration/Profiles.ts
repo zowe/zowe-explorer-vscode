@@ -176,6 +176,13 @@ export class Profiles extends ProfilesCache {
             ZoweLogger.error(error);
             return profileStatus;
         }
+        if (typeof profileSession.isUsingApiml !== "function") {
+            throw new imperative.ImperativeError({
+                msg:
+                    "The session provided to checkCurrentProfile has no isUsingApiml function." +
+                    "The extension providing the session must be updated to implement isUsingApiml() on the session object.",
+            });
+        }
         imperative.AuthOrder.addCredsToSession(iSessFromProf, ZoweExplorerZosmf.CommonApi.getCommandArgs(theProfile));
         switch (iSessFromProf.type) {
             case imperative.SessConstants.AUTH_TYPE_BASIC:

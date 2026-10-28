@@ -1193,7 +1193,7 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
 
     beforeEach(() => {
         vi.restoreAllMocks();
-        vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: null } } as any);
+        vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: null }, isUsingApiml: vi.fn() } as any);
     });
     it("should show as active in status of profile using basic auth", async () => {
         const globalMocks = createGlobalMocks();
@@ -1216,7 +1216,7 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
     });
     it("should show as active in status of profile using token auth", async () => {
         const globalMocks = createGlobalMocks();
-        vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "token" } } as any);
+        vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "token" }, isUsingApiml: vi.fn() } as any);
         environmentSetup(globalMocks);
         setupProfilesCheck(globalMocks);
         vi.spyOn(Profiles.getInstance(), "validateProfiles").mockResolvedValue({ status: "active", name: "sestest" });
@@ -1235,7 +1235,7 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         const globalMocks = createGlobalMocks();
         setupProfilesCheck(globalMocks);
         vi.spyOn(Profiles.getInstance(), "validateProfiles").mockResolvedValue({ status: "inactive", name: "sestest" });
-        vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "basic" } } as any);
+        vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "basic" }, isUsingApiml: vi.fn() } as any);
         await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "inactive" });
     });
     it("should show as unverified if using basic auth and has expired password", async () => {
@@ -1252,10 +1252,21 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         environmentSetup(globalMocks);
         setupProfilesCheck(globalMocks);
         const errorHandlingSpy = vi.spyOn(AuthUtils, "errorHandling").mockImplementation((() => undefined) as any);
-        vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "token" } } as any);
+        vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "token" }, isUsingApiml: vi.fn() } as any);
         vi.spyOn(Profiles.getInstance(), "ssoLogin").mockRejectedValue(false);
         await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "unverified" });
         expect(errorHandlingSpy).toHaveBeenCalledTimes(1);
+    });
+    it("should throw an error if the session provided does not implement isUsingApiml", async () => {
+        const globalMocks = createGlobalMocks();
+        environmentSetup(globalMocks);
+        setupProfilesCheck(globalMocks);
+        vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "token" }, isUsingApiml: undefined } as any);
+        vi.spyOn(Profiles.getInstance(), "ssoLogin").mockRejectedValue(false);
+        await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).rejects.toThrow(
+            "The session provided to checkCurrentProfile has no isUsingApiml function." +
+                "The extension providing the session must be updated to implement isUsingApiml() on the session object."
+        );
     });
     it("should not prompt for password if a valid private key is provided", async () => {
         const globalMocks = await createGlobalMocks();
@@ -1364,7 +1375,7 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         };
         vi.spyOn(Profiles.getInstance(), "isCertFileValid").mockReturnValueOnce(true);
         vi.spyOn(Profiles.getInstance(), "validateProfiles").mockResolvedValue({ status: "active", name: "sestest" });
-        vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "cert-pem" } } as any);
+        vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "cert-pem" }, isUsingApiml: vi.fn() } as any);
         await expect(Profiles.getInstance().checkCurrentProfile(testProfile)).resolves.toEqual({ name: "sestest", status: "active" });
     });
     it("should show as active in status of profile using certificate auth and open cert wizard if cert is not valid", async () => {
@@ -1389,7 +1400,7 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         vi.spyOn(Profiles.getInstance(), "isCertFileValid").mockReturnValueOnce(false);
         vi.spyOn(Profiles.getInstance(), "validateProfiles").mockResolvedValue({ status: "active", name: "sestest" });
         vi.spyOn(Profiles.getInstance(), "promptCertificate").mockResolvedValue({ cert: "cool", certKey: "dog", action: "save" });
-        vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "cert-pem" } } as any);
+        vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "cert-pem" }, isUsingApiml: vi.fn() } as any);
         await expect(Profiles.getInstance().checkCurrentProfile(testProfile)).resolves.toEqual({ name: "sestest", status: "active" });
     });
 
@@ -1415,7 +1426,7 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         vi.spyOn(Profiles.getInstance(), "isCertFileValid").mockReturnValueOnce(false);
         vi.spyOn(Profiles.getInstance(), "validateProfiles").mockResolvedValue({ status: "active", name: "sestest" });
         vi.spyOn(Profiles.getInstance(), "promptCertificate").mockResolvedValue(undefined);
-        vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "cert-pem" } } as any);
+        vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "cert-pem" }, isUsingApiml: vi.fn() } as any);
         await expect(Profiles.getInstance().checkCurrentProfile(testProfile)).resolves.toEqual({ name: "sestest", status: "inactive" });
     });
 
@@ -1462,7 +1473,7 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         };
         const isCertFileValidSpy = vi.spyOn(Profiles.getInstance(), "isCertFileValid");
         vi.spyOn(Profiles.getInstance(), "validateProfiles").mockResolvedValue({ status: "active", name: "sestest" });
-        vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "cert-pem" } } as any);
+        vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "cert-pem" }, isUsingApiml: vi.fn() } as any);
         await expect(Profiles.getInstance().checkCurrentProfile(testProfile)).resolves.toEqual({ name: "sestest", status: "active" });
         expect(isCertFileValidSpy).not.toHaveBeenCalled();
     });
