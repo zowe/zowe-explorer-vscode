@@ -6,13 +6,16 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
-- Added the `isReadOnlyUri`, `applyReadOnlyPermission`, and `throwIfReadOnly` functions to `FsAbstractUtils` for handling filesystem URIs with the `readonly=true` query parameter. [#2297](https://github.com/zowe/zowe-explorer-vscode/issues/2297)
+- Deprecated the `CertificateOptions` interface in the `PromptCredentials.ts` file, which was formerly only used by a private method in the `ZoweVsCodeExtension` class. [#4531](https://github.com/zowe/zowe-explorer-vscode/pull/4531)
+- Added the `promptCertificate` method to the `ProfilesCache` class, which opens a certificate wizard UI allowing the user to save certificate file paths used for authentication. [#4531](https://github.com/zowe/zowe-explorer-vscode/pull/4531)
+- Added the `supportsCertAuth` method to the `MainframeInteraction.ICommon` interface so that extenders can indicate if their API supports certificate authentication. [#4531](https://github.com/zowe/zowe-explorer-vscode/pull/4531)
 - Added the `notifyFileChanged` method to `IZoweExplorerFileApi` (the file API returned by `getFileApi()`) so extenders that save to the mainframe outside of Zowe Explorer's filesystem provider can invalidate the cached entry and trigger VS Code to re-read the file from the mainframe. [#4481](https://github.com/zowe/zowe-explorer-vscode/issues/4481)
 - Added support for the `tsoAccount` and `tsoProc` z/OSMF profile properties, which are now passed as the `X-IBM-Request-Acctnum` and `X-IBM-Request-Proc` z/OSMF headers on data set operations that support them. [#4485] (https://github.com/zowe/zowe-explorer-vscode/pull/4485)
 - Added `encodingMap` to the `BaseProvider` class, exposing the encoding map for extenders that need to query or override the encoding for a given resource URI. [#4474](https://github.com/zowe/zowe-explorer-vscode/pull/4474)
 - Added `getFileApi` and `IZoweExplorerFileApi` to `Types.IApiRegisterClient`, exposing a `getEncodingForUri` function that extenders can use to retrieve the encoding ZE has determined for a resource URI. [#4474](https://github.com/zowe/zowe-explorer-vscode/pull/4474)
 - Added support for resolving data set aliases when using SSH profiles in the `SshMvsApi` class. [#4489](https://github.com/zowe/zowe-explorer-vscode/pull/4489)
 - Added support for the `tsoAccount` and `tsoProcedure` z/OSMF profile properties, which are now passed as the `X-IBM-Request-Acctnum` and `X-IBM-Request-Proc` z/OSMF headers on data set operations that support them. [#4485] (https://github.com/zowe/zowe-explorer-vscode/pull/4485)
+- Added the `isReadOnlyUri`, `applyReadOnlyPermission`, and `throwIfReadOnly` functions to `FsAbstractUtils` for handling filesystem URIs with the `readonly=true` query parameter. [#2297](https://github.com/zowe/zowe-explorer-vscode/issues/2297)
 - Added optional `ssoLogin` and `ssoLogout` functions to the `IApiExplorerExtender` interface to expose SSO login and logout capabilities to Zowe Explorer extenders. [#4137](https://github.com/zowe/zowe-explorer-vscode/issues/4137)
 - Added the `vscode-codicon-stylesheet` id to the codicons `<link>` in the webview HTML template so VS Code Elements components can render icons. [#4534](https://github.com/zowe/zowe-explorer-vscode/pull/4534)
 

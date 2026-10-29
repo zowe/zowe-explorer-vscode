@@ -80,6 +80,13 @@ export namespace MainframeInteraction {
          * @returns {string} the token type name as defined by a CLI plugin that implements the profile.
          */
         getTokenTypeName?(): string;
+
+        /**
+         * Returns true if the service supports cert-pem authentication.
+         * If unimplemented, certificate authentication will be assumed to be unsupported, equivalent
+         * to returning false.
+         */
+        supportsCertAuth?(): boolean;
     }
 
     /**

@@ -294,7 +294,13 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
 
         let jwtCheckResult: JwtCheckResult;
         const sessTypeFromProf = AuthHandler.sessTypeFromProfile(profile);
-        if (sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_TOKEN || sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_BEARER) {
+        const usingDirectAuth =
+            profile.profile.allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_BASIC ||
+            profile.profile.allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_CERT_PEM;
+        if (
+            !usingDirectAuth &&
+            (sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_TOKEN || sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_BEARER)
+        ) {
             jwtCheckResult = await ZoweTreeProvider.checkJwtForProfile(profileName);
         } else {
             jwtCheckResult = JwtCheckResult.TokenUnusedOrUnsupported;
