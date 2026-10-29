@@ -9,7 +9,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
-- Added the `Make Read-Only` and `Make Writable` commands on profiles, data sets and z/OS Unix files for overriding the default read-only rules. Resources overriden as read-only or writable only persist for the current session. [#2297](https://github.com/zowe/zowe-explorer-vscode/issues/2297)
+- Added the `Make Read-Only` and `Make Writable` commands on profiles, data sets, and z/OS Unix files for overriding the default read-only rules. Resources overriden as read-only or writable only persist for the current session. [#2297](https://github.com/zowe/zowe-explorer-vscode/issues/2297)
 - Added the `zowe.readOnly.rules` setting to define rules for opening data sets and z/OS Unix files in read-only mode. [#2297](https://github.com/zowe/zowe-explorer-vscode/issues/2297)
 - Added support for opening data sets and USS files in read-only mode by adding the `readonly=true` query parameter to their resource URI. [#2297](https://github.com/zowe/zowe-explorer-vscode/issues/2297)
 - Added the `notifyFileChanged` method to `IZoweExplorerFileApi` (the file API returned by `getFileApi()`) so extenders that save to the mainframe outside of Zowe Explorer's filesystem provider can invalidate the cached entry and trigger VS Code to re-read the file from the mainframe. [#4481](https://github.com/zowe/zowe-explorer-vscode/issues/4481)
