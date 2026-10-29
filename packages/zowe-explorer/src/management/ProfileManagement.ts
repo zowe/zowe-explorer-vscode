@@ -196,6 +196,9 @@ export class ProfileManagement {
             }
         } else if (managementType === imperative.SessConstants.AUTH_TYPE_BASIC) {
             quickPickOptions = Object.values(this.basicAuthUpdateQpItems);
+            if (profileCommonApi.changePassword != null) {
+                quickPickOptions.push(this.changePasswordQpItems[this.AuthQpLabels.changePassword]);
+            }
             if (allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT) {
                 quickPickOptions.push(this.switchAuthenticationQpItems[this.AuthQpLabels.switch]);
             }
@@ -316,43 +319,6 @@ export class ProfileManagement {
         };
     }
 
-    private static basicAuthQp(node: IZoweTreeNode): vscode.QuickPickItem[] {
-        const profile = node.getProfile();
-        const quickPickOptions: vscode.QuickPickItem[] = Object.values(this.basicAuthUpdateQpItems);
-        try {
-            const commonApi = ZoweExplorerApiRegister.getInstance().getCommonApi(profile);
-            if (commonApi.changePassword != null) {
-                quickPickOptions.push(this.changePasswordQpItems[this.AuthQpLabels.changePassword]);
-            }
-        } catch {
-            ZoweLogger.debug(`Profile ${profile.name} doesn't support change password, will not provide option.`);
-        }
-        quickPickOptions.push(this.switchAuthenticationQpItems[this.AuthQpLabels.switch]);
-        return this.addFinalQpOptions(node, quickPickOptions);
-    }
-  
-    private static tokenAuthQp(node: IZoweTreeNode): vscode.QuickPickItem[] {
-        const profile = node.getProfile();
-        const quickPickOptions: vscode.QuickPickItem[] = Object.values(this.tokenAuthLoginQpItem);
-        if (profile.profile.tokenValue) {
-            quickPickOptions.push(this.tokenAuthLogoutQpItem[this.AuthQpLabels.logout]);
-        }
-        quickPickOptions.push(this.switchAuthenticationQpItems[this.AuthQpLabels.switch]);
-        return this.addFinalQpOptions(node, quickPickOptions);
-    }
-  
-    private static chooseAuthQp(node: IZoweTreeNode): vscode.QuickPickItem[] {
-        const profile = node.getProfile();
-        const quickPickOptions: vscode.QuickPickItem[] = Object.values(this.basicAuthAddQpItems);
-        try {
-            ZoweExplorerApiRegister.getInstance().getCommonApi(profile).getTokenTypeName();
-            quickPickOptions.push(this.tokenAuthLoginQpItem[this.AuthQpLabels.login]);
-        } catch {
-            ZoweLogger.debug(`Profile ${profile.name} doesn't support token authentication, will not provide option.`);
-        }
-        return this.addFinalQpOptions(node, quickPickOptions);
-    }
-  
     private static addFinalQpOptions(node: IZoweTreeNode, quickPickOptions: vscode.QuickPickItem[]): vscode.QuickPickItem[] {
         quickPickOptions.push(this.editProfileQpItems[this.AuthQpLabels.edit]);
         quickPickOptions.push(this.hideProfileQpItems[this.AuthQpLabels.hide]);
