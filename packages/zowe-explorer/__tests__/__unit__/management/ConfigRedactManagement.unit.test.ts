@@ -40,6 +40,7 @@ describe("ConfigRedactManagement unit tests", () => {
         });
 
         return {
+            waitForScreenReaderSpy: vi.spyOn(ConfigRedactManagement as any, "waitForScreenReader").mockResolvedValue(undefined),
             exportedFiles,
             exportToDirectory,
             dirUri,
@@ -103,6 +104,7 @@ describe("ConfigRedactManagement unit tests", () => {
                     showHostPath: false,
                 })
             );
+            expect(mocks.waitForScreenReaderSpy).toHaveBeenCalledTimes(1);
             expect(mocks.infoMessageSpy).toHaveBeenCalled();
             expect(mocks.errorMessageSpy).not.toHaveBeenCalled();
         });

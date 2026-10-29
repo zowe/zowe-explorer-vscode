@@ -1163,6 +1163,8 @@
   "Expanding a profile in the **Favorites** section no longer uploads empty content to each favorited z/OS Unix file. Previously this failed for users without write access and truncated the file for everyone else.": "",
   "Export Redacted Configuration": "",
   "Export configuration files for troubleshooting": "",
+  "Exported {0} redacted configuration file(s) to {1}": "",
+  "Exported {0} redacted configuration file(s). Always review the exported files before sharing them.": "",
   "Exposed commands to drive filtering in the Data Sets views <a>#3992</a>": "",
   "Exposed commands to drive search in the USS views. <a>#3933</a>": "",
   "Exposed read and write access to local storage keys for Zowe Explorer extenders. <a>#3180</a>": "",

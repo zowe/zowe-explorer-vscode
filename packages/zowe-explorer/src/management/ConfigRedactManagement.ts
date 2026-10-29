@@ -61,6 +61,18 @@ export class ConfigRedactManagement {
         },
     ];
 
+    /**
+     * Accessibility: the native folder dialog returns focus to the window right before the result toast is shown.
+     * Screen readers (e.g. VoiceOver) are busy announcing that focus change, so a toast shown immediately can be
+     * dropped or interrupted. Waiting briefly lets the toast be announced automatically without moving focus.
+     */
+    // eslint-disable-next-line no-magic-numbers
+    private static readonly TOAST_ANNOUNCE_DELAY_MS = 500;
+
+    private static async waitForScreenReader(): Promise<void> {
+        await new Promise<void>((resolve) => setTimeout(resolve, ConfigRedactManagement.TOAST_ANNOUNCE_DELAY_MS));
+    }
+
     public static async exportRedactedConfig(): Promise<void> {
         ZoweLogger.trace("ConfigRedactManagement.exportRedactedConfig called.");
         const opts = await ConfigRedactManagement.promptForOptions();
@@ -76,17 +88,24 @@ export class ConfigRedactManagement {
         try {
             const teamConfig = (await Profiles.getInstance().getProfileInfo()).getTeamConfig();
             const exportedFiles = teamConfig.api.redact.exportToDirectory(dir.fsPath, opts);
+            await ConfigRedactManagement.waitForScreenReader();
             if (exportedFiles.length === 0) {
                 Gui.infoMessage(vscode.l10n.t("No configuration files were found to export."));
                 return;
             }
-            const openFolder = await Gui.infoMessage(
+            // Keep the toast to a single short line for screen readers; the export location is written to the log instead.
+            ZoweLogger.info(
                 vscode.l10n.t({
-                    message:
-                        "Exported {0} redacted configuration file(s) to {1}.\nAlways review the exported files before sharing them or " +
-                        "placing them anywhere external or sensitive.",
+                    message: "Exported {0} redacted configuration file(s) to {1}",
                     args: [exportedFiles.length, dir.fsPath],
                     comment: ["Number of files exported", "Export directory"],
+                })
+            );
+            const openFolder = await Gui.infoMessage(
+                vscode.l10n.t({
+                    message: "Exported {0} redacted configuration file(s). Always review the exported files before sharing them.",
+                    args: [exportedFiles.length],
+                    comment: ["Number of files exported"],
                 }),
                 { items: [vscode.l10n.t("Open Folder")] }
             );
@@ -94,6 +113,7 @@ export class ConfigRedactManagement {
                 await vscode.env.openExternal(dir);
             }
         } catch (err) {
+            await ConfigRedactManagement.waitForScreenReader();
             await Gui.errorMessage(
                 vscode.l10n.t({
                     message: "Failed to export redacted configuration: {0}",
