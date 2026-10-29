@@ -1102,6 +1102,70 @@ describe("ReadOnlyManagement - getTreeItem", () => {
         expect(item.accessibilityInformation).toBe(accessibilityInformation);
         expect(item.checkboxState).toBe(0);
     });
+
+    describe("USS profile filtered to a directory", () => {
+        const filteredContext = Constants.USS_SESSION_CONTEXT + Constants.CONTEXT_PREFIX + Constants.FILTER_SEARCH;
+        const filteredProfile = (fullPath: string): IZoweTreeNode => treeNode(uss("/zosmf"), filteredContext, { fullPath } as any);
+        const allButHomeRules = [{ uss: "/**" }, { uss: "!/z/ibmuser/**" }, { uss: "!/z/public/**" }, { uss: "/z/ibmuser/file3.py" }];
+
+        it("uses the filtered directory rather than the profile root", () => {
+            useRules(allButHomeRules);
+            expect(ReadOnlyManagement.getTreeItem(filteredProfile("/z/ibmuser")).contextValue).toBe(filteredContext + Constants.WRITABLE_CONTEXT);
+            expect(ReadOnlyManagement.getTreeItem(filteredProfile("/etc")).contextValue).toBe(filteredContext + Constants.READ_ONLY_CONTEXT);
+        });
+
+        it("uses the filtered directory when a parent directory is negated", () => {
+            useRules([{ uss: "/**" }, { uss: "!/z/**" }]);
+            expect(ReadOnlyManagement.getTreeItem(filteredProfile("/z/ibmuser")).contextValue).toBe(filteredContext + Constants.WRITABLE_CONTEXT);
+        });
+
+        it("uses the profile root when the profile is not filtered", () => {
+            useRules(allButHomeRules);
+            const contextValue = Constants.USS_SESSION_CONTEXT + Constants.ACTIVE_CONTEXT;
+            const item = ReadOnlyManagement.getTreeItem(treeNode(uss("/zosmf"), contextValue, { fullPath: "" } as any));
+            expect(item.contextValue).toBe(contextValue + Constants.READ_ONLY_CONTEXT);
+        });
+
+        it("reflects an override set on the filtered directory", () => {
+            useRules(allButHomeRules);
+            const node = filteredProfile("/z/ibmuser");
+            ReadOnlyManagement.setReadOnly(ReadOnlyManagement.getNodeUri(node), true);
+            expect(ReadOnlyManagement.getTreeItem(node).contextValue).toBe(filteredContext + Constants.READ_ONLY_CONTEXT);
+            expect(ReadOnlyManagement.isReadOnly(uss("/zosmf/z/public/notes.txt"))).toBe(false);
+        });
+    });
+});
+
+describe("ReadOnlyManagement - getNodeUri", () => {
+    it.each([
+        ["a data set", ds("/zosmf/IBMUSER.JCL"), Constants.DS_PDS_CONTEXT],
+        ["a data set profile", ds("/zosmf"), Constants.DS_SESSION_CONTEXT + Constants.ACTIVE_CONTEXT],
+        ["a USS directory", uss("/zosmf/z/ibmuser"), Constants.USS_DIR_CONTEXT],
+        ["a USS file", uss("/zosmf/z/ibmuser/hello.txt"), Constants.USS_TEXT_FILE_CONTEXT],
+    ])("returns the resource URI of %s", (_desc, uri, contextValue) => {
+        expect(ReadOnlyManagement.getNodeUri(treeNode(uri, contextValue, { fullPath: "/somewhere/else" } as any))).toBe(uri);
+    });
+
+    it("returns the filtered directory of a USS profile", () => {
+        const node = treeNode(uss("/zosmf"), Constants.USS_SESSION_CONTEXT + Constants.ACTIVE_CONTEXT, { fullPath: "/z/ibmuser" } as any);
+        expect(ReadOnlyManagement.getNodeUri(node).toString()).toBe(uss("/zosmf/z/ibmuser").toString());
+    });
+
+    it.each([
+        ["an empty", ""],
+        ["an undefined", undefined],
+        ["a root", "/"],
+    ])("returns the profile root of a USS profile with %s full path", (_desc, fullPath) => {
+        const node = treeNode(uss("/zosmf"), Constants.USS_SESSION_CONTEXT + Constants.ACTIVE_CONTEXT, { fullPath } as any);
+        expect(ReadOnlyManagement.getNodeUri(node).path).toBe("/zosmf");
+    });
+
+    it("drops the query from a USS profile's URI", () => {
+        const node = treeNode(uss("/zosmf").with({ query: "readonly=true" }), Constants.USS_SESSION_CONTEXT + Constants.ACTIVE_CONTEXT, {
+            fullPath: "/z/ibmuser",
+        } as any);
+        expect(ReadOnlyManagement.getNodeUri(node).query).toBe("");
+    });
 });
 
 describe("ReadOnlyManagement - negated rules", () => {

@@ -1221,4 +1221,17 @@ describe("Shared Actions Unit Tests - Function toggleNodeReadOnly", () => {
         expect(setReadOnlySpy).toHaveBeenCalledWith(resourceUri, readOnly);
         expect(nodeDataChanged).toHaveBeenCalledWith(node);
     });
+
+    it("sets the state of the directory a filtered USS profile is showing, not the whole profile", async () => {
+        const node = {
+            resourceUri: vscode.Uri.from({ scheme: "zowe-uss", path: "/sestest" }),
+            contextValue: Constants.USS_SESSION_CONTEXT + Constants.ACTIVE_CONTEXT,
+            fullPath: "/z/ibmuser",
+        } as unknown as IZoweTreeNode;
+        vi.spyOn(ReadOnlyManagement, "isEligibleNode").mockReturnValue(true);
+        const setReadOnlySpy = vi.spyOn(ReadOnlyManagement, "setReadOnly").mockResolvedValue(undefined);
+        vi.spyOn(SharedTreeProviders, "getProviderForNode").mockReturnValue({ nodeDataChanged: vi.fn() } as any);
+        await SharedActions.toggleNodeReadOnly(node, false);
+        expect(setReadOnlySpy.mock.calls[0][0].path).toBe("/sestest/z/ibmuser");
+    });
 });

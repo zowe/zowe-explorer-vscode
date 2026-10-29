@@ -232,20 +232,11 @@ export class USSActions {
     }
 
     /**
-     * Returns the URI of the directory a node represents.
-     * A profile node's resourceUri is only the profile root, even when it is filtered to a directory, so the URI is built from the node's full path
-     */
-    private static getDirectoryUri(node: IZoweUSSTreeNode): vscode.Uri {
-        const profileName = node.resourceUri.path.split("/").filter(Boolean)[0];
-        return node.resourceUri.with({ path: path.posix.join("/", profileName, node.fullPath ?? ""), query: "" });
-    }
-
-    /**
      * Shows an error if any of the files would be uploaded to a read-only path in the directory
      * @returns true if a file would be uploaded to a read-only path and the upload should stop
      */
     private static async isReadOnlyUploadTarget(node: IZoweUSSTreeNode, files: vscode.Uri[]): Promise<boolean> {
-        const directoryUri = USSActions.getDirectoryUri(node);
+        const directoryUri = ReadOnlyManagement.getNodeUri(node);
         for (const file of files) {
             const targetUri = directoryUri.with({ path: path.posix.join(directoryUri.path, path.basename(file.fsPath)) });
             if (await ReadOnlyManagement.showErrorIfReadOnly(targetUri)) {
@@ -257,7 +248,7 @@ export class USSActions {
 
     public static async uploadDialog(node: IZoweUSSTreeNode, ussFileProvider: Types.IZoweUSSTreeType, isBinary?: boolean): Promise<void> {
         ZoweLogger.trace("uss.actions.uploadDialog called.");
-        if (await ReadOnlyManagement.showErrorIfReadOnly(USSActions.getDirectoryUri(node))) {
+        if (await ReadOnlyManagement.showErrorIfReadOnly(ReadOnlyManagement.getNodeUri(node))) {
             return;
         }
         const fileOpenOptions = {
@@ -318,7 +309,7 @@ export class USSActions {
             Gui.infoMessage(vscode.l10n.t("This action is only supported for USS directories."));
             return;
         }
-        if (await ReadOnlyManagement.showErrorIfReadOnly(USSActions.getDirectoryUri(node))) {
+        if (await ReadOnlyManagement.showErrorIfReadOnly(ReadOnlyManagement.getNodeUri(node))) {
             return;
         }
 
@@ -1124,7 +1115,7 @@ export class USSActions {
             await Gui.infoMessage(vscode.l10n.t("The paste operation is not supported for this node."));
             return;
         }
-        if (await ReadOnlyManagement.showErrorIfReadOnly(USSActions.getDirectoryUri(node))) {
+        if (await ReadOnlyManagement.showErrorIfReadOnly(ReadOnlyManagement.getNodeUri(node))) {
             return;
         }
         await Gui.withProgress(

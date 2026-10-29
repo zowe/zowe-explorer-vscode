@@ -10,7 +10,8 @@
  */
 
 import * as vscode from "vscode";
-import { FsAbstractUtils, Gui, IZoweTreeNode, ZoweScheme } from "@zowe/zowe-explorer-api";
+import * as path from "path";
+import { FsAbstractUtils, Gui, IZoweTreeNode, IZoweUSSTreeNode, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { SharedContext } from "../trees/shared/SharedContext";
 import { Constants } from "../configuration/Constants";
 import { SettingsConfig } from "../configuration/SettingsConfig";
@@ -227,6 +228,20 @@ export class ReadOnlyManagement {
     }
 
     /**
+     * Returns the URI of the resource a tree node represents.
+     * A USS profile node's resourceUri is only the profile root, even when it is filtered to a directory,
+     * so the URI is built from the node's full path
+     */
+    public static getNodeUri(node: IZoweTreeNode): vscode.Uri {
+        if (!SharedContext.isUssSession(node)) {
+            return node.resourceUri;
+        }
+        const profileName = node.resourceUri.path.split("/").filter(Boolean)[0];
+        const dirPath = path.posix.join("/", profileName, (node as IZoweUSSTreeNode).fullPath ?? "").replace(/\/+$/, "");
+        return node.resourceUri.with({ path: dirPath, query: "" });
+    }
+
+    /**
      * If a tree node is refreshed and its URI is now read-only, set its context to be so, and vice versa
      */
     public static getTreeItem(node: IZoweTreeNode): vscode.TreeItem {
@@ -243,7 +258,8 @@ export class ReadOnlyManagement {
         node2.accessibilityInformation = node.accessibilityInformation;
         node2.checkboxState = node.checkboxState;
         node2.contextValue =
-            node.contextValue + (ReadOnlyManagement.isReadOnly(node.resourceUri) ? Constants.READ_ONLY_CONTEXT : Constants.WRITABLE_CONTEXT);
+            node.contextValue +
+            (ReadOnlyManagement.isReadOnly(ReadOnlyManagement.getNodeUri(node)) ? Constants.READ_ONLY_CONTEXT : Constants.WRITABLE_CONTEXT);
         return node2;
     }
 

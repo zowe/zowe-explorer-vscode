@@ -425,7 +425,7 @@ export class SharedActions {
         if (!ReadOnlyManagement.isEligibleNode(node)) {
             return;
         }
-        await ReadOnlyManagement.setReadOnly(node.resourceUri, readOnly);
+        await ReadOnlyManagement.setReadOnly(ReadOnlyManagement.getNodeUri(node), readOnly);
         SharedTreeProviders.getProviderForNode(node)?.nodeDataChanged?.(node);
     }
 }
