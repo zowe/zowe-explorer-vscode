@@ -226,6 +226,7 @@
   "Added support for pasting at top-level of USS tree (if filtered), and optimized copy/paste operations to avoid using local paths when possible. <a>#2041</a>": "Added support for pasting at top-level of USS tree (if filtered), and optimized copy/paste operations to avoid using local paths when possible. <a>#2041</a>",
   "Added support for resolving aliases in the Zowe data set tree and when using the Zowe data set filesystem provider. <a>#4438</a> & <a>#4489</a>": "Added support for resolving aliases in the Zowe data set tree and when using the Zowe data set filesystem provider. <a>#4438</a> & <a>#4489</a>",
   "Added support for resolving data set aliases when using SSH profiles. <a>#4489</a>": "Added support for resolving data set aliases when using SSH profiles. <a>#4489</a>",
+  "Added support for the allowedLoginMethod profile property. This property can be used to restrict allowed authentication methods to a single option. If a profile has no value for allowedLoginMethod, or if the value is \"prompt\", there is no change in behavior compared to previous Zowe Explorer versions. <a>#4531</a>": "Added support for the allowedLoginMethod profile property. This property can be used to restrict allowed authentication methods to a single option. If a profile has no value for allowedLoginMethod, or if the value is \"prompt\", there is no change in behavior compared to previous Zowe Explorer versions. <a>#4531</a>",
   "Added support to delete VSAM data sets via right-click action.": "Added support to delete VSAM data sets via right-click action.",
   "Added support to delete VSAM data sets. <a>#3824</a>": "Added support to delete VSAM data sets. <a>#3824</a>",
   "Added support to view the Encoding history for MVS and Dataset in the History View. <a>#2776</a>": "Added support to view the Encoding history for MVS and Dataset in the History View. <a>#2776</a>",
@@ -686,6 +687,12 @@
   },
   "Error Details": "Error Details",
   "Error checking if SSH profile type required for issuing UNIX commands, setting requirement to false for profile {0}.": "Error checking if SSH profile type required for issuing UNIX commands, setting requirement to false for profile {0}.",
+  "Error checking supportsCertAuth for profile {0}/Service profile name": {
+    "message": "Error checking supportsCertAuth for profile {0}",
+    "comment": [
+      "Service profile name"
+    ]
+  },
   "Error creating data set favorite node: {0} for profile {1}./LabelProfile name": {
     "message": "Error creating data set favorite node: {0} for profile {1}.",
     "comment": [
@@ -1030,6 +1037,7 @@
   "Fixed an issue that would allow multiple member-filter on a single dataset search. <a>#2037</a>": "Fixed an issue that would allow multiple member-filter on a single dataset search. <a>#2037</a>",
   "Fixed an issue to review inconsistent capitalization across translation strings. <a>#2935</a>": "Fixed an issue to review inconsistent capitalization across translation strings. <a>#2935</a>",
   "Fixed an issue when renaming a data set or member where new extension suffix was not detected. <a>#4142</a>": "Fixed an issue when renaming a data set or member where new extension suffix was not detected. <a>#4142</a>",
+  "Fixed an issue where UNIX commands were always wrapped in an SSH_TTY terminal redirect, even for profiles that do not use SSH. <a>#4564</a>": "Fixed an issue where UNIX commands were always wrapped in an SSH_TTY terminal redirect, even for profiles that do not use SSH. <a>#4564</a>",
   "Fixed an issue where VS Code did not provide all context menu options for a profile node after a multi-select operation. <a>#2108</a>": "Fixed an issue where VS Code did not provide all context menu options for a profile node after a multi-select operation. <a>#2108</a>",
   "Fixed an issue where Zowe Explorer displayed a \"No Zowe client configurations\" prompt when a project user configuration existed but no global configuration was present. <a>#3168</a>": "Fixed an issue where Zowe Explorer displayed a \"No Zowe client configurations\" prompt when a project user configuration existed but no global configuration was present. <a>#3168</a>",
   "Fixed an issue where Zowe Explorer failed to activate if a VS Code workspace is opened and contains an invalid directory path. Now, invalid directory paths are ignored by Zowe Explorer and only valid paths are treated as project-level directories. <a>#4271</a>": "Fixed an issue where Zowe Explorer failed to activate if a VS Code workspace is opened and contains an invalid directory path. Now, invalid directory paths are ignored by Zowe Explorer and only valid paths are treated as project-level directories. <a>#4271</a>",
@@ -1068,6 +1076,7 @@
   "Fixed an issue where data set nodes did not update if migrated or recalled outside of Zowe Explorer. <a>#3294</a>": "Fixed an issue where data set nodes did not update if migrated or recalled outside of Zowe Explorer. <a>#3294</a>",
   "Fixed an issue where data sets and USS files honored illegal characters in their respective names. <a>#4501</a>": "Fixed an issue where data sets and USS files honored illegal characters in their respective names. <a>#4501</a>",
   "Fixed an issue where data sets were not requested with attributes if the profile type's API did not implement the dataSetsMatchingPattern function. <a>#3578</a>": "Fixed an issue where data sets were not requested with attributes if the profile type's API did not implement the dataSetsMatchingPattern function. <a>#3578</a>",
+  "Fixed an issue where data sets with a PLX qualifier, and their members, opened as PL/I files. Use the VS Code files.associations setting to choose a language for those data sets. <a>#3801</a>": "Fixed an issue where data sets with a PLX qualifier, and their members, opened as PL/I files. Use the VS Code files.associations setting to choose a language for those data sets. <a>#3801</a>",
   "Fixed an issue where deleting an open PDS that is empty resulted in an error. <a>#3908</a>": "Fixed an issue where deleting an open PDS that is empty resulted in an error. <a>#3908</a>",
   "Fixed an issue where dragging and dropping a USS file caused an unhandled error while finalizing the drop operation. <a>#3613</a>": "Fixed an issue where dragging and dropping a USS file caused an unhandled error while finalizing the drop operation. <a>#3613</a>",
   "Fixed an issue where dragging and dropping data sets across LPARs resulted in silent failure. <a>#3542</a>": "Fixed an issue where dragging and dropping data sets across LPARs resulted in silent failure. <a>#3542</a>",
@@ -1082,6 +1091,7 @@
   "Fixed an issue where file system URIs with trailing slashes failed to resolve. <a>#3904</a>": "Fixed an issue where file system URIs with trailing slashes failed to resolve. <a>#3904</a>",
   "Fixed an issue where file system calls incorrectly threw a FileNotFound error for existing files, ensuring they are now fetched correctly. <a>#3554</a>": "Fixed an issue where file system calls incorrectly threw a FileNotFound error for existing files, ensuring they are now fetched correctly. <a>#3554</a>",
   "Fixed an issue where files opened via extender profiles failed to refresh or reload correctly. <a>#4049</a>": "Fixed an issue where files opened via extender profiles failed to refresh or reload correctly. <a>#4049</a>",
+  "Fixed an issue where filtering PDS members by user ID was case-sensitive, so a lowercase user ID filter would not match any members. User ID filtering is now case-insensitive. <a>#3723</a>": "Fixed an issue where filtering PDS members by user ID was case-sensitive, so a lowercase user ID filter would not match any members. User ID filtering is now case-insensitive. <a>#3723</a>",
   "Fixed an issue where filtering a data set by Date Modified showed members without date attributes. <a>#4075</a>": "Fixed an issue where filtering a data set by Date Modified showed members without date attributes. <a>#4075</a>",
   "Fixed an issue where focus was lost on a previously selected tree item after opening a Zowe resource (Data set, USS file, or Job) in the editor and closing it using Ctrl+W. Screen readers will now announce when focus is restored. <a>#4025</a>": "Fixed an issue where focus was lost on a previously selected tree item after opening a Zowe resource (Data set, USS file, or Job) in the editor and closing it using Ctrl+W. Screen readers will now announce when focus is restored. <a>#4025</a>",
   "Fixed an issue where listing data sets resulted in an error after opening a data set with an encoding. <a>#3347</a>": "Fixed an issue where listing data sets resulted in an error after opening a data set with an encoding. <a>#3347</a>",
@@ -1151,6 +1161,7 @@
   "Fixed an issue where the onProfileUpdated event emitter was not guaranteed to be the same across Zowe Explorer and extenders, causing some event listeners to not fire when an extender fires the event emitter. <a>#3622</a>": "Fixed an issue where the onProfileUpdated event emitter was not guaranteed to be the same across Zowe Explorer and extenders, causing some event listeners to not fire when an extender fires the event emitter. <a>#3622</a>",
   "Fixed an issue where the onProfilesUpdate event did not fire after secure credentials were updated. <a>#2822</a>": "Fixed an issue where the onProfilesUpdate event did not fire after secure credentials were updated. <a>#2822</a>",
   "Fixed an issue where the pound sign in a resource URI caused the data sets table view to strip off part of the resource path, causing table actions to fail. Now, supported characters are preserved in URIs when passed to the data sets table. <a>#4467</a>": "Fixed an issue where the pound sign in a resource URI caused the data sets table view to strip off part of the resource path, causing table actions to fail. Now, supported characters are preserved in URIs when passed to the data sets table. <a>#4467</a>",
+  "Fixed an issue where the profile actions menu (including \"Hide Profile\") failed to open for profiles missing required properties like host. <a>#4557</a>": "Fixed an issue where the profile actions menu (including \"Hide Profile\") failed to open for profiles missing required properties like host. <a>#4557</a>",
   "Fixed an issue where the profile status did not refresh after updating credentials <a>#4141</a>": "Fixed an issue where the profile status did not refresh after updating credentials <a>#4141</a>",
   "Fixed an issue where the remote conflict icons showed when using the \"Compare with Selected\" feature. <a>#3085</a>": "Fixed an issue where the remote conflict icons showed when using the \"Compare with Selected\" feature. <a>#3085</a>",
   "Fixed an issue where the selected profile name changed after the first Unix command was executed. <a>#4446</a>": "Fixed an issue where the selected profile name changed after the first Unix command was executed. <a>#4446</a>",
@@ -1540,6 +1551,7 @@
   "Localization is tied to the VS Code localization setting. If there are no localizations available for a string, it will fallback to English.": "Localization is tied to the VS Code localization setting. If there are no localizations available for a string, it will fallback to English.",
   "Localization of strings within Zowe Explorer webviews. <a>#2983</a>": "Localization of strings within Zowe Explorer webviews. <a>#2983</a>",
   "Locate in Tree": "Locate in Tree",
+  "Log in": "Log in",
   "Log in to Authentication Service": "Log in to Authentication Service",
   "Log in to obtain a new token value": "Log in to obtain a new token value",
   "Log out of Authentication Service": "Log out of Authentication Service",
@@ -1880,6 +1892,12 @@
       "Profile name"
     ]
   },
+  "Profile {0} is using cert-pem authentication. Choose a profile action./Profile name": {
+    "message": "Profile {0} is using cert-pem authentication. Choose a profile action.",
+    "comment": [
+      "Profile name"
+    ]
+  },
   "Profile {0} is using token authentication. Choose a profile action./Profile name": {
     "message": "Profile {0} is using token authentication. Choose a profile action.",
     "comment": [
@@ -1893,6 +1911,7 @@
     ]
   },
   "Profile: ": "Profile: ",
+  "Profile: {0}": "Profile: {0}",
   "Progress is shown in the status bar.": "Progress is shown in the status bar.",
   "Project": "Project",
   "Project: in the current working directory": "Project: in the current working directory",
@@ -2018,6 +2037,7 @@
   "SCLM": "SCLM",
   "SSH Key": "SSH Key",
   "SSH profile missing connection details. Please update.": "SSH profile missing connection details. Please update.",
+  "Save": "Save",
   "Save as User setting": "Save as User setting",
   "Save as Workspace setting": "Save as Workspace setting",
   "Saving USS file...": "Saving USS file...",
@@ -2149,6 +2169,7 @@
     ]
   },
   "Set a filter...": "Set a filter...",
+  "Set the path to your authentication certificate": "Set the path to your authentication certificate",
   "Set up <a>POEditor project</a> for contributing translations and cleaned up redundant localization strings. <a>#546</a>": "Set up <a>POEditor project</a> for contributing translations and cleaned up redundant localization strings. <a>#546</a>",
   "Setting to hide hidden USS files": "Setting to hide hidden USS files",
   "Settings have been successfully migrated for Zowe Explorer version 2 and above. To apply these settings, please reload your VS Code window.": "Settings have been successfully migrated for Zowe Explorer version 2 and above. To apply these settings, please reload your VS Code window.",
@@ -2193,7 +2214,6 @@
   },
   "Status": "Status",
   "Streamlined attribute viewing options into one feature - \"Show Attributes\".": "Streamlined attribute viewing options into one feature - \"Show Attributes\".",
-  "Submit": "Submit",
   "Submit this query": "Submit this query",
   "Submitting as JCL in document {0}/Document file name": {
     "message": "Submitting as JCL in document {0}",
@@ -2388,6 +2408,7 @@
   "Unpin": "Unpin",
   "Unpin selected rows": "Unpin selected rows",
   "Update": "Update",
+  "Update Certificate": "Update Certificate",
   "Update Credentials": "Update Credentials",
   "Update Global and Project level schemas": "Update Global and Project level schemas",
   "Update Global schema only": "Update Global schema only",

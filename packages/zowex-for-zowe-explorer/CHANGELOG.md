@@ -10,6 +10,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ### Bug fixes
 
+- Updated Zowex SDK to `1.0.2` for technical currency. [#4526](https://github.com/zowe/zowe-explorer-vscode/pull/4526)
+
 ## `3.6.0`
 
 - Added a visual progress indicator in the VS Code status bar while the Zowe Remote SSH server is starting or reconnecting, so users can see when ZRS is active rather than waiting without feedback. [#4449](https://github.com/zowe/zowe-explorer-vscode/issues/4449)

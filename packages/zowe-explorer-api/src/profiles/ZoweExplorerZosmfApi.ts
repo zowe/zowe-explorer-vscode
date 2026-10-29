@@ -112,6 +112,14 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
         public changePassword(session: imperative.Session, newPassword: string): Promise<zosmf.IZosmfChangePasswordResponse> {
             return zosmf.ZosmfChangePassword.changePassword(session, newPassword);
         }
+
+        /**
+         * z/OSMF supports cert-pem authentication.
+         * @returns True
+         */
+        public supportsCertAuth(): boolean {
+            return true;
+        }
     }
 
     /**

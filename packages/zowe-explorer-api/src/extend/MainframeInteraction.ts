@@ -92,6 +92,13 @@ export namespace MainframeInteraction {
          * @returns {Promise<IChangePasswordResponse>} the outcome of the change request
          */
         changePassword?(session: imperative.Session, newPassword: string): Promise<IChangePasswordResponse>;
+
+        /**
+         * Returns true if the service supports cert-pem authentication.
+         * If unimplemented, certificate authentication will be assumed to be unsupported, equivalent
+         * to returning false.
+         */
+        supportsCertAuth?(): boolean;
     }
 
     /**

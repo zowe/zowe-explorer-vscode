@@ -277,72 +277,41 @@ describe("SshCommonApi", () => {
             expect(status).toEqual("inactive");
         });
 
-        it("should not show the initial deployment warning when confirmSshServerDeploy is false", async () => {
+        it.each([true, false])("should not prompt before checking the server when confirmSshServerDeploy is %s", async (confirm) => {
             vi.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
-                get: vi.fn().mockImplementation((key, defaultVal) => {
-                    const config: any = {
-                        confirmSshServerDeploy: false,
-                    };
-                    return config[key] === undefined ? defaultVal : config[key];
-                }),
-            } as any);
-            vi.spyOn(Gui, "showMessage").mockRejectedValue(new Error("don't call me!"));
+                get: vi.fn().mockReturnValue(confirm),
+            } as unknown as vscode.WorkspaceConfiguration);
+            const showMessage = vi.spyOn(Gui, "showMessage");
             const commonApi = new SshCommonApi(profile);
-            await commonApi.getStatus(profile, ZosUssProfile.type);
-            expect(Gui.showMessage).not.toHaveBeenCalled();
+
+            expect(await commonApi.getStatus(profile, ZosUssProfile.type)).toEqual("active");
+            expect(SshClientCache.inst.connect).toHaveBeenCalledWith(profile);
+            expect(showMessage).not.toHaveBeenCalled();
         });
 
-        it("should return inactive confirmSshServerDeploy is true and the user cancels", async () => {
-            vi.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
-                get: vi.fn().mockImplementation((key, defaultVal) => {
-                    const config: any = {
-                        confirmSshServerDeploy: true,
-                    };
-                    return config[key] === undefined ? defaultVal : config[key];
-                }),
-            } as any);
-            vi.spyOn(Gui, "showMessage").mockResolvedValue("Cancel");
-            const commonApi = new SshCommonApi(profile);
-            const status = await commonApi.getStatus(profile, ZosUssProfile.type);
-            expect(status).toEqual("inactive");
-            expect(Gui.showMessage).toHaveBeenCalled();
+        it("should return inactive without reporting an error when deployment is cancelled", async () => {
+            vi.mocked(SshClientCache.inst.connect).mockRejectedValue(new vscode.CancellationError());
+            const handleError = vi.spyOn(SshErrorHandler.getInstance(), "handleError");
+            const promptAuth = vi.spyOn(AuthHandler, "promptForAuthentication");
+
+            expect(await new SshCommonApi(profile).getStatus(profile, "ssh")).toEqual("inactive");
+            expect(handleError).not.toHaveBeenCalled();
+            expect(promptAuth).not.toHaveBeenCalled();
         });
-        it("should return active confirmSshServerDeploy is true and the user confirms to connect anyway", async () => {
-            vi.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
-                get: vi.fn().mockImplementation((key, defaultVal) => {
-                    const config: any = {
-                        confirmSshServerDeploy: true,
-                    };
-                    return config[key] === undefined ? defaultVal : config[key];
-                }),
-            } as any);
-            vi.spyOn(Gui, "showMessage").mockResolvedValue("Connect");
-            const commonApi = new SshCommonApi(profile);
-            const status = await commonApi.getStatus(profile, ZosUssProfile.type);
-            expect(status).toEqual("active");
-            expect(Gui.showMessage).toHaveBeenCalled();
-        });
-        it("should return active & store updated config if confirmSshServerDeploy is true and the user confirms to connect anyway", async () => {
-            const storedConfig: any = {};
-            const updateConfigMock = vi.fn().mockImplementation((k, v) => {
-                storedConfig[k] = v;
-            });
-            vi.spyOn(vscode.workspace, "getConfiguration").mockReturnValue({
-                get: vi.fn().mockImplementation((key, defaultVal) => {
-                    const config: any = {
-                        confirmSshServerDeploy: true,
-                    };
-                    return config[key] === undefined ? defaultVal : config[key];
-                }),
-                update: updateConfigMock,
-            } as any);
-            vi.spyOn(Gui, "showMessage").mockResolvedValue("Connect, don't ask me again");
-            const commonApi = new SshCommonApi(profile);
-            const status = await commonApi.getStatus(profile, ZosUssProfile.type);
-            expect(status).toEqual("active");
-            expect(Gui.showMessage).toHaveBeenCalled();
-            expect(updateConfigMock).toHaveBeenCalled();
-            expect(storedConfig["confirmSshServerDeploy"]).toEqual(false);
+
+        it("should stop password retries when deployment is cancelled after private key fallback", async () => {
+            const privateKeyProfile = { ...profile, profile: { privateKey: "/key", host: "host", user: "user" } };
+            vi.mocked(SshClientCache.inst.connect)
+                .mockRejectedValueOnce(new Error("All configured authentication methods failed"))
+                .mockRejectedValueOnce(new vscode.CancellationError());
+            vi.spyOn(ZSshUtils, "isPrivateKeyAuthFailure").mockReturnValue(true);
+            const input = vi.spyOn(vscode.window, "showInputBox").mockResolvedValue("password");
+            const showError = vi.spyOn(vscode.window, "showErrorMessage");
+
+            expect(await new SshCommonApi(privateKeyProfile).getStatus(privateKeyProfile, "ssh")).toEqual("inactive");
+            expect(input).toHaveBeenCalledTimes(1);
+            expect(SshClientCache.inst.connect).toHaveBeenCalledTimes(2);
+            expect(showError).not.toHaveBeenCalled();
         });
     });
 

@@ -7,6 +7,11 @@ const vscodeApi = acquireVsCodeApi();
 export function App() {
   const [certPath, setCertPath] = useState("");
   const [certKeyPath, setCertKeyPath] = useState("");
+  const [title, setTitle] = useState(l10n.t("Log in to Authentication Service"));
+  const [showLoginButton, setShowLoginButton] = useState(false);
+  const [saveButtonText, setSaveButtonText] = useState(l10n.t("Save"));
+  const [profileName, setProfileName] = useState("");
+
   const [localizationState, setLocalizationState] = useState(null);
 
   useEffect(() => {
@@ -26,8 +31,22 @@ export function App() {
         return;
       }
 
+      if (event.data.opts.title) {
+        setTitle(event.data.opts.title);
+      }
+      if (event.data.opts.profileName) {
+        setProfileName(l10n.t(`Profile: {0}`, event.data.opts.profileName));
+      }
       if (event.data.opts.cert) {
         setCertPath(event.data.opts.cert);
+      }
+
+      if (event.data.opts.showLoginButton != null) {
+        setShowLoginButton(event.data.opts.showLoginButton);
+      }
+
+      if (event.data.opts.saveButtonText) {
+        setSaveButtonText(event.data.opts.saveButtonText);
       }
 
       if (event.data.opts.certKey) {
@@ -42,10 +61,11 @@ export function App() {
   return (
     <div style={{ minWidth: "25em" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h1>{l10n.t("Log in to Authentication Service")}</h1>
+        <h1>{title}</h1>
       </div>
       <vscode-divider />
       <div style={{ marginTop: "1em" }}>
+        <h4>{profileName}</h4>
         <h3>{l10n.t("Select a certificate and certificate key in PEM format:")}</h3>
         <vscode-table style={{ marginTop: "1em" }} columns={["160px", "auto", "110px"]}>
           <vscode-table-header slot="header">
@@ -61,7 +81,7 @@ export function App() {
               <vscode-table-cell>
                 <i>{certPath}</i>
               </vscode-table-cell>
-              <vscode-table-cell>
+              <vscode-table-cell style={{ padding: "1em" }}>
                 <vscode-button secondary onClick={() => vscodeApi.postMessage({ command: "promptCert" })}>
                   {l10n.t("Browse")}
                 </vscode-button>
@@ -74,7 +94,7 @@ export function App() {
               <vscode-table-cell>
                 <i>{certKeyPath}</i>
               </vscode-table-cell>
-              <vscode-table-cell>
+              <vscode-table-cell style={{ padding: "1em" }}>
                 <vscode-button secondary onClick={() => vscodeApi.postMessage({ command: "promptCertKey" })}>
                   {l10n.t("Browse")}
                 </vscode-button>
@@ -86,12 +106,24 @@ export function App() {
           <vscode-button
             style={{ marginTop: "1em" }}
             onClick={() => {
-              vscodeApi.postMessage({ command: "submitted" });
+              vscodeApi.postMessage({ command: "save" });
             }}
           >
-            {l10n.t("Submit")}
+            {saveButtonText}
           </vscode-button>
+          {showLoginButton ? (
+            <vscode-button
+              secondary
+              style={{ marginLeft: "1em", marginTop: "1em" }}
+              onClick={() => {
+                vscodeApi.postMessage({ command: "login" });
+              }}
+            >
+              {l10n.t("Log in")}
+            </vscode-button>
+          ) : null}
           <vscode-button
+            id="cancelButton"
             secondary
             style={{ marginTop: "1em", marginLeft: "1em" }}
             onClick={() => {
