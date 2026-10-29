@@ -162,7 +162,7 @@ describe("ProfileManagement unit tests", () => {
             } as any);
             mocks.mockResolveQp.mockResolvedValueOnce(mocks.mockChangePasswordChosen);
             await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
-            expect(mocks.debugLogSpy).toHaveBeenCalledWith(mocks.logMsg);
+            expect(mocks.mockResolveQp.mock.calls[0][0].items).toContain(mocks.mockChangePasswordChosen);
             expect(mocks.changePasswordSpy).toHaveBeenCalled();
         });
         it("profile using basic authentication should not see Change Password when the API does not support it", async () => {
@@ -172,8 +172,7 @@ describe("ProfileManagement unit tests", () => {
             } as any);
             mocks.mockResolveQp.mockResolvedValueOnce(undefined);
             await ProfileManagement.manageProfile(mocks.mockDsSessionNode);
-            expect(mocks.mockCreateQp).toHaveBeenCalled();
-            expect(mocks.mockCreateQp.mock.results[0].value.items).not.toContain(mocks.mockChangePasswordChosen);
+            expect(mocks.mockResolveQp.mock.calls[0][0].items).not.toContain(mocks.mockChangePasswordChosen);
         });
         it("profile using basic authentication should see handleSwitchAuthentication called when Change the Authentication method chosen", async () => {
             const mocks = createBlockMocks(createGlobalMocks());
