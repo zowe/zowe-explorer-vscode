@@ -37,7 +37,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where the profile actions menu (including "Hide Profile") failed to open for profiles missing required properties like host. [#4557](https://github.com/zowe/zowe-explorer-vscode/pull/4557)
 - Fixed an issue where UNIX commands were always wrapped in an `SSH_TTY` terminal redirect, even for profiles that do not use SSH. [#4564](https://github.com/zowe/zowe-explorer-vscode/pull/4564)
 - Fixed redundant SSH server deployment confirmations when connecting to an already installed, up-to-date server. Confirmation is now requested only when automatic installation or updating is needed. [#4563](https://github.com/zowe/zowe-explorer-vscode/pull/4563)
-- Fixed an issue where profiles with `authOrder` starting with `token` or `bearer` and no stored credentials (e.g. after logging out with an unsecured config) were prompted for basic credentials instead of the SSO login. [#4574](https://github.com/zowe/zowe-explorer-vscode/issues/4574)
+- Fixed an issue where profiles with `authOrder` starting with `token` or `bearer` and no stored credentials (for example, after logging out with an unsecured config) were prompted for basic credentials instead of the SSO login. [#4574](https://github.com/zowe/zowe-explorer-vscode/issues/4574)
 
 ## `3.6.0`
 
