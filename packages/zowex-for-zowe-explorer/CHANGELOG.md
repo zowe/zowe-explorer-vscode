@@ -6,9 +6,9 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## TBD Release
 
-### New features and enhancements
-
 ### Bug fixes
+
+- Updated Zowex SDK to `1.0.2` for technical currency. [#4526](https://github.com/zowe/zowe-explorer-vscode/pull/4526)
 
 ## `3.6.0`
 

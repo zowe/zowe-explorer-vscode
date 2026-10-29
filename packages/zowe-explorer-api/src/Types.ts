@@ -32,6 +32,15 @@ export namespace Types {
          * @returns the encoding if found, otherwise undefined
          */
         getEncodingForUri(uri: Uri): ZosEncoding | undefined;
+
+        /**
+         * Invalidates the cached entry for the given URI and fires a
+         * `FileChangeType.Changed` event so VS Code re-reads the file.
+         * Use this after an external save operation that bypasses the
+         * Zowe Explorer filesystem provider (e.g. a custom editor upload).
+         * @param uri the URI of the resource that changed
+         */
+        notifyFileChanged(uri: Uri): void;
     };
 
     export type IApiRegisterClient = IRegisterClient & {

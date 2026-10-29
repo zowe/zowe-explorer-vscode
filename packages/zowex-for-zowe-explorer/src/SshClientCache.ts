@@ -12,7 +12,7 @@
 import type { SshSession } from "@zowe/zos-uss-for-zowe-sdk";
 import { Gui, imperative, ProfilesCache, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
-import { type ClientOptions, type ExistingClientRequest, ZSshClient, ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
+import { type ClientOptions, type ExistingClientRequest, SessionContext, ZSshClient, ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
 import { ConfigUtils } from "./ConfigUtils";
 import { deployWithProgress } from "./ServerDeployment";
 import { SshErrorHandler } from "./SshErrorHandler";
@@ -114,7 +114,7 @@ export class SshClientCache extends vscode.Disposable {
      * @param session - established SSH session used to detect the server
      * @returns true if a usable version of the SSH backend server is detected on the user's path
      */
-    public async detectServerOnPath(session: SshSession): Promise<string | undefined> {
+    public async detectServerOnPath(session: SshSession | SessionContext): Promise<string | undefined> {
         try {
             const pathServer = await ZSshUtils.detectServerOnPath(session);
             imperative.Logger.getAppLogger().debug("detectServerOnPath return value: %s", JSON.stringify(pathServer));
@@ -153,6 +153,7 @@ export class SshClientCache extends vscode.Disposable {
                 `$(sync~spin) ${opts.restart ? "Restarting" : "Starting"} Zowe Remote SSH server for profile "${profile.name as string}"...`
             );
             const session = ZSshUtils.buildSession(profile.profile!);
+            using sessionHandle = new SessionContext(session);
 
             let serverPath = ConfigUtils.getServerPath(profile.profile) ?? ZSshClient.DEFAULT_SERVER_PATH;
 
@@ -207,7 +208,7 @@ export class SshClientCache extends vscode.Disposable {
                 }
                 if (serverShouldDeploy) {
                     if (serverNotFound) {
-                        const onEnvPathServer = await this.detectServerOnPath(session);
+                        const onEnvPathServer = await this.detectServerOnPath(sessionHandle);
                         if (onEnvPathServer) {
                             try {
                                 serverPath = onEnvPathServer;
@@ -224,7 +225,7 @@ export class SshClientCache extends vscode.Disposable {
                     }
 
                     if (serverShouldDeploy) {
-                        if (await ZSshUtils.lacksWriteAccess(session, serverPath)) {
+                        if (await ZSshUtils.lacksWriteAccess(sessionHandle, serverPath)) {
                             if (serverNotFound) {
                                 // the user has no usable instance of the SSH server so we should notify them
                                 const errMsg = vscode.l10n.t(SshClientCache.WRITE_ACCESS_TO_SERVER_PATH_ERR, serverPath);
@@ -238,8 +239,10 @@ export class SshClientCache extends vscode.Disposable {
                                 );
                             }
                         } else {
-                            // The user appears to have write access
-                            await deployWithProgress(session, serverPath);
+                            if (!(await this.confirmServerDeployment()) || !(await deployWithProgress(sessionHandle, serverPath))) {
+                                newClient?.dispose();
+                                throw new vscode.CancellationError();
+                            }
                             newClient?.dispose();
                             newClient = await this.buildClient(session, clientId, {
                                 serverPath,
@@ -267,6 +270,27 @@ export class SshClientCache extends vscode.Disposable {
         }
 
         return this.mClientSessionMap.get(clientId)?.client as ZSshClient;
+    }
+
+    private async confirmServerDeployment(): Promise<boolean> {
+        const config = vscode.workspace.getConfiguration("zowe");
+        if (!config.get<boolean>("confirmSshServerDeploy", true)) {
+            return true;
+        }
+
+        const connectButton = vscode.l10n.t("Connect");
+        const connectDontAskButton = vscode.l10n.t("Connect, don't ask me again");
+        const selection = await Gui.showMessage(
+            vscode.l10n.t("The SSH server must be installed or updated on z/OS UNIX before connecting. Would you like to proceed?"),
+            { items: [vscode.l10n.t("Cancel"), connectButton, connectDontAskButton] }
+        );
+        if (selection === connectDontAskButton) {
+            await config.update("confirmSshServerDeploy", false, vscode.ConfigurationTarget.Global);
+        } else if (selection !== connectButton) {
+            imperative.Logger.getAppLogger().info("User declined SSH server deployment");
+            return false;
+        }
+        return true;
     }
 
     public end(hostOrProfile: string | imperative.IProfileLoaded, opts: ZSshRestartOptions = SshClientCache.mNoRestart): void {
