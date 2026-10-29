@@ -1703,7 +1703,7 @@ describe("ProfilesUtils unit tests", () => {
                 profile: { user: "IBMUSER", password: "oldPass1" },
             };
             const fakeSession = {
-                ISession: { password: "oldPass1" },
+                ISession: { user: "IBMUSER", password: "oldPass1" },
             } as unknown as imperative.Session;
             const mockNode = {
                 getProfile: vi.fn().mockReturnValue(fakeProfile),
@@ -1791,73 +1791,82 @@ describe("ProfilesUtils unit tests", () => {
             expect(mocks.errorMessageSpy).toHaveBeenCalledWith("Unable to create a session for the selected profile.");
         });
 
-        it("should cancel if old password input is dismissed", async () => {
+        it("should prefill the user name from the session", async () => {
             const mocks = createChangePasswordMocks();
-            mocks.showInputBoxSpy.mockResolvedValueOnce(undefined); // old password cancelled
+            mocks.showInputBoxSpy.mockResolvedValueOnce(undefined); // user name cancelled
+            await ProfilesUtils.changePassword(mocks.mockNode);
+            expect(mocks.showInputBoxSpy.mock.calls[0][0]).toEqual(expect.objectContaining({ value: "IBMUSER" }));
+        });
+
+        it("should cancel if user name input is dismissed", async () => {
+            const mocks = createChangePasswordMocks();
+            mocks.showInputBoxSpy.mockResolvedValueOnce(undefined); // user name cancelled
             await ProfilesUtils.changePassword(mocks.mockNode);
             expect(mocks.infoMessageSpy).toHaveBeenCalledWith("Operation cancelled");
             expect(mocks.changePasswordFn).not.toHaveBeenCalled();
         });
 
-        it("should show error if old password does not match stored credentials", async () => {
+        it("should cancel if old password input is dismissed", async () => {
             const mocks = createChangePasswordMocks();
-            mocks.showInputBoxSpy.mockResolvedValueOnce("wrongPassword"); // old password mismatch
+            mocks.showInputBoxSpy
+                .mockResolvedValueOnce("IBMUSER") // user name
+                .mockResolvedValueOnce(undefined); // old password cancelled
             await ProfilesUtils.changePassword(mocks.mockNode);
-            expect(mocks.errorMessageSpy).toHaveBeenCalledWith("Current password does not match the stored credentials. Password was not changed.");
+            expect(mocks.infoMessageSpy).toHaveBeenCalledWith("Operation cancelled");
             expect(mocks.changePasswordFn).not.toHaveBeenCalled();
         });
 
-        it("should let the server validate the current password when it is not stored locally", async () => {
+        it("should not compare the old password against the stored credentials", async () => {
             const mocks = createChangePasswordMocks();
-            mocks.fakeSession.ISession.password = undefined;
-            mocks.fakeSession.ISession.user = "IBMUSER";
             mocks.showInputBoxSpy
-                .mockResolvedValueOnce("someOldPass") // old password, cannot be compared locally
+                .mockResolvedValueOnce("IBMUSER") // user name
+                .mockResolvedValueOnce("differentToStored") // old password, left for the host to verify
                 .mockResolvedValueOnce("newPass456") // new password
                 .mockResolvedValueOnce("newPass456"); // confirm
-            new MockedProperty(Constants, "PROFILES_CACHE", {
-                value: {
-                    getProfileInfo: vi.fn().mockResolvedValue({
-                        updateProperty: vi.fn().mockResolvedValue(undefined),
-                        isSecured: vi.fn().mockReturnValue(true),
-                    }),
-                    updateCachedProfile: vi.fn(),
-                },
-                configurable: true,
+            mocks.changePasswordFn.mockImplementationOnce((session: imperative.Session) => {
+                expect(session.ISession.password).toBe("differentToStored");
+                return Promise.reject(new Error("Authentication failed"));
             });
-            vi.spyOn(SharedTreeProviders, "getProviderForNode").mockReturnValue({ refreshElement: vi.fn() } as any);
-
             await ProfilesUtils.changePassword(mocks.mockNode);
-            expect(mocks.errorMessageSpy).not.toHaveBeenCalled();
-            expect(mocks.changePasswordFn).toHaveBeenCalledWith(mocks.fakeSession, "newPass456");
+            expect(mocks.changePasswordFn).toHaveBeenCalled();
         });
 
-        it("should clear the unverified password from the session when the server rejects the change", async () => {
+        it("should send the entered user name and current password, even when none are stored", async () => {
             const mocks = createChangePasswordMocks();
+            mocks.fakeSession.ISession.user = undefined;
             mocks.fakeSession.ISession.password = undefined;
-            mocks.fakeSession.ISession.user = "IBMUSER";
             mocks.showInputBoxSpy
+                .mockResolvedValueOnce("NEWUSER") // user name
+                .mockResolvedValueOnce("someOldPass") // old password
+                .mockResolvedValueOnce("newPass456") // new password
+                .mockResolvedValueOnce("newPass456"); // confirm
+            mocks.changePasswordFn.mockImplementationOnce((session: imperative.Session) => {
+                expect(session.ISession.user).toBe("NEWUSER");
+                expect(session.ISession.password).toBe("someOldPass");
+                return Promise.resolve({ success: false, message: "rejected" });
+            });
+            await ProfilesUtils.changePassword(mocks.mockNode);
+            expect(mocks.changePasswordFn).toHaveBeenCalled();
+        });
+
+        it("should restore the stored credentials on the session when the server rejects the change", async () => {
+            const mocks = createChangePasswordMocks();
+            mocks.showInputBoxSpy
+                .mockResolvedValueOnce("OTHERUSR") // user name
                 .mockResolvedValueOnce("wrongOldPass") // old password
                 .mockResolvedValueOnce("newPass456") // new password
                 .mockResolvedValueOnce("newPass456"); // confirm
             mocks.changePasswordFn.mockRejectedValueOnce(new Error("Authentication failed"));
             await ProfilesUtils.changePassword(mocks.mockNode);
-            expect(mocks.fakeSession.ISession.password).toBeUndefined();
+            expect(mocks.fakeSession.ISession.user).toBe("IBMUSER");
+            expect(mocks.fakeSession.ISession.password).toBe("oldPass1");
             expect(mocks.errorMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Failed to change password: Authentication failed"));
-        });
-
-        it("should show error if neither a password nor a user is available for the profile", async () => {
-            const mocks = createChangePasswordMocks();
-            mocks.fakeSession.ISession.password = undefined;
-            mocks.showInputBoxSpy.mockResolvedValueOnce("someOldPass"); // old password
-            await ProfilesUtils.changePassword(mocks.mockNode);
-            expect(mocks.errorMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Manage Profile -> Update Credentials"));
-            expect(mocks.changePasswordFn).not.toHaveBeenCalled();
         });
 
         it("should cancel if new password input is dismissed", async () => {
             const mocks = createChangePasswordMocks();
             mocks.showInputBoxSpy
+                .mockResolvedValueOnce("IBMUSER") // user name
                 .mockResolvedValueOnce("oldPass1") // old password
                 .mockResolvedValueOnce(undefined); // new password cancelled
             await ProfilesUtils.changePassword(mocks.mockNode);
@@ -1868,6 +1877,7 @@ describe("ProfilesUtils unit tests", () => {
         it("should show error if old password and new password are the same", async () => {
             const mocks = createChangePasswordMocks();
             mocks.showInputBoxSpy
+                .mockResolvedValueOnce("IBMUSER") // user name
                 .mockResolvedValueOnce("oldPass1") // old password
                 .mockResolvedValueOnce("oldPass1"); // new password
             await ProfilesUtils.changePassword(mocks.mockNode);
@@ -1877,6 +1887,7 @@ describe("ProfilesUtils unit tests", () => {
         it("should cancel if confirm password input is dismissed", async () => {
             const mocks = createChangePasswordMocks();
             mocks.showInputBoxSpy
+                .mockResolvedValueOnce("IBMUSER") // user name
                 .mockResolvedValueOnce("oldPass1") // old password
                 .mockResolvedValueOnce("newPass456") // new password
                 .mockResolvedValueOnce(undefined); // confirm cancelled
@@ -1888,6 +1899,7 @@ describe("ProfilesUtils unit tests", () => {
         it("should show error if new password and confirm password do not match", async () => {
             const mocks = createChangePasswordMocks();
             mocks.showInputBoxSpy
+                .mockResolvedValueOnce("IBMUSER") // user name
                 .mockResolvedValueOnce("oldPass1") // old password
                 .mockResolvedValueOnce("newPass456") // new password
                 .mockResolvedValueOnce("differentPass"); // confirm mismatch
@@ -1899,6 +1911,7 @@ describe("ProfilesUtils unit tests", () => {
         it("should show error if changePassword API call fails", async () => {
             const mocks = createChangePasswordMocks();
             mocks.showInputBoxSpy
+                .mockResolvedValueOnce("IBMUSER") // user name
                 .mockResolvedValueOnce("oldPass1") // old password
                 .mockResolvedValueOnce("newPass456") // new password
                 .mockResolvedValueOnce("newPass456"); // confirm
@@ -1910,6 +1923,7 @@ describe("ProfilesUtils unit tests", () => {
         it("should show error if the changePassword response is unsuccessful", async () => {
             const mocks = createChangePasswordMocks();
             mocks.showInputBoxSpy
+                .mockResolvedValueOnce("IBMUSER") // user name
                 .mockResolvedValueOnce("oldPass1") // old password
                 .mockResolvedValueOnce("newPass456") // new password
                 .mockResolvedValueOnce("newPass456"); // confirm
@@ -1921,6 +1935,7 @@ describe("ProfilesUtils unit tests", () => {
         it("should show warning if credentials update locally fails after server change", async () => {
             const mocks = createChangePasswordMocks();
             mocks.showInputBoxSpy
+                .mockResolvedValueOnce("IBMUSER") // user name
                 .mockResolvedValueOnce("oldPass1") // old password
                 .mockResolvedValueOnce("newPass456") // new password
                 .mockResolvedValueOnce("newPass456"); // confirm
@@ -1933,12 +1948,7 @@ describe("ProfilesUtils unit tests", () => {
             expect(mocks.warningMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Password changed on the server but failed"));
         });
 
-        it("should successfully change password and show success message", async () => {
-            const mocks = createChangePasswordMocks();
-            mocks.showInputBoxSpy
-                .mockResolvedValueOnce("oldPass1") // old password
-                .mockResolvedValueOnce("newPass456") // new password
-                .mockResolvedValueOnce("newPass456"); // confirm
+        function mockSuccessfulLocalUpdate() {
             const mockProfInfo = {
                 updateProperty: vi.fn().mockResolvedValue(undefined),
                 isSecured: vi.fn().mockReturnValue(true),
@@ -1951,11 +1961,22 @@ describe("ProfilesUtils unit tests", () => {
                 },
                 configurable: true,
             });
-            const mockTreeProvider = { refreshElement: vi.fn() } as any;
-            vi.spyOn(SharedTreeProviders, "getProviderForNode").mockReturnValue(mockTreeProvider);
+            vi.spyOn(SharedTreeProviders, "getProviderForNode").mockReturnValue({ refreshElement: vi.fn() } as any);
+            return { mockProfInfo, updateCachedProfileMock };
+        }
+
+        it("should successfully change password and show success message", async () => {
+            const mocks = createChangePasswordMocks();
+            mocks.showInputBoxSpy
+                .mockResolvedValueOnce("IBMUSER") // user name
+                .mockResolvedValueOnce("oldPass1") // old password
+                .mockResolvedValueOnce("newPass456") // new password
+                .mockResolvedValueOnce("newPass456"); // confirm
+            const { mockProfInfo, updateCachedProfileMock } = mockSuccessfulLocalUpdate();
 
             await ProfilesUtils.changePassword(mocks.mockNode);
             expect(mocks.changePasswordFn).toHaveBeenCalledWith(mocks.fakeSession, "newPass456");
+            expect(mockProfInfo.updateProperty).toHaveBeenCalledTimes(1);
             expect(mockProfInfo.updateProperty).toHaveBeenCalledWith({
                 profileName: "testProfile",
                 profileType: "zosmf",
@@ -1969,6 +1990,20 @@ describe("ProfilesUtils unit tests", () => {
             expect(mocks.unlockProfileSpy).toHaveBeenCalledWith(mocks.fakeProfile, true);
             expect(mocks.profileUpdatedEmitter.fire).toHaveBeenCalledWith(mocks.fakeProfile);
             expect(mocks.showMessageSpy).toHaveBeenCalledWith("Password for testProfile was successfully changed");
+        });
+
+        it("should also store the user name when a different one was entered", async () => {
+            const mocks = createChangePasswordMocks();
+            mocks.showInputBoxSpy
+                .mockResolvedValueOnce("NEWUSER") // user name
+                .mockResolvedValueOnce("oldPass1") // old password
+                .mockResolvedValueOnce("newPass456") // new password
+                .mockResolvedValueOnce("newPass456"); // confirm
+            const { mockProfInfo } = mockSuccessfulLocalUpdate();
+
+            await ProfilesUtils.changePassword(mocks.mockNode);
+            expect(mockProfInfo.updateProperty).toHaveBeenCalledWith(expect.objectContaining({ property: "user", value: "NEWUSER" }));
+            expect(mocks.fakeProfile.profile.user).toBe("NEWUSER");
         });
     });
 });

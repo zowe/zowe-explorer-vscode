@@ -202,6 +202,7 @@
   "Added support for adding VSAM datasets to favorites. <a>#4103</a>": "Added support for adding VSAM datasets to favorites. <a>#4103</a>",
   "Added support for adding a Zowe profile across all trees <a>#2603</a>": "Added support for adding a Zowe profile across all trees <a>#2603</a>",
   "Added support for asynchronous operations when using integrated terminals. <a>#3640</a>": "Added support for asynchronous operations when using integrated terminals. <a>#3640</a>",
+  "Added support for changing password on the remote system, which then also updates locally stored password. <a>#4212</a>": "Added support for changing password on the remote system, which then also updates locally stored password. <a>#4212</a>",
   "Added support for comma-separated job prefixes in the **JOBS** tree filter, matching existing data set filter behavior. <a>#4395</a>": "Added support for comma-separated job prefixes in the **JOBS** tree filter, matching existing data set filter behavior. <a>#4395</a>",
   "Added support for consoleName property in z/OSMF profiles when issuing MVS commands <a>#1667</a>": "Added support for consoleName property in z/OSMF profiles when issuing MVS commands <a>#1667</a>",
   "Added support for consoleName property in z/OSMF profiles when issuing MVS commands. <a>#1667</a>": "Added support for consoleName property in z/OSMF profiles when issuing MVS commands. <a>#1667</a>",
@@ -344,8 +345,8 @@
     ]
   },
   "Change the Authentication Method": "Change the Authentication Method",
-  "Changed ZoweExplorerExtender.initForZowe profileTypeConfigurations: imperative.ICommandProfileTypeConfiguration[] to a required argument to address issues seen after registration of profile type when not passed. <a>#2575</a>": "Changed ZoweExplorerExtender.initForZowe profileTypeConfigurations: imperative.ICommandProfileTypeConfiguration[] to a required argument to address issues seen after registration of profile type when not passed. <a>#2575</a>",
   "Change your password on the server and update stored password": "Change your password on the server and update stored password",
+  "Changed ZoweExplorerExtender.initForZowe profileTypeConfigurations: imperative.ICommandProfileTypeConfiguration[] to a required argument to address issues seen after registration of profile type when not passed. <a>#2575</a>": "Changed ZoweExplorerExtender.initForZowe profileTypeConfigurations: imperative.ICommandProfileTypeConfiguration[] to a required argument to address issues seen after registration of profile type when not passed. <a>#2575</a>",
   "Changed default base profile naming scheme in newly generated configuration files to prevent name and property conflicts between Global and Project profiles <a>#2682</a>": "Changed default base profile naming scheme in newly generated configuration files to prevent name and property conflicts between Global and Project profiles <a>#2682</a>",
   "Changed the jobs pagination setting to be disabled by default and the default records to fetch from 100 to 1000 due to customer feedback. <a>#3743</a>": "Changed the jobs pagination setting to be disabled by default and the default records to fetch from 100 to 1000 due to customer feedback. <a>#3743</a>",
   "Changelog": "Changelog",
@@ -418,8 +419,8 @@
   "Configure and apply file filtering options": "Configure and apply file filtering options",
   "Configure and apply file filtering options (currently configured)": "Configure and apply file filtering options (currently configured)",
   "Confirm": "Confirm",
-  "Confirm new password": "Confirm new password",
   "Confirm New Password": "Confirm New Password",
+  "Confirm new password": "Confirm new password",
   "Conflict: Remote contents have changed.": "Conflict: Remote contents have changed.",
   "Connection Name": "Connection Name",
   "Console command submitted.": "Console command submitted.",
@@ -466,6 +467,7 @@
       "Profile name"
     ]
   },
+  "Current Password": "Current Password",
   "Current Records": "Current Records",
   "Current encoding is {0}/Encoding name": {
     "message": "Current encoding is {0}",
@@ -475,9 +477,6 @@
   },
   "Currently, hidden Unix files (those starting with a .) are always listed in the USS tree. There is now a setting **Zowe > Files: Show Hidden Files** that can be disabled to hide these files.": "Currently, hidden Unix files (those starting with a .) are always listed in the USS tree. There is now a setting **Zowe > Files: Show Hidden Files** that can be disabled to hide these files.",
   "Custom credential manager failed to activate": "Custom credential manager failed to activate",
-  "Current Password": "Current Password",
-  "Current password does not match the stored credentials. Password was not changed.": "Current password does not match the stored credentials. Password was not changed.",
-  "Current Records": "Current Records",
   "Custom credential manager {0} found, attempting to activate./Credential manager display name": {
     "message": "Custom credential manager {0} found, attempting to activate.",
     "comment": [
@@ -636,14 +635,12 @@
   "Enter an allocation unit": "Enter an allocation unit",
   "Enter command here...": "Enter command here...",
   "Enter current password": "Enter current password",
-  "Enter Data Set Pattern": "Enter Data Set Pattern",
   "Enter file extension (e.g. csv)": "Enter file extension (e.g. csv)",
   "Enter job owner ID": "Enter job owner ID",
   "Enter job prefix, use a comma to separate multiple prefixes": "Enter job prefix, use a comma to separate multiple prefixes",
   "Enter job status": "Enter job status",
   "Enter local filter...": "Enter local filter...",
   "Enter new password": "Enter new password",
-  "Enter or update the MVS command": "Enter or update the MVS command",
   "Enter or update the TSO command": "Enter or update the TSO command",
   "Enter or update the Unix command": "Enter or update the Unix command",
   "Enter or update the console command": "Enter or update the console command",
@@ -670,6 +667,7 @@
   "Enter the secondary space allocation": "Enter the secondary space allocation",
   "Enter the size of the data set": "Enter the size of the data set",
   "Enter the text to search for.": "Enter the text to search for.",
+  "Enter the user name": "Enter the user name",
   "Enter the user name for the {0} connection. Leave blank to not store./Profile name": {
     "message": "Enter the user name for the {0} connection. Leave blank to not store.",
     "comment": [
@@ -769,16 +767,16 @@
   "Exposed commands to drive filtering in the Data Sets views <a>#3992</a>": "Exposed commands to drive filtering in the Data Sets views <a>#3992</a>",
   "Exposed commands to drive search in the USS views. <a>#3933</a>": "Exposed commands to drive search in the USS views. <a>#3933</a>",
   "Exposed read and write access to local storage keys for Zowe Explorer extenders. <a>#3180</a>": "Exposed read and write access to local storage keys for Zowe Explorer extenders. <a>#3180</a>",
+  "Failed to change password: {0}/Error message": {
+    "message": "Failed to change password: {0}",
+    "comment": [
+      "Error message"
+    ]
+  },
   "Failed to copy member {0}: {1}/Member nameError message": {
     "message": "Failed to copy member {0}: {1}",
     "comment": [
       "Member name",
-      "Error message"
-    ]
-  },
-  "Failed to change password: {0}/Error message": {
-    "message": "Failed to change password: {0}",
-    "comment": [
       "Error message"
     ]
   },
@@ -1625,11 +1623,13 @@
   "Name of Data Set Template": "Name of Data Set Template",
   "Name of data set member": "Name of data set member",
   "Name of member": "Name of member",
+  "New Password": "New Password",
   "New features and enhancements": "New features and enhancements",
   "New filter": "New filter",
-  "New Password": "New Password",
+  "New password cannot be the same as old password. Password was not changed.": "New password cannot be the same as old password. Password was not changed.",
   "Next page": "Next page",
   "No": "No",
+  "No API found for the selected profile.": "No API found for the selected profile.",
   "No SSH profile found. Please create an SSH profile.": "No SSH profile found. Please create an SSH profile.",
   "No USS favorites found.": "No USS favorites found.",
   "No USS profiles found. Please add a profile first.": "No USS profiles found. Please add a profile first.",
@@ -1641,7 +1641,6 @@
       "Session label"
     ]
   },
-  "No API found for the selected profile.": "No API found for the selected profile.",
   "No changelog entries found for this version.": "No changelog entries found for this version.",
   "No configuration files were found to export.": "No configuration files were found to export.",
   "No custom credential managers found, using the default instead.": "No custom credential managers found, using the default instead.",
@@ -2354,8 +2353,8 @@
   "USS path must start with /": "USS path must start with /",
   "USSActions.pasteUssFile - use DatasetActions.pasteUss instead": "USSActions.pasteUssFile - use DatasetActions.pasteUss instead",
   "Unable to copy data set.": "Unable to copy data set.",
-  "Unable to create data set or member with lowercase letters.": "Unable to create data set or member with lowercase letters.",
   "Unable to create a session for the selected profile.": "Unable to create a session for the selected profile.",
+  "Unable to create data set or member with lowercase letters.": "Unable to create data set or member with lowercase letters.",
   "Unable to create data set.": "Unable to create data set.",
   "Unable to create member.": "Unable to create member.",
   "Unable to create node:": "Unable to create node:",
