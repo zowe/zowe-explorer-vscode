@@ -1042,7 +1042,6 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         destination: vscode.Uri,
         options: { readonly overwrite: boolean; readonly tree: USSFileStructure.UssFileTree }
     ): Promise<void> {
-        ReadOnlyManagement.throwIfReadOnly(destination, { checkParent: true });
         const destInfo = this._getInfoFromUri(destination);
         const sourceInfo = this._getInfoFromUri(source);
 
@@ -1070,6 +1069,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         // Build the name of the destination file/folder, handling any potential name collisions
         const fileName = this.buildFileName(fileList, path.basename(sourceInfo.path));
         const outputPath = path.posix.join(destInfo.path, fileName);
+        ReadOnlyManagement.throwIfReadOnly(destination.with({ path: path.posix.join(destination.path, fileName), query: "" }), { checkParent: true });
 
         try {
             await AuthUtils.retryRequest(sourceInfo.profile, async () => {

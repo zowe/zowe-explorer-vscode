@@ -657,6 +657,7 @@ describe("UssFSProvider", () => {
                 move: vi.fn(),
                 copy: vi.fn(),
                 create: vi.fn(),
+                fileList: vi.fn().mockResolvedValue({ success: true, apiResponse: { items: [] } }),
             };
             vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue(mockUssApi as any);
             resetReadOnly();
@@ -835,24 +836,56 @@ describe("UssFSProvider", () => {
         });
 
         describe("copy", () => {
-            it("rejects pasting into a read-only directory", async () => {
-                makeReadOnly(testUris.folder.path);
-                const fileTree = {
-                    localUri: testUris.file,
-                    ussPath: "/aFile.txt",
-                    baseName: "aFile.txt",
-                    binary: false,
-                    children: [],
-                    sessionName: "sestest",
-                    type: USSFileStructure.UssFileType.File,
-                };
-                const uriWithTree = testUris.file.with({ query: `tree=${encodeURIComponent(JSON.stringify(fileTree))}` });
-                await expect(
-                    UssFSProvider.instance.copy(uriWithTree, testUris.file.with({ path: "/sestest/aFolder/aFile.txt" }), { overwrite: true })
-                ).rejects.toThrow("/aFolder is read-only.");
+            const fileTree = {
+                localUri: testUris.file,
+                ussPath: "/aFile.txt",
+                baseName: "aFile.txt",
+                binary: false,
+                children: [],
+                sessionName: "sestest",
+                type: USSFileStructure.UssFileType.File,
+            };
+            const uriWithTree = testUris.file.with({ query: `tree=${encodeURIComponent(JSON.stringify(fileTree))}` });
+            const pasteInto = (dirPath: string): Promise<void> =>
+                UssFSProvider.instance.copy(uriWithTree, testUris.folder.with({ path: `/sestest${dirPath}` }), { overwrite: true });
+
+            beforeEach(() => {
+                vi.spyOn(UssFSProvider.instance as any, "_getInfoFromUri").mockImplementation((uri: vscode.Uri) => ({
+                    profile: testProfile,
+                    path: uri.path.substring("/sestest".length),
+                }));
+            });
+
+            const expectNothingPasted = (): void => {
                 expect(mockUssApi.copy).not.toHaveBeenCalled();
                 expect(mockUssApi.create).not.toHaveBeenCalled();
                 expect(mockUssApi.uploadFromBuffer).not.toHaveBeenCalled();
+            };
+
+            it("rejects pasting into a read-only directory", async () => {
+                makeReadOnly("/sestest/aFolder");
+                await expect(pasteInto("/aFolder")).rejects.toThrow("/aFolder is read-only.");
+                expectNothingPasted();
+            });
+
+            it("rejects pasting over a read-only path in a writable directory", async () => {
+                makeReadOnly("/sestest/aFolder/aFile.txt");
+                await expect(pasteInto("/aFolder")).rejects.toThrow("/aFolder/aFile.txt is read-only.");
+                expectNothingPasted();
+            });
+
+            it("checks the name the pasted entry will get after resolving name collisions", async () => {
+                mockUssApi.fileList.mockResolvedValue({ success: true, apiResponse: { items: [{ name: "aFile.txt" }] } });
+                makeReadOnly("/sestest/aFolder/aFile (1).txt");
+                await expect(pasteInto("/aFolder")).rejects.toThrow("/aFolder/aFile (1).txt is read-only.");
+                expectNothingPasted();
+            });
+
+            it("pastes into a writable directory whose parent is read-only", async () => {
+                ReadOnlyManagement.setReadOnly(testUris.folder, true);
+                ReadOnlyManagement.setReadOnly(testUris.folder.with({ path: "/sestest/aFolder/sub" }), false);
+                await pasteInto("/aFolder/sub");
+                expect(mockUssApi.copy).toHaveBeenCalledWith("/aFolder/sub/aFile.txt", expect.objectContaining({ from: "/aFile.txt" }));
             });
         });
     });
