@@ -291,6 +291,24 @@ export class DatasetActions {
         });
     }
 
+    /**
+     * Shows an error if any of the files would be uploaded to a read-only member of the PDS
+     * @returns true if a file would be uploaded to a read-only member and the upload should stop
+     */
+    private static async isReadOnlyUploadTarget(node: IZoweDatasetTreeNode, files: vscode.Uri[]): Promise<boolean> {
+        if (!SharedContext.isPds(node)) {
+            return false;
+        }
+        for (const file of files) {
+            const memberName = zosfiles.ZosFilesUtils.generateMemberName(file.fsPath);
+            const memberUri = node.resourceUri.with({ path: path.posix.join(node.resourceUri.path, memberName), query: "" });
+            if (await ReadOnlyManagement.showErrorIfReadOnly(memberUri)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private static async allocateNewDataSet(
         node: IZoweDatasetTreeNode,
         dsName: string,
@@ -517,6 +535,9 @@ export class DatasetActions {
         };
         const value = await Gui.showOpenDialog(fileOpenOptions);
         if (value?.length > 0) {
+            if (await DatasetActions.isReadOnlyUploadTarget(node, value)) {
+                return;
+            }
             await Gui.withProgress(
                 {
                     location: vscode.ProgressLocation.Notification,
@@ -595,6 +616,9 @@ export class DatasetActions {
         };
         const selectedFiles = await Gui.showOpenDialog(fileOpenOptions);
         if (!selectedFiles || selectedFiles.length === 0) {
+            return;
+        }
+        if (await DatasetActions.isReadOnlyUploadTarget(node, selectedFiles)) {
             return;
         }
 

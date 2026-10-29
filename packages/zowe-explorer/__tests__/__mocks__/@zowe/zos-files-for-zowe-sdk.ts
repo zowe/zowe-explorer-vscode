@@ -195,6 +195,10 @@ export class IZosFilesResponse {
 export class ZosFilesUtils {
     public static getDirsFromDataSet = vi.fn().mockReturnValue("test/dataset/path");
     public static DEFAULT_FILE_EXTENSION = "txt";
+    public static generateMemberName = vi.fn((fileName: string): string => {
+        const actual = (require("@zowe/zos-files-for-zowe-sdk") as typeof import("@zowe/zos-files-for-zowe-sdk")).ZosFilesUtils;
+        return actual.generateMemberName(fileName);
+    });
 }
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires

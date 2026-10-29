@@ -3212,7 +3212,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
 describe("USS Action Unit Tests - read-only files and directories", () => {
     let globalMocks: ReturnType<typeof createGlobalMocks>;
     let errorMessageSpy: MockInstance;
-    let ussApi: { create: MockInstance; fileList: MockInstance };
+    let ussApi: { create: MockInstance; fileList: MockInstance; putContent: MockInstance };
     let testUSSTree: USSTree;
     let sessionNode: ZoweUSSNode;
 
@@ -3243,6 +3243,7 @@ describe("USS Action Unit Tests - read-only files and directories", () => {
         ussApi = {
             create: vi.fn(),
             fileList: vi.fn().mockResolvedValue({ success: true, apiResponse: { items: [] } }),
+            putContent: vi.fn(),
         };
         vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue(ussApi as any);
         errorMessageSpy = vi.spyOn(Gui, "errorMessage").mockResolvedValue(undefined);
@@ -3325,6 +3326,87 @@ describe("USS Action Unit Tests - read-only files and directories", () => {
             expect(errorMessageSpy).toHaveBeenCalledWith("/z/public is read-only.");
             expect(promptEncodingSpy).not.toHaveBeenCalled();
             expect(globalMocks.showOpenDialog).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("uploading to read-only paths", () => {
+        const localFile = (name: string): vscode.Uri => vscode.Uri.file(path.join("/tmp/zxplore", name));
+
+        it("does not upload a file whose target path is read-only", async () => {
+            const dir = ussNode("/z/ibmuser", Constants.USS_DIR_CONTEXT);
+            makeReadOnly(`${dir.resourceUri.path}/config.txt`);
+            vi.spyOn(Gui, "showOpenDialog").mockResolvedValue([localFile("config.txt")]);
+            const progressSpy = vi.spyOn(Gui, "withProgress");
+
+            await USSActions.uploadDialog(dir, testUSSTree);
+
+            expect(errorMessageSpy).toHaveBeenCalledWith("/z/ibmuser/config.txt is read-only.");
+            expect(progressSpy).not.toHaveBeenCalled();
+            expect(ussApi.putContent).not.toHaveBeenCalled();
+        });
+
+        it("does not upload any files when one of the targets is read-only", async () => {
+            const dir = ussNode("/z/ibmuser", Constants.USS_DIR_CONTEXT);
+            makeReadOnly(`${dir.resourceUri.path}/config.txt`);
+            vi.spyOn(Gui, "showOpenDialog").mockResolvedValue([localFile("hello.txt"), localFile("config.txt")]);
+            const progressSpy = vi.spyOn(Gui, "withProgress");
+
+            await USSActions.uploadDialog(dir, testUSSTree, true);
+
+            expect(errorMessageSpy).toHaveBeenCalledWith("/z/ibmuser/config.txt is read-only.");
+            expect(progressSpy).not.toHaveBeenCalled();
+            expect(ussApi.putContent).not.toHaveBeenCalled();
+        });
+
+        it("does not upload with encoding when a target path is read-only", async () => {
+            const dir = ussNode("/z/ibmuser", Constants.USS_DIR_CONTEXT);
+            makeReadOnly(`${dir.resourceUri.path}/config.txt`);
+            vi.spyOn(SharedUtils, "promptForUploadEncoding").mockResolvedValue({ kind: "text" });
+            vi.spyOn(Gui, "showOpenDialog").mockResolvedValue([localFile("config.txt")]);
+            const progressSpy = vi.spyOn(Gui, "withProgress");
+
+            await USSActions.uploadDialogWithEncoding(dir, testUSSTree);
+
+            expect(errorMessageSpy).toHaveBeenCalledWith("/z/ibmuser/config.txt is read-only.");
+            expect(progressSpy).not.toHaveBeenCalled();
+            expect(ussApi.putContent).not.toHaveBeenCalled();
+        });
+
+        it("uploads files whose target paths are writable", async () => {
+            const dir = ussNode("/z/ibmuser", Constants.USS_DIR_CONTEXT);
+            makeReadOnly(`${dir.resourceUri.path}/config.txt`);
+            vi.spyOn(Gui, "showOpenDialog").mockResolvedValue([localFile("hello.bin")]);
+            vi.spyOn(Gui, "withProgress").mockImplementation((_opts: any, task: any) =>
+                task({ report: vi.fn() }, { isCancellationRequested: false })
+            );
+            vi.spyOn(testUSSTree, "getTreeView").mockReturnValue({ reveal: vi.fn() } as any);
+
+            await USSActions.uploadDialog(dir, testUSSTree, true).catch(() => undefined);
+
+            expect(errorMessageSpy).not.toHaveBeenCalled();
+            expect(ussApi.putContent).toHaveBeenCalledWith(localFile("hello.bin").fsPath, "/z/ibmuser/hello.bin", { binary: true });
+        });
+
+        it("checks the directory a filtered profile is showing, not the profile itself", async () => {
+            sessionNode.fullPath = "/etc";
+            makeReadOnly(`/${globalMocks.testProfile.name}/etc`);
+            const openDialogSpy = vi.spyOn(Gui, "showOpenDialog");
+
+            await USSActions.uploadDialog(sessionNode, testUSSTree);
+
+            expect(errorMessageSpy).toHaveBeenCalledWith("/etc is read-only.");
+            expect(openDialogSpy).not.toHaveBeenCalled();
+        });
+
+        it("checks the directory a filtered profile is showing when pasting", async () => {
+            sessionNode.fullPath = "/etc";
+            makeReadOnly(`/${globalMocks.testProfile.name}/etc`);
+            const pasteSpy = vi.spyOn(sessionNode, "pasteUssTree");
+
+            await USSActions.pasteUss(testUSSTree, sessionNode);
+
+            expect(errorMessageSpy).toHaveBeenCalledWith("/etc is read-only.");
+            expect(pasteSpy).not.toHaveBeenCalled();
         });
     });
 

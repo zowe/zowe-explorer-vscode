@@ -8784,6 +8784,75 @@ describe("Dataset Actions Unit Tests - read-only data sets", () => {
         });
     });
 
+    describe("uploading to read-only members", () => {
+        const localFile = (name: string): vscode.Uri => vscode.Uri.file(path.join("/tmp/zxplore", name));
+
+        beforeEach(() => {
+            // Earlier tests in this file can leave SharedContext.isPds mocked
+            vi.spyOn(SharedContext, "isPds").mockImplementation((node: any) => node?.contextValue?.startsWith(Constants.DS_PDS_CONTEXT));
+        });
+
+        it("does not upload a file to a member a rule makes read-only", async () => {
+            const node = dsNode("IBMUSER.JCL", Constants.DS_PDS_CONTEXT);
+            vi.spyOn(Gui, "showOpenDialog").mockResolvedValue([localFile("prodjob.jcl")]);
+            const putContentsSpy = mockMvsApi("putContents");
+            const progressSpy = vi.spyOn(Gui, "withProgress");
+
+            await DatasetActions.uploadDialog(node, blockMocks.testDatasetTree);
+
+            expect(errorMessageSpy).toHaveBeenCalledWith("IBMUSER.JCL(PRODJOB) is read-only.");
+            expect(progressSpy).not.toHaveBeenCalled();
+            expect(putContentsSpy).not.toHaveBeenCalled();
+        });
+
+        it("derives the member name from the file name the same way the upload does", async () => {
+            const node = dsNode("IBMUSER.JCL", Constants.DS_PDS_CONTEXT);
+            vi.spyOn(Gui, "showOpenDialog").mockResolvedValue([localFile("prod-job_2.jcl")]);
+            const putContentsSpy = mockMvsApi("putContents");
+
+            await DatasetActions.uploadDialog(node, blockMocks.testDatasetTree);
+
+            expect(errorMessageSpy).toHaveBeenCalledWith("IBMUSER.JCL(PRODJOB2) is read-only.");
+            expect(putContentsSpy).not.toHaveBeenCalled();
+        });
+
+        it("does not upload any files when one of the members is read-only", async () => {
+            const node = dsNode("IBMUSER.JCL", Constants.DS_PDS_CONTEXT);
+            vi.spyOn(Gui, "showOpenDialog").mockResolvedValue([localFile("hello.jcl"), localFile("prodjob.jcl")]);
+            const putContentsSpy = mockMvsApi("putContents");
+
+            await DatasetActions.uploadDialog(node, blockMocks.testDatasetTree);
+
+            expect(errorMessageSpy).toHaveBeenCalledWith("IBMUSER.JCL(PRODJOB) is read-only.");
+            expect(putContentsSpy).not.toHaveBeenCalled();
+        });
+
+        it("does not upload with encoding to a member a rule makes read-only", async () => {
+            const node = dsNode("IBMUSER.JCL", Constants.DS_PDS_CONTEXT);
+            vi.spyOn(SharedUtils, "promptForUploadEncoding").mockResolvedValue({ kind: "text" });
+            vi.spyOn(Gui, "showOpenDialog").mockResolvedValue([localFile("prodjob.jcl")]);
+            const putContentsSpy = mockMvsApi("putContents");
+
+            await DatasetActions.uploadDialogWithEncoding(node, blockMocks.testDatasetTree);
+
+            expect(errorMessageSpy).toHaveBeenCalledWith("IBMUSER.JCL(PRODJOB) is read-only.");
+            expect(putContentsSpy).not.toHaveBeenCalled();
+        });
+
+        it("uploads files to writable members", async () => {
+            runProgress();
+            const node = dsNode("IBMUSER.JCL", Constants.DS_PDS_CONTEXT);
+            vi.spyOn(Gui, "showOpenDialog").mockResolvedValue([localFile("hello.jcl")]);
+            const putContentsSpy = mockMvsApi("putContents");
+            putContentsSpy.mockResolvedValue({ success: true });
+
+            await DatasetActions.uploadDialog(node, blockMocks.testDatasetTree).catch(() => undefined);
+
+            expect(errorMessageSpy).not.toHaveBeenCalledWith(expect.stringContaining("is read-only."));
+            expect(putContentsSpy).toHaveBeenCalledWith(localFile("hello.jcl").fsPath, "IBMUSER.JCL", expect.anything());
+        });
+    });
+
     describe("deleteDatasetPrompt", () => {
         it("does not ask to delete a member of a read-only PDS", async () => {
             const pds = dsNode("ZXP.PUBLIC.JCL", Constants.DS_PDS_CONTEXT);
