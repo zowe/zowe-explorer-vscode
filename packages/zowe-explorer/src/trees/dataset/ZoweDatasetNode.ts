@@ -904,7 +904,9 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
                 case Sorting.DatasetFilterOpts.LastModified:
                     return matchesDateStat(node, value, "modifiedDate");
                 case Sorting.DatasetFilterOpts.UserId:
-                    return node.getStats()?.user === value;
+                    // User IDs cannot contain lowercase characters, so compare
+                    // the filter value and the member's user ID in uppercase.
+                    return node.getStats()?.user?.toUpperCase() === value.toUpperCase();
                 case Sorting.DatasetFilterOpts.Name: {
                     const label = (node.label as string).toUpperCase();
                     const pattern = value.toUpperCase().replace(/\*/g, ".*");
