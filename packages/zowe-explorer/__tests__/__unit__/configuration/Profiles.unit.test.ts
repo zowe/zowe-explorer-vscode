@@ -406,7 +406,7 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
 
         await Profiles.getInstance().createZoweSession(treeProvider);
 
-        expect(quickPick.title).toBe("Add Profile to Tree");
+        expect(quickPick.title).toBe("Show Profile in Tree");
         expect(quickPick.placeholder).toContain("Create a New Team Configuration File");
         expect(quickPick.placeholder).toContain("Edit Team Configuration File");
         expect(quickPick.placeholder).toContain(expectedTreeLabel);

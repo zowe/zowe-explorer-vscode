@@ -20,7 +20,7 @@ When(/the user has a (.*) profile in their Data Sets tree/, async function (auth
     // add profile via quick pick
     this.treePane = await paneDivForTree("Data Sets");
     await this.treePane.elem.moveTo();
-    const plusIcon = await this.treePane.getAction(`Add Profile to Data Sets View`);
+    const plusIcon = await this.treePane.getAction(`Show Profile in Data Sets View`);
     await expect(plusIcon).toBeDefined();
     await plusIcon.elem.click();
     await browser.waitUntil((): Promise<boolean> => quickPick.isClickable());

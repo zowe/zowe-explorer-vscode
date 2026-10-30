@@ -137,7 +137,7 @@ Given(/the user has a profile in their (.*) tree/, async function (tree: string)
     if (attempts === maxAttempts) {
         // add profile via quick pick
         await this.treePane.elem.moveTo();
-        const plusIcon = await this.treePane.getAction(`Add Profile to ${tree} View`);
+        const plusIcon = await this.treePane.getAction(`Show Profile in ${tree} View`);
         await expect(plusIcon).toBeDefined();
         await plusIcon.elem.click();
         await browser.waitUntil((): Promise<boolean> => quickPick.isClickable());
