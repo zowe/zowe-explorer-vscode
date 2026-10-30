@@ -164,14 +164,24 @@ export class Profiles extends ProfilesCache {
         let usingBasicAuth: boolean = false;
         let usingCertAuth: boolean = false;
         let usingTokenAuth: boolean = false;
+        const allowedLoginMethod: string = this.getAllowedLoginMethod(theProfile);
 
+        let profileSession: imperative.Session;
         let iSessFromProf: imperative.ISession;
         const usingPrivateKey = theProfile.type === "ssh" && theProfile.profile.privateKey;
         try {
-            iSessFromProf = AuthHandler.getSessFromProfile(theProfile).ISession;
+            profileSession = AuthHandler.getSessFromProfile(theProfile);
+            iSessFromProf = profileSession.ISession;
         } catch (error) {
             ZoweLogger.error(error);
             return profileStatus;
+        }
+        if (typeof profileSession.isUsingApiml !== "function") {
+            throw new imperative.ImperativeError({
+                msg:
+                    "The session provided to checkCurrentProfile has no isUsingApiml function. " +
+                    "The extension providing the session must be updated to implement isUsingApiml() on the session object",
+            });
         }
         imperative.AuthOrder.addCredsToSession(iSessFromProf, ZoweExplorerZosmf.CommonApi.getCommandArgs(theProfile));
         switch (iSessFromProf.type) {
@@ -194,7 +204,30 @@ export class Profiles extends ProfilesCache {
             // Ignore error
         }
 
-        if (usingTokenAuth || ((await this.profileHasSecureToken(theProfile)) && tokenType)) {
+        if (tokenType && profileSession.isUsingApiml()) {
+            usingTokenAuth = true;
+        }
+        if (allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_CERT_PEM) {
+            usingCertAuth = true;
+            usingTokenAuth = false;
+            usingBasicAuth = false;
+        }
+
+        ZoweLogger.debug(
+            `checkCurrentProfile(): profile ${theProfile.name} (type ${theProfile.type}), ` +
+                `session type from profile=${iSessFromProf.type}, tokenType = ${tokenType} ` +
+                ` allowedLoginMethod = ${allowedLoginMethod} `
+        );
+
+        if (
+            usingTokenAuth ||
+            // if the service profile specifies a direct login method,
+            // then we should not try to use ssoLogin even if the base or parent profile has a token
+            (allowedLoginMethod !== imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_CERT_PEM &&
+                allowedLoginMethod !== imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_BASIC &&
+                (await this.profileHasSecureToken(theProfile)) &&
+                tokenType)
+        ) {
             // The profile will need to be reactivated, so remove it from profilesForValidation
             this.profilesForValidation = this.profilesForValidation.filter(
                 (profile) => !(profile.name === theProfile.name && profile.status !== "unverified")
@@ -241,16 +274,30 @@ export class Profiles extends ProfilesCache {
             }
         } else if (!usingTokenAuth && !usingBasicAuth && usingCertAuth) {
             if (theProfile.profile.certAccount == null && !this.isCertFileValid(theProfile.profile.certFile)) {
-                ZoweLogger.error(`Profile ${theProfile.name} has an invalid SSL certificate`);
-                Gui.errorMessage(
-                    vscode.l10n.t({
-                        message: `Profile {0} has an invalid SSL certificate.`,
-                        args: [theProfile.name],
-                        comment: ["Profile name"],
-                    })
-                );
-                this.validProfile = Validation.ValidationType.INVALID;
-                return { ...profileStatus, status: "inactive" };
+                const certResponse = await Profiles.getInstance().promptCertificate({
+                    profile: theProfile,
+                    title: vscode.l10n.t(`Update Certificate`),
+                    rePrompt: true,
+                    // don't show 'log in' button /text if direct cert pem because that uses no token.
+                    showLoginButton: false,
+                });
+                if (!certResponse || !certResponse.cert || !certResponse.certKey) {
+                    ZoweLogger.error(`Profile ${theProfile.name} has an invalid SSL certificate`);
+                    Gui.errorMessage(
+                        vscode.l10n.t({
+                            message: `Profile {0} has an invalid SSL certificate.`,
+                            args: [theProfile.name],
+                            comment: ["Profile name"],
+                        })
+                    );
+                    this.validProfile = Validation.ValidationType.INVALID;
+                    return { ...profileStatus, status: "inactive" };
+                } else {
+                    Profiles.getInstance().updateCachedProfile({
+                        ...theProfile,
+                        profile: { ...theProfile.profile, certFile: certResponse.cert, certKeyFile: certResponse.certKey },
+                    });
+                }
             }
             profileStatus.status = "active";
             this.profilesForValidation.push(profileStatus);
@@ -286,27 +333,27 @@ export class Profiles extends ProfilesCache {
         const autoStoreValue = (await this.getProfileInfo()).getTeamConfig().properties.autoStore ?? true;
         const autoStoreIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Auto Store: ")));
         if (autoStoreIndex === -1) {
-            toolTipList.push(`${vscode.l10n.t("Auto Store: ")}${autoStoreValue.toString()}`);
+            toolTipList.push(`${vscode.l10n.t("Auto Store: ")}${autoStoreValue.toString()} `);
         } else {
-            toolTipList[autoStoreIndex] = `${vscode.l10n.t("Auto Store: ")}${autoStoreValue.toString()}`;
+            toolTipList[autoStoreIndex] = `${vscode.l10n.t("Auto Store: ")}${autoStoreValue.toString()} `;
         }
 
         const layers = await this.uniqueExistingLayers();
         const configFileIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Config File: ")));
         if (configFileIndex === -1) {
-            toolTipList.push(`${vscode.l10n.t("Config File: ")}${layers[0].global ? vscode.l10n.t("Global") : vscode.l10n.t("Project")}`);
+            toolTipList.push(`${vscode.l10n.t("Config File: ")}${layers[0].global ? vscode.l10n.t("Global") : vscode.l10n.t("Project")} `);
         } else {
             toolTipList[configFileIndex] = `${vscode.l10n.t("Config File: ")}${
                 layers[0].global ? vscode.l10n.t("Global") : vscode.l10n.t("Project")
-            }`;
+            } `;
         }
 
         const isSecureCredsEnabled: boolean = SettingsConfig.getDirectValue(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED);
         const secureCredentialsIndex = toolTipList.findIndex((key) => key.startsWith(vscode.l10n.t("Secure Credentials Enabled: ")));
         if (secureCredentialsIndex === -1) {
-            toolTipList.push(`${vscode.l10n.t("Secure Credentials Enabled: ")}${isSecureCredsEnabled.toString()}`);
+            toolTipList.push(`${vscode.l10n.t("Secure Credentials Enabled: ")}${isSecureCredsEnabled.toString()} `);
         } else {
-            toolTipList[secureCredentialsIndex] = `${vscode.l10n.t("Secure Credentials Enabled: ")}${isSecureCredsEnabled.toString()}`;
+            toolTipList[secureCredentialsIndex] = `${vscode.l10n.t("Secure Credentials Enabled: ")}${isSecureCredsEnabled.toString()} `;
         }
 
         node.tooltip = toolTipList.join("\n");
@@ -687,23 +734,37 @@ export class Profiles extends ProfilesCache {
 
     public async promptCredentials(profile: string | imperative.IProfileLoaded, rePrompt?: boolean): Promise<string[]> {
         ZoweLogger.trace("Profiles.promptCredentials called.");
+
         const isProfileString = typeof profile === "string";
         const profilename = isProfileString ? profile : profile.name;
+        // When re-prompting, a blank value is rejected, so the "leave blank" hint would be misleading.
         const userInputBoxOptions: vscode.InputBoxOptions = {
             placeHolder: vscode.l10n.t(`User Name`),
-            prompt: vscode.l10n.t({
-                message: "Enter the user name for the {0} connection. Leave blank to not store.",
-                args: [profilename],
-                comment: ["Profile name"],
-            }),
+            prompt: rePrompt
+                ? vscode.l10n.t({
+                      message: "Enter the user name for the {0} connection.",
+                      args: [profilename],
+                      comment: ["Profile name"],
+                  })
+                : vscode.l10n.t({
+                      message: "Enter the user name for the {0} connection. Leave blank to cancel.",
+                      args: [profilename],
+                      comment: ["Profile name"],
+                  }),
         };
         const passwordInputBoxOptions: vscode.InputBoxOptions = {
             placeHolder: vscode.l10n.t(`Password`),
-            prompt: vscode.l10n.t({
-                message: "Enter the password for the {0} connection. Leave blank to not store.",
-                args: [profilename],
-                comment: ["Profile name"],
-            }),
+            prompt: rePrompt
+                ? vscode.l10n.t({
+                      message: "Enter the password for the {0} connection.",
+                      args: [profilename],
+                      comment: ["Profile name"],
+                  })
+                : vscode.l10n.t({
+                      message: "Enter the password for the {0} connection. Leave blank to cancel.",
+                      args: [profilename],
+                      comment: ["Profile name"],
+                  }),
         };
 
         let mProfileInfo: imperative.ProfileInfo;
@@ -904,7 +965,14 @@ export class Profiles extends ProfilesCache {
         } else {
             serviceProfile = this.loadNamedProfile(label.trim());
         }
-
+        const allowedLoginMethod: string = this.getAllowedLoginMethod(serviceProfile);
+        if (
+            allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_BASIC ||
+            allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_CERT_PEM
+        ) {
+            // Direct auth uses credentials or certificates without getting a token.
+            return false;
+        }
         const zeInstance = ZoweExplorerApiRegister.getInstance();
         try {
             loginTokenType = zeInstance.getCommonApi(serviceProfile).getTokenTypeName();

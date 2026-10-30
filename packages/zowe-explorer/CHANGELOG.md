@@ -9,6 +9,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Added support for the `allowedLoginMethod` profile property. This property can be used to restrict allowed authentication methods to a single option. If a profile has no value for `allowedLoginMethod`, or if the value is `"prompt"`, there is no change in behavior compared to previous Zowe Explorer versions. [#4531](https://github.com/zowe/zowe-explorer-vscode/pull/4531)
 - Added the `notifyFileChanged` method to `IZoweExplorerFileApi` (the file API returned by `getFileApi()`) so extenders that save to the mainframe outside of Zowe Explorer's filesystem provider can invalidate the cached entry and trigger VS Code to re-read the file from the mainframe. [#4481](https://github.com/zowe/zowe-explorer-vscode/issues/4481)
 - Added a `getFileApi` method to `ZoweExplorerApiRegister` that returns a file API for querying mainframe file system state. The initial API includes `getEncodingForUri`, which returns the encoding ZE has determined for a given resource URI, checking auto-detected encodings (such as USS file-tag detection) before falling back to explicitly user-selected encodings. [#4474](https://github.com/zowe/zowe-explorer-vscode/pull/4474)
 - Renamed the `"Uninstall zowex server on host..."` command to `""Uninstall SSH server on host..."`. [#4489](https://github.com/zowe/zowe-explorer-vscode/pull/4489)
@@ -33,6 +34,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed hover/tooltip inconsistencies in favorited search nodes where search criteria or path was displayed instead of the profile name. [#4011](https://github.com/zowe/zowe-explorer-vscode/issues/4011)
 - Fixed an issue where the tooltip for SSH profiles was incorrectly displaying the auth method or missing the username. [#4417](https://github.com/zowe/zowe-explorer-vscode/pull/4417)
 - Fixed an issue where using "Allocate Like" on a data set caused the tree nodes to disappear until the profile was collapsed and re-expanded. [#4444](https://github.com/zowe/zowe-explorer-vscode/issues/4444)
+- Fixed an issue where filtering PDS members by user ID was case-sensitive, so a lowercase user ID filter would not match any members. User ID filtering is now case-insensitive. [#3723](https://github.com/zowe/zowe-explorer-vscode/issues/3723)
 - Fixed an issue where data sets with a `PLX` qualifier, and their members, opened as PL/I files. Use the VS Code `files.associations` setting to choose a language for those data sets. [#3801](https://github.com/zowe/zowe-explorer-vscode/issues/3801)
 - Fixed an issue where pressing `Esc` on the "Do you wish to apply this for all trees?" prompt, after choosing a profile to add to a tree, still added the profile. Cancelling the prompt now adds nothing. [#4514](https://github.com/zowe/zowe-explorer-vscode/issues/4514)
 - Fixed an issue where the profile actions menu (including "Hide Profile") failed to open for profiles missing required properties like host. [#4557](https://github.com/zowe/zowe-explorer-vscode/pull/4557)
@@ -54,6 +56,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed confusing wording in the "Update Credentials" prompts. The hint "Leave blank to not store" was shown even when updating existing credentials, where a blank user name is rejected outright. It is now omitted when updating, and reworded to "Leave blank to cancel" elsewhere, to clarify that a blank value cancels the operation rather than clearing any stored credentials. [#3744](https://github.com/zowe/zowe-explorer-vscode/issues/3744)
 - Fixed an issue where opening a PDS member from the table view would fail with a file not found error, if the PDS had not been expanded in the tree. [#4415](https://github.com/zowe/zowe-explorer-vscode/issues/4415)
 - Fixed an issue where recalling a sequential data set caused its contents to be overwritten, resulting in data loss. Now, when a data set is recalled, its contents are no longer modified. [#4412](https://github.com/zowe/zowe-explorer-vscode/issues/4412)
 - Fixed an issue where expanding a profile in the Favorites section uploaded empty contents to each favorited USS file, which failed for users without write access and truncated the file for users with write access. [#4450](https://github.com/zowe/zowe-explorer-vscode/issues/4450)
