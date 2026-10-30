@@ -1165,7 +1165,7 @@
           "group": "001_zowe_dsCreate@2"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)session.*/ && !listMultiSelection",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*_fav.*)(?!.*profile=zftp.*)session.*/ && !listMultiSelection",
           "command": "zowe.ds.filteredDataSetsSearchFor",
           "group": "001_zowe_dsCreate@3"
         },
@@ -1180,7 +1180,7 @@
           "group": "001_zowe_dsCreate@4"
         },
         {
-          "when": "view == zowe.ds.explorer && viewItem =~ /^pds.*/ && !listMultiSelection",
+          "when": "view == zowe.ds.explorer && viewItem =~ /^(?!.*profile=zftp.*)pds.*/ && !listMultiSelection",
           "command": "zowe.ds.pdsSearchFor",
           "group": "001_zowe_dsCreate@7"
         },
