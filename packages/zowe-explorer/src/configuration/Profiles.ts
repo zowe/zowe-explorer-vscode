@@ -196,6 +196,13 @@ export class Profiles extends ProfilesCache {
                 usingCertAuth = true;
                 break;
         }
+        // addCredsToSession resolves type from available credentials only, so honor the user's token/bearer intent when none are present
+        if (!usingBasicAuth && !usingTokenAuth && !usingCertAuth) {
+            const firstInOrder = iSessFromProf.authTypeOrder?.[0];
+            if (firstInOrder === imperative.SessConstants.AUTH_TYPE_TOKEN || firstInOrder === imperative.SessConstants.AUTH_TYPE_BEARER) {
+                usingTokenAuth = true;
+            }
+        }
 
         let tokenType: string;
         try {
