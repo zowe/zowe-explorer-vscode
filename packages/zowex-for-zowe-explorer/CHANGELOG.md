@@ -13,7 +13,6 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - Updated Zowex SDK to `1.0.2` for technical currency. [#4526](https://github.com/zowe/zowe-explorer-vscode/pull/4526)
 - Fixed an error when modifying permissions of a USS file in the "Edit Attributes" webview. [#4582](https://github.com/zowe/zowe-explorer-vscode/pull/4582)
 - Fixed the volume serial being ignored when creating a new data set. [#4582](https://github.com/zowe/zowe-explorer-vscode/pull/4582)
-- Fixed seconds precision missing when displaying "Modified Date" for PDS members in the data set table view. [#4582](https://github.com/zowe/zowe-explorer-vscode/pull/4582)
 
 ## `3.6.0`
 

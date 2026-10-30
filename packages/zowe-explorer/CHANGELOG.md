@@ -38,6 +38,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where data sets with a `PLX` qualifier, and their members, opened as PL/I files. Use the VS Code `files.associations` setting to choose a language for those data sets. [#3801](https://github.com/zowe/zowe-explorer-vscode/issues/3801)
 - Fixed an issue where the profile actions menu (including "Hide Profile") failed to open for profiles missing required properties like host. [#4557](https://github.com/zowe/zowe-explorer-vscode/pull/4557)
 - Fixed an issue where UNIX commands were always wrapped in an `SSH_TTY` terminal redirect, even for profiles that do not use SSH. [#4564](https://github.com/zowe/zowe-explorer-vscode/pull/4564)
+- Fixed seconds precision missing for SSH profiles when displaying "Modified Date" of PDS members in the data set table view. [#4582](https://github.com/zowe/zowe-explorer-vscode/pull/4582)
 
 ## `3.6.0`
 
