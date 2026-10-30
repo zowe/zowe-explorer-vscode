@@ -198,12 +198,12 @@ export function buildMemberInfo(member: any, parentUri: string): IDataSetInfo {
         modifiedDate = new Date(member.m4date);
         // Add time component if available
         if (member.mtime) {
-            const [hours, minutes] = member.mtime.split(":");
+            const [hours, minutes, seconds] = member.mtime.split(":");
             modifiedDate.setHours(parseInt(hours, 10), parseInt(minutes, 10));
 
             // Add seconds component if available
-            if (member.msec) {
-                modifiedDate.setSeconds(parseInt(member.msec, 10));
+            if (seconds || member.msec) {
+                modifiedDate.setSeconds(parseInt(seconds || member.msec, 10));
             }
         }
     }

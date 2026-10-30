@@ -3115,6 +3115,23 @@ describe("buildMemberInfo", () => {
             expect(result.modifiedDate?.getSeconds()).toBe(45);
         });
 
+        it("should preserve seconds from mtime without msec", () => {
+            const member = {
+                member: "MEMBER1",
+                m4date: "2023-12-15",
+                mtime: "14:30:45",
+                user: "USER1",
+            };
+
+            const result = buildMemberInfo(member, parentUri);
+
+            const expectedDate = new Date("2023-12-15");
+            expectedDate.setHours(14, 30, 45);
+
+            expect(result.modifiedDate).toEqual(expectedDate);
+            expect(result.modifiedDate?.getSeconds()).toBe(45);
+        });
+
         it("should handle mtime without msec", () => {
             const member = {
                 member: "MEMBER1",
