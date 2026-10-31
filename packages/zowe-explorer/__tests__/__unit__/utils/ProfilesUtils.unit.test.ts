@@ -1707,6 +1707,7 @@ describe("ProfilesUtils unit tests", () => {
             } as unknown as imperative.Session;
             const mockNode = {
                 getProfile: vi.fn().mockReturnValue(fakeProfile),
+                setSessionToChoice: vi.fn(),
             } as unknown as IZoweTreeNode;
 
             const changePasswordFn = vi.fn().mockResolvedValue({ success: true, returnCode: 0, reasonCode: 0, message: "" });
@@ -1816,51 +1817,72 @@ describe("ProfilesUtils unit tests", () => {
             expect(mocks.changePasswordFn).not.toHaveBeenCalled();
         });
 
-        it("should not compare the old password against the stored credentials", async () => {
+        it("should reject a blank user name in the input box", async () => {
+            const mocks = createChangePasswordMocks();
+            mocks.showInputBoxSpy.mockResolvedValueOnce(undefined); // user name cancelled
+            await ProfilesUtils.changePassword(mocks.mockNode);
+            const { validateInput } = mocks.showInputBoxSpy.mock.calls[0][0];
+            expect(validateInput("   ")).toBe("User name cannot be empty");
+            expect(validateInput("IBMUSER")).toBeNull();
+        });
+
+        it("should reject an empty password in each password input box", async () => {
             const mocks = createChangePasswordMocks();
             mocks.showInputBoxSpy
                 .mockResolvedValueOnce("IBMUSER") // user name
-                .mockResolvedValueOnce("differentToStored") // old password, left for the host to verify
+                .mockResolvedValueOnce("oldPass1") // current password
                 .mockResolvedValueOnce("newPass456") // new password
-                .mockResolvedValueOnce("newPass456"); // confirm
-            mocks.changePasswordFn.mockImplementationOnce((session: imperative.Session) => {
-                expect(session.ISession.password).toBe("differentToStored");
-                return Promise.reject(new Error("Authentication failed"));
-            });
+                .mockResolvedValueOnce(undefined); // confirm cancelled
             await ProfilesUtils.changePassword(mocks.mockNode);
-            expect(mocks.changePasswordFn).toHaveBeenCalled();
+            for (const [options] of mocks.showInputBoxSpy.mock.calls.slice(1)) {
+                expect(options.validateInput("")).toBe("Password cannot be empty");
+                expect(options.validateInput("p4ssw0rd")).toBeNull();
+            }
+            expect(mocks.showInputBoxSpy).toHaveBeenCalledTimes(4);
         });
 
-        it("should send the entered user name and current password, even when none are stored", async () => {
+        it("should build a separate session from the entered credentials for the request", async () => {
             const mocks = createChangePasswordMocks();
-            mocks.fakeSession.ISession.user = undefined;
-            mocks.fakeSession.ISession.password = undefined;
+            const changeSession = { ISession: { user: "NEWUSER", password: "differentToStored" } } as unknown as imperative.Session;
+            mocks.mockCommonApi.getSession.mockReturnValueOnce(mocks.fakeSession).mockReturnValueOnce(changeSession);
             mocks.showInputBoxSpy
                 .mockResolvedValueOnce("NEWUSER") // user name
-                .mockResolvedValueOnce("someOldPass") // old password
-                .mockResolvedValueOnce("newPass456") // new password
-                .mockResolvedValueOnce("newPass456"); // confirm
-            mocks.changePasswordFn.mockImplementationOnce((session: imperative.Session) => {
-                expect(session.ISession.user).toBe("NEWUSER");
-                expect(session.ISession.password).toBe("someOldPass");
-                return Promise.resolve({ success: false, message: "rejected" });
-            });
-            await ProfilesUtils.changePassword(mocks.mockNode);
-            expect(mocks.changePasswordFn).toHaveBeenCalled();
-        });
-
-        it("should restore the stored credentials on the session when the server rejects the change", async () => {
-            const mocks = createChangePasswordMocks();
-            mocks.showInputBoxSpy
-                .mockResolvedValueOnce("OTHERUSR") // user name
-                .mockResolvedValueOnce("wrongOldPass") // old password
+                .mockResolvedValueOnce("differentToStored") // current password, left for the host to verify
                 .mockResolvedValueOnce("newPass456") // new password
                 .mockResolvedValueOnce("newPass456"); // confirm
             mocks.changePasswordFn.mockRejectedValueOnce(new Error("Authentication failed"));
             await ProfilesUtils.changePassword(mocks.mockNode);
-            expect(mocks.fakeSession.ISession.user).toBe("IBMUSER");
-            expect(mocks.fakeSession.ISession.password).toBe("oldPass1");
+            expect(mocks.mockCommonApi.getSession).toHaveBeenLastCalledWith(
+                expect.objectContaining({ profile: expect.objectContaining({ user: "NEWUSER", password: "differentToStored" }) })
+            );
+            expect(mocks.changePasswordFn).toHaveBeenCalledWith(changeSession, "newPass456");
+        });
+
+        it("should not modify the cached session or profile when the server rejects the change", async () => {
+            const mocks = createChangePasswordMocks();
+            mocks.showInputBoxSpy
+                .mockResolvedValueOnce("OTHERUSR") // user name
+                .mockResolvedValueOnce("wrongOldPass") // current password
+                .mockResolvedValueOnce("newPass456") // new password
+                .mockResolvedValueOnce("newPass456"); // confirm
+            mocks.changePasswordFn.mockRejectedValueOnce(new Error("Authentication failed"));
+            await ProfilesUtils.changePassword(mocks.mockNode);
+            expect(mocks.fakeSession.ISession).toEqual({ user: "IBMUSER", password: "oldPass1" });
+            expect(mocks.fakeProfile.profile).toEqual({ user: "IBMUSER", password: "oldPass1" });
             expect(mocks.errorMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Failed to change password: Authentication failed"));
+        });
+
+        it("should show error if a session cannot be created from the entered credentials", async () => {
+            const mocks = createChangePasswordMocks();
+            mocks.mockCommonApi.getSession.mockReturnValueOnce(mocks.fakeSession).mockReturnValueOnce(undefined);
+            mocks.showInputBoxSpy
+                .mockResolvedValueOnce("IBMUSER") // user name
+                .mockResolvedValueOnce("oldPass1") // current password
+                .mockResolvedValueOnce("newPass456") // new password
+                .mockResolvedValueOnce("newPass456"); // confirm
+            await ProfilesUtils.changePassword(mocks.mockNode);
+            expect(mocks.changePasswordFn).not.toHaveBeenCalled();
+            expect(mocks.errorMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Unable to create a session for the selected profile."));
         });
 
         it("should cancel if new password input is dismissed", async () => {
@@ -1985,7 +2007,7 @@ describe("ProfilesUtils unit tests", () => {
                 setSecure: true,
             });
             expect(mocks.fakeProfile.profile.password).toBe("newPass456");
-            expect(mocks.fakeSession.ISession.password).toBe("newPass456");
+            expect(mocks.mockNode.setSessionToChoice).toHaveBeenCalledWith(mocks.fakeSession);
             expect(updateCachedProfileMock).toHaveBeenCalledWith(mocks.fakeProfile, mocks.mockNode);
             expect(mocks.unlockProfileSpy).toHaveBeenCalledWith(mocks.fakeProfile, true);
             expect(mocks.profileUpdatedEmitter.fire).toHaveBeenCalledWith(mocks.fakeProfile);

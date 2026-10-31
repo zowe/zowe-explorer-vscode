@@ -23,7 +23,6 @@ import {
     ProfilesCache,
     imperative,
     ZoweVsCodeExtension,
-    ZoweExplorerZosmf,
     AuthHandler,
     FsAbstractUtils,
     Types,
@@ -562,12 +561,15 @@ export class ProfilesUtils {
                 ignoreFocusOut: true,
                 placeHolder: vscode.l10n.t("User Name"),
                 value: session.ISession.user,
+                validateInput: (value) => (value.trim() ? null : vscode.l10n.t("User name cannot be empty")),
             })
         )?.trim();
         if (!user) {
             Gui.infoMessage(vscode.l10n.t("Operation cancelled"));
             return;
         }
+
+        const validatePassword = (value: string): string => (value ? null : vscode.l10n.t("Password cannot be empty"));
 
         // Don't check if current password === stored password (if any), but require user to populate this field themselves
         // The host then verifies the user and current password as part of the change request instead
@@ -576,6 +578,7 @@ export class ProfilesUtils {
             password: true,
             ignoreFocusOut: true,
             placeHolder: vscode.l10n.t("Current Password"),
+            validateInput: validatePassword,
         });
         if (!currentPassword) {
             Gui.infoMessage(vscode.l10n.t("Operation cancelled"));
@@ -587,12 +590,13 @@ export class ProfilesUtils {
             password: true,
             ignoreFocusOut: true,
             placeHolder: vscode.l10n.t("New Password"),
+            validateInput: validatePassword,
         });
         if (!newPassword) {
             Gui.infoMessage(vscode.l10n.t("Operation cancelled"));
             return;
         }
-        if (currentPassword.toLowerCase() === newPassword.toLowerCase()) {
+        if (currentPassword === newPassword) {
             Gui.errorMessage(vscode.l10n.t("New password cannot be the same as old password. Password was not changed."));
             return;
         }
@@ -602,29 +606,28 @@ export class ProfilesUtils {
             password: true,
             ignoreFocusOut: true,
             placeHolder: vscode.l10n.t("Confirm New Password"),
+            validateInput: validatePassword,
         });
         if (!confirmPassword) {
             Gui.infoMessage(vscode.l10n.t("Operation cancelled"));
             return;
         }
-        if (newPassword.toLowerCase() !== confirmPassword.toLowerCase()) {
+        if (newPassword !== confirmPassword) {
             Gui.errorMessage(vscode.l10n.t("Passwords do not match. Password was not changed."));
             return;
         }
 
-        const { user: storedUser, password: storedPassword } = session.ISession;
         try {
-            // The API reads the user and current password from the session
-            session.ISession.user = user;
-            session.ISession.password = currentPassword;
-            const response = await commonApi.changePassword(session, newPassword);
+            // Build a new session from the entered credentials
+            const changeSession = commonApi.getSession({ ...profile, profile: { ...profile.profile, user, password: currentPassword } });
+            if (!changeSession) {
+                throw new Error(vscode.l10n.t("Unable to create a session for the selected profile."));
+            }
+            const response = await commonApi.changePassword(changeSession, newPassword);
             if (!response.success) {
                 throw new Error(response.message);
             }
         } catch (err) {
-            // Don't leave unverified credentials on the cached session
-            session.ISession.user = storedUser;
-            session.ISession.password = storedPassword;
             Gui.errorMessage(
                 vscode.l10n.t({
                     message: "Failed to change password: {0}",
@@ -644,11 +647,11 @@ export class ProfilesUtils {
             }
             await profInfo.updateProperty({ ...upd, property: "password", value: newPassword });
             profile.profile.user = user;
-            profile.profile.password = session.ISession.password = newPassword;
-            imperative.AuthOrder.addCredsToSession(session.ISession, ZoweExplorerZosmf.CommonApi.getCommandArgs(profile));
+            profile.profile.password = newPassword;
 
-            // Update the profile cache, then release the locks on it
+            // Update the profile cache and rebuild the node's session from it, then release the locks on it
             Constants.PROFILES_CACHE.updateCachedProfile(profile, node);
+            node.setSessionToChoice(commonApi.getSession(profile));
             AuthHandler.unlockProfile(profile, true);
 
             // Let ZE, extenders amd secure vault (if enabled) know that the profile has updated
