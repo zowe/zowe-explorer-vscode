@@ -16,7 +16,7 @@ import { imperative, PersistenceSchemaEnum } from "@zowe/zowe-explorer-api";
 import type { Profiles } from "./Profiles";
 
 export class Constants {
-    public static readonly COMMAND_COUNT = 134;
+    public static readonly COMMAND_COUNT = 136;
     public static readonly MAX_SEARCH_HISTORY = 5;
     public static readonly MAX_FILE_HISTORY = 10;
     public static readonly MAX_DISPLAYED_DELETE_NAMES = 10;
@@ -96,6 +96,9 @@ export class Constants {
     public static readonly SETTINGS_OVERRIDE_WITH_ENV_VAR = "zowe.settings.overrideWithEnvironmentVariables";
     public static readonly SETTINGS_HISTORY_GROUP_BY_HOST = "zowe.settings.historyGroupByHost";
     public static readonly SETTINGS_MAX_SEARCH_HISTORY = "zowe.settings.maxSearchHistory";
+    public static readonly SETTINGS_READ_ONLY_RULES = "zowe.readOnly.rules";
+    public static readonly READ_ONLY_CONTEXT = "_readonly";
+    public static readonly WRITABLE_CONTEXT = "_writable";
     public static EXTENDER_CONFIG: imperative.ICommandProfileTypeConfiguration[] = [];
     public static readonly ZOWE_CLI_SCM = "@zowe/cli";
     public static readonly MAX_DATASET_LENGTH = 44;

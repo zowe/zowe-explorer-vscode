@@ -32,6 +32,7 @@ import { Profiles } from "../../../../src/configuration/Profiles";
 import { createIProfile, createISession } from "../../../__mocks__/mockCreators/shared";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
+import { ReadOnlyManagement } from "../../../../src/management/ReadOnlyManagement";
 import { USSFileStructure } from "../../../../src/trees/uss/USSFileStructure";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { ZoweLogger } from "../../../../src/tools/ZoweLogger";
@@ -607,6 +608,285 @@ describe("UssFSProvider", () => {
             expect(readChildDirResult).toEqual([["grandchild.txt", FileType.File]]);
 
             remoteLookupSpy.mockRestore();
+        });
+    });
+
+    describe("read-only URIs", () => {
+        afterEach(() => {
+            vi.restoreAllMocks();
+        });
+
+        it("returns readonly permissions in stat for a file opened with readonly=true", async () => {
+            vi.spyOn(UssFSProvider.instance as any, "lookup").mockReturnValue(null);
+            vi.spyOn(UssFSProvider.instance as any, "statImplementation").mockResolvedValue(testEntries.file);
+            const res = await UssFSProvider.instance.stat(testUris.file.with({ query: "readonly=true" }));
+            expect(res).toStrictEqual({ ...testEntries.file, permissions: FilePermission.Readonly });
+            expect(testEntries.file.permissions).toBeUndefined();
+        });
+
+        it("does not return readonly permissions in stat without the readonly query", async () => {
+            vi.spyOn(UssFSProvider.instance as any, "lookup").mockReturnValue(null);
+            vi.spyOn(UssFSProvider.instance as any, "statImplementation").mockResolvedValue(testEntries.file);
+            const res = await UssFSProvider.instance.stat(testUris.file);
+            expect(res).toBe(testEntries.file);
+        });
+
+        it("rejects writeFile for a read-only URI", async () => {
+            const lookupParentDirectorySpy = vi.spyOn(UssFSProvider.instance, "lookupParentDirectory");
+            await expect(
+                UssFSProvider.instance.writeFile(testUris.file.with({ query: "readonly=true" }), new Uint8Array(), { create: false, overwrite: true })
+            ).rejects.toThrow("was opened in read-only mode");
+            expect(lookupParentDirectorySpy).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("read-only rules and overrides", () => {
+        let mockUssApi: Record<string, Mock>;
+        const resetReadOnly = (): void => {
+            (ReadOnlyManagement as any).overrides.clear();
+            (ReadOnlyManagement as any).ruleCache = undefined;
+        };
+        const makeReadOnly = (...paths: string[]): MockInstance =>
+            vi.spyOn(ReadOnlyManagement, "isReadOnly").mockImplementation((uri: vscode.Uri) => paths.includes(uri.path));
+
+        beforeEach(() => {
+            mockUssApi = {
+                uploadFromBuffer: vi.fn().mockResolvedValue({ apiResponse: { etag: "NEWETAG" } }),
+                delete: vi.fn(),
+                rename: vi.fn(),
+                move: vi.fn(),
+                copy: vi.fn(),
+                create: vi.fn(),
+                fileList: vi.fn().mockResolvedValue({ success: true, apiResponse: { items: [] } }),
+            };
+            vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue(mockUssApi as any);
+            resetReadOnly();
+        });
+
+        afterEach(() => {
+            resetReadOnly();
+            vi.restoreAllMocks();
+        });
+
+        describe("writeFile", () => {
+            it("rejects saving a read-only file", async () => {
+                makeReadOnly(testUris.file.path);
+                const file = new UssFile("aFile.txt");
+                file.metadata = { profile: testProfile, path: "/aFile.txt" };
+                const session = { ...testEntries.session, entries: new Map([["aFile.txt", file]]) };
+                vi.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(session);
+                await expect(
+                    UssFSProvider.instance.writeFile(testUris.file, new Uint8Array([1]), { create: false, overwrite: true })
+                ).rejects.toThrow("/aFile.txt is read-only.");
+                expect(mockUssApi.uploadFromBuffer).not.toHaveBeenCalled();
+            });
+
+            it("rejects creating a file in a read-only directory", async () => {
+                makeReadOnly(testUris.folder.path);
+                const folder = { ...testEntries.folder, entries: new Map() };
+                vi.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(folder);
+                await expect(
+                    UssFSProvider.instance.writeFile(testUris.innerFile, new Uint8Array(), { create: true, overwrite: true })
+                ).rejects.toThrow("/aFolder is read-only.");
+                expect(folder.entries.has("innerFile.txt")).toBe(false);
+                expect(mockUssApi.uploadFromBuffer).not.toHaveBeenCalled();
+            });
+
+            it("rejects edits to a read-only file in the conflict view", async () => {
+                makeReadOnly(testUris.file.path);
+                const file = new UssFile("aFile.txt");
+                file.metadata = { profile: testProfile, path: "/aFile.txt" };
+                const session = { ...testEntries.session, entries: new Map([["aFile.txt", file]]) };
+                vi.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(session);
+                await expect(
+                    UssFSProvider.instance.writeFile(testUris.file.with({ query: "inDiff=true" }), new Uint8Array([4, 5, 6]), {
+                        create: false,
+                        overwrite: true,
+                    })
+                ).rejects.toThrow("/aFile.txt is read-only.");
+                expect(mockUssApi.uploadFromBuffer).not.toHaveBeenCalled();
+            });
+        });
+
+        describe("delete", () => {
+            it("rejects deleting a read-only file", async () => {
+                makeReadOnly(testUris.file.path);
+                await expect(UssFSProvider.instance.delete(testUris.file, { recursive: false })).rejects.toThrow("/aFile.txt is read-only.");
+                expect(mockUssApi.delete).not.toHaveBeenCalled();
+            });
+
+            it("rejects deleting a file that inherits read-only from its directory", async () => {
+                ReadOnlyManagement.setReadOnly(testUris.folder, true);
+                await expect(UssFSProvider.instance.delete(testUris.innerFile, { recursive: false })).rejects.toThrow(
+                    "/aFolder/innerFile.txt is read-only."
+                );
+                expect(mockUssApi.delete).not.toHaveBeenCalled();
+            });
+
+            it("deletes a writable file in a read-only directory and removes its override", async () => {
+                ReadOnlyManagement.setReadOnly(testUris.folder, true);
+                ReadOnlyManagement.setReadOnly(testUris.innerFile, false);
+                const innerFile = new UssFile("innerFile.txt");
+                innerFile.metadata = { profile: testProfile, path: "/aFolder/innerFile.txt" };
+                const folder = { ...testEntries.folder, entries: new Map([["innerFile.txt", innerFile]]), size: 1 };
+                vi.spyOn(UssFSProvider.instance as any, "_getDeleteInfo").mockReturnValue({
+                    entryToDelete: innerFile,
+                    parent: folder,
+                    parentUri: testUris.folder,
+                });
+
+                await UssFSProvider.instance.delete(testUris.innerFile, { recursive: false });
+
+                expect(mockUssApi.delete).toHaveBeenCalledWith("/aFolder/innerFile.txt", false);
+                expect(ReadOnlyManagement.isReadOnly(testUris.innerFile)).toBe(true);
+            });
+
+            it("rejects deleting a read-only directory", async () => {
+                makeReadOnly(testUris.folder.path);
+                await expect(UssFSProvider.instance.delete(testUris.folder, { recursive: true })).rejects.toThrow("/aFolder is read-only.");
+                expect(mockUssApi.delete).not.toHaveBeenCalled();
+            });
+        });
+
+        describe("rename", () => {
+            it("rejects renaming a read-only file", async () => {
+                makeReadOnly(testUris.file.path);
+                await expect(
+                    UssFSProvider.instance.rename(testUris.file, testUris.file.with({ path: "/sestest/aFile2.txt" }), { overwrite: false })
+                ).rejects.toThrow("/aFile.txt is read-only.");
+                expect(mockUssApi.rename).not.toHaveBeenCalled();
+            });
+
+            it("rejects renaming a file to a read-only name", async () => {
+                makeReadOnly("/sestest/PROD");
+                await expect(
+                    UssFSProvider.instance.rename(testUris.folder, testUris.folder.with({ path: "/sestest/PROD" }), { overwrite: false })
+                ).rejects.toThrow("/PROD is read-only.");
+                expect(mockUssApi.rename).not.toHaveBeenCalled();
+            });
+
+            it("rejects renaming a file that inherits read-only from its directory", async () => {
+                ReadOnlyManagement.setReadOnly(testUris.folder, true);
+                await expect(
+                    UssFSProvider.instance.rename(testUris.innerFile, testUris.innerFile.with({ path: "/sestest/aFolder/renamed.txt" }), {
+                        overwrite: false,
+                    })
+                ).rejects.toThrow("/aFolder/innerFile.txt is read-only.");
+                expect(mockUssApi.rename).not.toHaveBeenCalled();
+            });
+
+            it("renames a writable file in a read-only directory and keeps it writable under its new name", async () => {
+                ReadOnlyManagement.setReadOnly(testUris.folder, true);
+                ReadOnlyManagement.setReadOnly(testUris.innerFile, false);
+                const newUri = testUris.innerFile.with({ path: "/sestest/aFolder/renamed.txt" });
+                const innerFile = new UssFile("innerFile.txt");
+                innerFile.metadata = { profile: testProfile, path: "/aFolder/innerFile.txt" };
+                const folder = { ...testEntries.folder, entries: new Map([["innerFile.txt", innerFile]]) };
+                vi.spyOn(UssFSProvider.instance as any, "lookup").mockReturnValue(innerFile);
+                vi.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(folder);
+
+                await UssFSProvider.instance.rename(testUris.innerFile, newUri, { overwrite: false });
+
+                expect(mockUssApi.rename).toHaveBeenCalledWith("/aFolder/innerFile.txt", "/aFolder/renamed.txt");
+                expect(ReadOnlyManagement.isReadOnly(newUri)).toBe(false);
+                expect(ReadOnlyManagement.isReadOnly(testUris.innerFile)).toBe(true);
+            });
+        });
+
+        describe("move", () => {
+            it("rejects moving a read-only file", async () => {
+                makeReadOnly(testUris.file.path);
+                await expect(UssFSProvider.instance.move(testUris.file, testUris.file.with({ path: "/sestest/aFolder/aFile.txt" }))).rejects.toThrow(
+                    "/aFile.txt is read-only."
+                );
+                expect(mockUssApi.move).not.toHaveBeenCalled();
+            });
+
+            it("rejects moving a file into a read-only directory", async () => {
+                makeReadOnly(testUris.folder.path);
+                await expect(UssFSProvider.instance.move(testUris.file, testUris.file.with({ path: "/sestest/aFolder/aFile.txt" }))).rejects.toThrow(
+                    "/aFolder is read-only."
+                );
+                expect(mockUssApi.move).not.toHaveBeenCalled();
+            });
+
+            it("rejects moving a file that inherits read-only from its directory", async () => {
+                ReadOnlyManagement.setReadOnly(testUris.folder, true);
+                await expect(
+                    UssFSProvider.instance.move(testUris.innerFile, testUris.innerFile.with({ path: "/sestest/innerFile.txt" }))
+                ).rejects.toThrow("/aFolder/innerFile.txt is read-only.");
+                expect(mockUssApi.move).not.toHaveBeenCalled();
+            });
+
+            it("moves a writable file out of a read-only directory and keeps it writable", async () => {
+                ReadOnlyManagement.setReadOnly(testUris.folder, true);
+                ReadOnlyManagement.setReadOnly(testUris.innerFile, false);
+                const newUri = testUris.innerFile.with({ path: "/sestest/innerFile.txt" });
+                vi.spyOn(UssFSProvider.instance as any, "_getInfoFromUri")
+                    .mockReturnValueOnce({ path: "/innerFile.txt", profile: testProfile })
+                    .mockReturnValueOnce({ path: "/aFolder/innerFile.txt", profile: testProfile });
+                const relocateSpy = vi.spyOn(UssFSProvider.instance as any, "_relocateEntry").mockResolvedValue(undefined);
+
+                await expect(UssFSProvider.instance.move(testUris.innerFile, newUri)).resolves.toBe(true);
+
+                expect(mockUssApi.move).toHaveBeenCalledWith("/aFolder/innerFile.txt", "/innerFile.txt");
+                expect(relocateSpy).toHaveBeenCalled();
+                expect(ReadOnlyManagement.isReadOnly(newUri)).toBe(false);
+            });
+        });
+
+        describe("copy", () => {
+            const fileTree = {
+                localUri: testUris.file,
+                ussPath: "/aFile.txt",
+                baseName: "aFile.txt",
+                binary: false,
+                children: [],
+                sessionName: "sestest",
+                type: USSFileStructure.UssFileType.File,
+            };
+            const uriWithTree = testUris.file.with({ query: `tree=${encodeURIComponent(JSON.stringify(fileTree))}` });
+            const pasteInto = (dirPath: string): Promise<void> =>
+                UssFSProvider.instance.copy(uriWithTree, testUris.folder.with({ path: `/sestest${dirPath}` }), { overwrite: true });
+
+            beforeEach(() => {
+                vi.spyOn(UssFSProvider.instance as any, "_getInfoFromUri").mockImplementation((uri: vscode.Uri) => ({
+                    profile: testProfile,
+                    path: uri.path.substring("/sestest".length),
+                }));
+            });
+
+            const expectNothingPasted = (): void => {
+                expect(mockUssApi.copy).not.toHaveBeenCalled();
+                expect(mockUssApi.create).not.toHaveBeenCalled();
+                expect(mockUssApi.uploadFromBuffer).not.toHaveBeenCalled();
+            };
+
+            it("rejects pasting into a read-only directory", async () => {
+                makeReadOnly("/sestest/aFolder");
+                await expect(pasteInto("/aFolder")).rejects.toThrow("/aFolder is read-only.");
+                expectNothingPasted();
+            });
+
+            it("rejects pasting over a read-only path in a writable directory", async () => {
+                makeReadOnly("/sestest/aFolder/aFile.txt");
+                await expect(pasteInto("/aFolder")).rejects.toThrow("/aFolder/aFile.txt is read-only.");
+                expectNothingPasted();
+            });
+
+            it("checks the name the pasted entry will get after resolving name collisions", async () => {
+                mockUssApi.fileList.mockResolvedValue({ success: true, apiResponse: { items: [{ name: "aFile.txt" }] } });
+                makeReadOnly("/sestest/aFolder/aFile (1).txt");
+                await expect(pasteInto("/aFolder")).rejects.toThrow("/aFolder/aFile (1).txt is read-only.");
+                expectNothingPasted();
+            });
+
+            it("pastes into a writable directory whose parent is read-only", async () => {
+                ReadOnlyManagement.setReadOnly(testUris.folder, true);
+                ReadOnlyManagement.setReadOnly(testUris.folder.with({ path: "/sestest/aFolder/sub" }), false);
+                await pasteInto("/aFolder/sub");
+                expect(mockUssApi.copy).toHaveBeenCalledWith("/aFolder/sub/aFile.txt", expect.objectContaining({ from: "/aFile.txt" }));
+            });
         });
     });
 

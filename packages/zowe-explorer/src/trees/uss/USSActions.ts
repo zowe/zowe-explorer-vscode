@@ -33,6 +33,7 @@ import { Constants } from "../../configuration/Constants";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
 import { LocalFileManagement } from "../../management/LocalFileManagement";
 import { ZoweLogger } from "../../tools/ZoweLogger";
+import { ReadOnlyManagement } from "../../management/ReadOnlyManagement";
 import { FilterItem } from "../../management/FilterManagement";
 import { UssFSProvider } from "./UssFSProvider";
 import { SharedActions } from "../shared/SharedActions";
@@ -81,6 +82,11 @@ export class USSActions {
             return;
         }
 
+        const parentUri = isTopLevel ? node.resourceUri.with({ path: path.posix.join(node.resourceUri.path, filePath) }) : node.resourceUri;
+        if (await ReadOnlyManagement.showErrorIfReadOnly(parentUri)) {
+            return;
+        }
+
         const nameOptions: vscode.InputBoxOptions = {
             title: vscode.l10n.t({
                 message: "Create {0}",
@@ -105,6 +111,9 @@ export class USSActions {
                 const uri = node.resourceUri.with({
                     path: isTopLevel ? path.posix.join(node.resourceUri.path, filePath) : path.posix.join(node.resourceUri.path, name),
                 });
+                if (await ReadOnlyManagement.showErrorIfReadOnly(uri, { checkParent: true })) {
+                    return;
+                }
 
                 let replace = false;
                 let cacheEntryCreated = false;
@@ -222,8 +231,26 @@ export class USSActions {
         }
     }
 
+    /**
+     * Shows an error if any of the files would be uploaded to a read-only path in the directory
+     * @returns true if a file would be uploaded to a read-only path and the upload should stop
+     */
+    private static async isReadOnlyUploadTarget(node: IZoweUSSTreeNode, files: vscode.Uri[]): Promise<boolean> {
+        const directoryUri = ReadOnlyManagement.getNodeUri(node);
+        for (const file of files) {
+            const targetUri = directoryUri.with({ path: path.posix.join(directoryUri.path, path.basename(file.fsPath)) });
+            if (await ReadOnlyManagement.showErrorIfReadOnly(targetUri)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static async uploadDialog(node: IZoweUSSTreeNode, ussFileProvider: Types.IZoweUSSTreeType, isBinary?: boolean): Promise<void> {
         ZoweLogger.trace("uss.actions.uploadDialog called.");
+        if (await ReadOnlyManagement.showErrorIfReadOnly(ReadOnlyManagement.getNodeUri(node))) {
+            return;
+        }
         const fileOpenOptions = {
             canSelectFiles: true,
             openLabel: "Upload Files",
@@ -234,6 +261,9 @@ export class USSActions {
         const value = await Gui.showOpenDialog(fileOpenOptions);
 
         if (value?.length > 0) {
+            if (await USSActions.isReadOnlyUploadTarget(node, value)) {
+                return;
+            }
             await Gui.withProgress(
                 {
                     location: vscode.ProgressLocation.Notification,
@@ -279,6 +309,9 @@ export class USSActions {
             Gui.infoMessage(vscode.l10n.t("This action is only supported for USS directories."));
             return;
         }
+        if (await ReadOnlyManagement.showErrorIfReadOnly(ReadOnlyManagement.getNodeUri(node))) {
+            return;
+        }
 
         const profile = node.getProfile();
         const encoding = await SharedUtils.promptForUploadEncoding(profile, node.fullPath);
@@ -296,6 +329,9 @@ export class USSActions {
 
         const selectedFiles = await Gui.showOpenDialog(fileOpenOptions);
         if (!selectedFiles || selectedFiles.length === 0) {
+            return;
+        }
+        if (await USSActions.isReadOnlyUploadTarget(node, selectedFiles)) {
             return;
         }
 
@@ -928,6 +964,11 @@ export class USSActions {
             selectedNodes = ussFileProvider.getTreeView().selection;
         }
         selectedNodes = selectedNodes.filter((x) => SharedContext.isDocument(x) || SharedContext.isUssDirectory(x) || SharedContext.isBinary(x));
+        for (const selectedNode of selectedNodes) {
+            if (await ReadOnlyManagement.showErrorIfReadOnly(selectedNode.resourceUri)) {
+                return;
+            }
+        }
         const fileNames = selectedNodes.map(({ label }) => label.toString());
         const displayedFileNames = fileNames.slice(0, Constants.MAX_DISPLAYED_DELETE_NAMES).join("\n");
         const additionalFilesCount = fileNames.length - Constants.MAX_DISPLAYED_DELETE_NAMES;
@@ -1072,6 +1113,9 @@ export class USSActions {
         ZoweLogger.trace("uss.actions.pasteUss called.");
         if (node.pasteUssTree == null) {
             await Gui.infoMessage(vscode.l10n.t("The paste operation is not supported for this node."));
+            return;
+        }
+        if (await ReadOnlyManagement.showErrorIfReadOnly(ReadOnlyManagement.getNodeUri(node))) {
             return;
         }
         await Gui.withProgress(

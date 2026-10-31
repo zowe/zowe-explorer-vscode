@@ -15,6 +15,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added `getFileApi` and `IZoweExplorerFileApi` to `Types.IApiRegisterClient`, exposing a `getEncodingForUri` function that extenders can use to retrieve the encoding ZE has determined for a resource URI. [#4474](https://github.com/zowe/zowe-explorer-vscode/pull/4474)
 - Added support for resolving data set aliases when using SSH profiles in the `SshMvsApi` class. [#4489](https://github.com/zowe/zowe-explorer-vscode/pull/4489)
 - Added support for the `tsoAccount` and `tsoProcedure` z/OSMF profile properties, which are now passed as the `X-IBM-Request-Acctnum` and `X-IBM-Request-Proc` z/OSMF headers on data set operations that support them. [#4485] (https://github.com/zowe/zowe-explorer-vscode/pull/4485)
+- Added the `isReadOnlyUri`, `applyReadOnlyPermission`, and `throwIfReadOnly` functions to `FsAbstractUtils` for handling filesystem URIs with the `readonly=true` query parameter. [#2297](https://github.com/zowe/zowe-explorer-vscode/issues/2297)
 - Added optional `ssoLogin` and `ssoLogout` functions to the `IApiExplorerExtender` interface to expose SSO login and logout capabilities to Zowe Explorer extenders. [#4137](https://github.com/zowe/zowe-explorer-vscode/issues/4137)
 - Added the `vscode-codicon-stylesheet` id to the codicons `<link>` in the webview HTML template so VS Code Elements components can render icons. [#4534](https://github.com/zowe/zowe-explorer-vscode/pull/4534)
 
