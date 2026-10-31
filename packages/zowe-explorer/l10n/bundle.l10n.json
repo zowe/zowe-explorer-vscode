@@ -202,6 +202,7 @@
   "Added support for adding VSAM datasets to favorites. <a>#4103</a>": "Added support for adding VSAM datasets to favorites. <a>#4103</a>",
   "Added support for adding a Zowe profile across all trees <a>#2603</a>": "Added support for adding a Zowe profile across all trees <a>#2603</a>",
   "Added support for asynchronous operations when using integrated terminals. <a>#3640</a>": "Added support for asynchronous operations when using integrated terminals. <a>#3640</a>",
+  "Added support for changing the password on the remote system, which then also updates the locally stored password. Currently only supports the z/OSMF profile type. <a>#1538</a>": "Added support for changing the password on the remote system, which then also updates the locally stored password. Currently only supports the z/OSMF profile type. <a>#1538</a>",
   "Added support for comma-separated job prefixes in the **JOBS** tree filter, matching existing data set filter behavior. <a>#4395</a>": "Added support for comma-separated job prefixes in the **JOBS** tree filter, matching existing data set filter behavior. <a>#4395</a>",
   "Added support for consoleName property in z/OSMF profiles when issuing MVS commands <a>#1667</a>": "Added support for consoleName property in z/OSMF profiles when issuing MVS commands <a>#1667</a>",
   "Added support for consoleName property in z/OSMF profiles when issuing MVS commands. <a>#1667</a>": "Added support for consoleName property in z/OSMF profiles when issuing MVS commands. <a>#1667</a>",
@@ -336,7 +337,15 @@
   "Certificate Key for Authentication.": "Certificate Key for Authentication.",
   "Certificate Keys": "Certificate Keys",
   "Certificate Wizard": "Certificate Wizard",
+  "Change Password": "Change Password",
+  "Change Password is not supported for profile type \"{0}\"./Profile type": {
+    "message": "Change Password is not supported for profile type \"{0}\".",
+    "comment": [
+      "Profile type"
+    ]
+  },
   "Change the Authentication Method": "Change the Authentication Method",
+  "Change your password on the server and update stored password": "Change your password on the server and update stored password",
   "Changed ZoweExplorerExtender.initForZowe profileTypeConfigurations: imperative.ICommandProfileTypeConfiguration[] to a required argument to address issues seen after registration of profile type when not passed. <a>#2575</a>": "Changed ZoweExplorerExtender.initForZowe profileTypeConfigurations: imperative.ICommandProfileTypeConfiguration[] to a required argument to address issues seen after registration of profile type when not passed. <a>#2575</a>",
   "Changed default base profile naming scheme in newly generated configuration files to prevent name and property conflicts between Global and Project profiles <a>#2682</a>": "Changed default base profile naming scheme in newly generated configuration files to prevent name and property conflicts between Global and Project profiles <a>#2682</a>",
   "Changed the jobs pagination setting to be disabled by default and the default records to fetch from 100 to 1000 due to customer feedback. <a>#3743</a>": "Changed the jobs pagination setting to be disabled by default and the default records to fetch from 100 to 1000 due to customer feedback. <a>#3743</a>",
@@ -410,6 +419,8 @@
   "Configure and apply file filtering options": "Configure and apply file filtering options",
   "Configure and apply file filtering options (currently configured)": "Configure and apply file filtering options (currently configured)",
   "Confirm": "Confirm",
+  "Confirm New Password": "Confirm New Password",
+  "Confirm new password": "Confirm new password",
   "Conflict: Remote contents have changed.": "Conflict: Remote contents have changed.",
   "Connection Name": "Connection Name",
   "Console command submitted.": "Console command submitted.",
@@ -456,6 +467,7 @@
       "Profile name"
     ]
   },
+  "Current Password": "Current Password",
   "Current Records": "Current Records",
   "Current encoding is {0}/Encoding name": {
     "message": "Current encoding is {0}",
@@ -622,11 +634,13 @@
   "Enter an SMS data class": "Enter an SMS data class",
   "Enter an allocation unit": "Enter an allocation unit",
   "Enter command here...": "Enter command here...",
+  "Enter current password": "Enter current password",
   "Enter file extension (e.g. csv)": "Enter file extension (e.g. csv)",
   "Enter job owner ID": "Enter job owner ID",
   "Enter job prefix, use a comma to separate multiple prefixes": "Enter job prefix, use a comma to separate multiple prefixes",
   "Enter job status": "Enter job status",
   "Enter local filter...": "Enter local filter...",
+  "Enter new password": "Enter new password",
   "Enter or update the TSO command": "Enter or update the TSO command",
   "Enter or update the Unix command": "Enter or update the Unix command",
   "Enter or update the console command": "Enter or update the console command",
@@ -659,6 +673,7 @@
   "Enter the secondary space allocation": "Enter the secondary space allocation",
   "Enter the size of the data set": "Enter the size of the data set",
   "Enter the text to search for.": "Enter the text to search for.",
+  "Enter the user name": "Enter the user name",
   "Enter the user name for the {0} connection. Leave blank to cancel./Profile name": {
     "message": "Enter the user name for the {0} connection. Leave blank to cancel.",
     "comment": [
@@ -764,6 +779,12 @@
   "Exposed commands to drive filtering in the Data Sets views <a>#3992</a>": "Exposed commands to drive filtering in the Data Sets views <a>#3992</a>",
   "Exposed commands to drive search in the USS views. <a>#3933</a>": "Exposed commands to drive search in the USS views. <a>#3933</a>",
   "Exposed read and write access to local storage keys for Zowe Explorer extenders. <a>#3180</a>": "Exposed read and write access to local storage keys for Zowe Explorer extenders. <a>#3180</a>",
+  "Failed to change password: {0}/Error message": {
+    "message": "Failed to change password: {0}",
+    "comment": [
+      "Error message"
+    ]
+  },
   "Failed to copy member {0}: {1}/Member nameError message": {
     "message": "Failed to copy member {0}: {1}",
     "comment": [
@@ -1615,10 +1636,13 @@
   "Name of Data Set Template": "Name of Data Set Template",
   "Name of data set member": "Name of data set member",
   "Name of member": "Name of member",
+  "New Password": "New Password",
   "New features and enhancements": "New features and enhancements",
   "New filter": "New filter",
+  "New password cannot be the same as old password. Password was not changed.": "New password cannot be the same as old password. Password was not changed.",
   "Next page": "Next page",
   "No": "No",
+  "No API found for the selected profile.": "No API found for the selected profile.",
   "No SSH profile found. Please create an SSH profile.": "No SSH profile found. Please create an SSH profile.",
   "No USS favorites found.": "No USS favorites found.",
   "No USS profiles found. Please add a profile first.": "No USS profiles found. Please add a profile first.",
@@ -1655,6 +1679,7 @@
       "Session label"
     ]
   },
+  "No profile found for the selected node.": "No profile found for the selected node.",
   "No profiles available": "No profiles available",
   "No profiles available.": "No profiles available.",
   "No recent members found.": "No recent members found.",
@@ -1758,6 +1783,20 @@
   "Partitioned Data Set: Default": "Partitioned Data Set: Default",
   "Partitioned Data Set: Extended": "Partitioned Data Set: Extended",
   "Password": "Password",
+  "Password cannot be empty": "Password cannot be empty",
+  "Password changed on the server but failed to update locally stored credentials. Consider right clicking profile -> Manage Profile -> Update Credentials with new password immediately. {0}/Error message": {
+    "message": "Password changed on the server but failed to update locally stored credentials. Consider right clicking profile -> Manage Profile -> Update Credentials with new password immediately. {0}",
+    "comment": [
+      "Error message"
+    ]
+  },
+  "Password for {0} was successfully changed/Profile name": {
+    "message": "Password for {0} was successfully changed",
+    "comment": [
+      "Profile name"
+    ]
+  },
+  "Passwords do not match. Password was not changed.": "Passwords do not match. Password was not changed.",
   "Pasting files...": "Pasting files...",
   "Path: ": "Path: ",
   "Pattern: ": "Pattern: ",
@@ -2328,6 +2367,7 @@
   "USS path must start with /": "USS path must start with /",
   "USSActions.pasteUssFile - use DatasetActions.pasteUss instead": "USSActions.pasteUssFile - use DatasetActions.pasteUss instead",
   "Unable to copy data set.": "Unable to copy data set.",
+  "Unable to create a session for the selected profile.": "Unable to create a session for the selected profile.",
   "Unable to create data set or member with lowercase letters.": "Unable to create data set or member with lowercase letters.",
   "Unable to create data set.": "Unable to create data set.",
   "Unable to create member.": "Unable to create member.",
@@ -2456,6 +2496,7 @@
   "User ID": "User ID",
   "User Name": "User Name",
   "User dismissed the Certificate Wizard.": "User dismissed the Certificate Wizard.",
+  "User name cannot be empty": "User name cannot be empty",
   "User: ": "User: ",
   "Users can now follow a prompt to create a new Zowe client configuration. The prompt displays when VS Code is opened with Zowe Explorer installed, but the user does not have any Zowe client configurations. <a>#3148</a>": "Users can now follow a prompt to create a new Zowe client configuration. The prompt displays when VS Code is opened with Zowe Explorer installed, but the user does not have any Zowe client configurations. <a>#3148</a>",
   "Users can now update the credentials for a profile when the autoStore property is set to false in a team configuration. When autoStore is false, the new credentials are only saved in memory, and these credentials persist until the user updates them again or closes VS Code. <a>#3524</a>": "Users can now update the credentials for a profile when the autoStore property is set to false in a team configuration. When autoStore is false, the new credentials are only saved in memory, and these credentials persist until the user updates them again or closes VS Code. <a>#3524</a>",

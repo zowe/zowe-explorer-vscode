@@ -13,17 +13,20 @@ import * as vscode from "vscode";
 import * as path from "path";
 import * as fs from "fs";
 import {
+    errorMessage,
     handleError,
     IZoweTreeNode,
     ZoweTreeNode,
     FileManagement,
     Gui,
+    MainframeInteraction,
     ProfilesCache,
     imperative,
     ZoweVsCodeExtension,
     AuthHandler,
     FsAbstractUtils,
     Types,
+    Validation,
 } from "@zowe/zowe-explorer-api";
 import { Constants } from "../configuration/Constants";
 import { SettingsConfig } from "../configuration/SettingsConfig";
@@ -33,6 +36,7 @@ import { ZoweLocalStorage } from "../tools/ZoweLocalStorage";
 import { Definitions } from "../configuration/Definitions";
 import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
 import { IProfileLoaded, ISession, SessConstants } from "@zowe/imperative";
+import type { ZoweExplorerApiRegister } from "../extending/ZoweExplorerApiRegister";
 
 export class ProfilesUtils {
     public static PROFILE_SECURITY: string | boolean = Constants.ZOWE_CLI_SCM;
@@ -509,6 +513,174 @@ export class ProfilesUtils {
             ZoweLogger.info(successMsg);
             Gui.showMessage(successMsg);
         }
+    }
+
+    /**
+     * Change the user's password on the remote mainframe system and then
+     * update the locally stored credentials to match.
+     */
+    public static async changePassword(node: IZoweTreeNode): Promise<void> {
+        ZoweLogger.trace("ProfilesUtils.changePassword called.");
+        const profile = node?.getProfile();
+        if (profile == null) {
+            Gui.errorMessage(vscode.l10n.t("No profile found for the selected node."));
+            return;
+        }
+
+        let commonApi: MainframeInteraction.ICommon;
+        try {
+            commonApi = ProfilesUtils.apiRegister?.getCommonApi(profile);
+        } catch (err) {
+            ZoweLogger.debug(`Failed to get the common API for profile ${profile.name}: ${errorMessage(err)}`);
+        }
+        if (commonApi == null) {
+            Gui.errorMessage(vscode.l10n.t("No API found for the selected profile."));
+            return;
+        }
+        if (commonApi.changePassword == null) {
+            Gui.errorMessage(
+                vscode.l10n.t({
+                    message: 'Change Password is not supported for profile type "{0}".',
+                    args: [profile.type],
+                    comment: ["Profile type"],
+                })
+            );
+            return;
+        }
+
+        const session = commonApi.getSession(profile);
+        if (!session) {
+            Gui.errorMessage(vscode.l10n.t("Unable to create a session for the selected profile."));
+            return;
+        }
+
+        // Allow the username to be changed here too, so that it works as closely to update credentials as possible
+        const user = (
+            await Gui.showInputBox({
+                prompt: vscode.l10n.t("Enter the user name"),
+                ignoreFocusOut: true,
+                placeHolder: vscode.l10n.t("User Name"),
+                value: session.ISession.user,
+                validateInput: (value) => (value.trim() ? null : vscode.l10n.t("User name cannot be empty")),
+            })
+        )?.trim();
+        if (!user) {
+            Gui.infoMessage(vscode.l10n.t("Operation cancelled"));
+            return;
+        }
+
+        const validatePassword = (value: string): string => (value ? null : vscode.l10n.t("Password cannot be empty"));
+
+        // Don't check if current password === stored password (if any), but require user to populate this field themselves
+        // The host then verifies the user and current password as part of the change request instead
+        const currentPassword = await Gui.showInputBox({
+            prompt: vscode.l10n.t("Enter current password"),
+            password: true,
+            ignoreFocusOut: true,
+            placeHolder: vscode.l10n.t("Current Password"),
+            validateInput: validatePassword,
+        });
+        if (!currentPassword) {
+            Gui.infoMessage(vscode.l10n.t("Operation cancelled"));
+            return;
+        }
+
+        const newPassword = await Gui.showInputBox({
+            prompt: vscode.l10n.t("Enter new password"),
+            password: true,
+            ignoreFocusOut: true,
+            placeHolder: vscode.l10n.t("New Password"),
+            validateInput: validatePassword,
+        });
+        if (!newPassword) {
+            Gui.infoMessage(vscode.l10n.t("Operation cancelled"));
+            return;
+        }
+        if (currentPassword === newPassword) {
+            Gui.errorMessage(vscode.l10n.t("New password cannot be the same as old password. Password was not changed."));
+            return;
+        }
+
+        const confirmPassword = await Gui.showInputBox({
+            prompt: vscode.l10n.t("Confirm new password"),
+            password: true,
+            ignoreFocusOut: true,
+            placeHolder: vscode.l10n.t("Confirm New Password"),
+            validateInput: validatePassword,
+        });
+        if (!confirmPassword) {
+            Gui.infoMessage(vscode.l10n.t("Operation cancelled"));
+            return;
+        }
+        if (newPassword !== confirmPassword) {
+            Gui.errorMessage(vscode.l10n.t("Passwords do not match. Password was not changed."));
+            return;
+        }
+
+        try {
+            // Build a new session from the entered credentials
+            const changeSession = commonApi.getSession({ ...profile, profile: { ...profile.profile, user, password: currentPassword } });
+            if (!changeSession) {
+                throw new Error(vscode.l10n.t("Unable to create a session for the selected profile."));
+            }
+            const response = await commonApi.changePassword(changeSession, newPassword);
+            if (!response.success) {
+                throw new Error(response.message);
+            }
+        } catch (err) {
+            Gui.errorMessage(
+                vscode.l10n.t({
+                    message: "Failed to change password: {0}",
+                    args: [errorMessage(err)],
+                    comment: ["Error message"],
+                })
+            );
+            return;
+        }
+
+        // Update the locally stored credentials with the new password
+        try {
+            const profInfo = await Constants.PROFILES_CACHE.getProfileInfo();
+            const upd = { profileName: profile.name, profileType: profile.type, setSecure: profInfo.isSecured() };
+            if (user !== profile.profile.user) {
+                await profInfo.updateProperty({ ...upd, property: "user", value: user });
+            }
+            await profInfo.updateProperty({ ...upd, property: "password", value: newPassword });
+            profile.profile.user = user;
+            profile.profile.password = newPassword;
+
+            // Update the profile cache and rebuild the node's session from it, then release the locks on it
+            Constants.PROFILES_CACHE.updateCachedProfile(profile, node);
+            node.setSessionToChoice(commonApi.getSession(profile));
+            AuthHandler.unlockProfile(profile, true);
+
+            // Let ZE, extenders amd secure vault (if enabled) know that the profile has updated
+            ZoweVsCodeExtension.onProfileUpdatedEmitter.fire(profile);
+            if (SettingsConfig.getDirectValue<boolean>(Constants.SETTINGS_SECURE_CREDENTIALS_ENABLED)) {
+                // Uses the injected register, as importing ZoweExplorerApiRegister here would be circular
+                (ProfilesUtils.apiRegister as ZoweExplorerApiRegister)?.onProfilesUpdateEmitter?.fire(Validation.EventType.UPDATE);
+            }
+            SharedTreeProviders.getProviderForNode(node).refreshElement(node);
+        } catch (err) {
+            Gui.warningMessage(
+                vscode.l10n.t({
+                    message:
+                        "Password changed on the server but failed to update locally stored credentials. Consider right clicking profile -> Manage Profile -> Update Credentials with new password immediately. {0}",
+                    args: [errorMessage(err)],
+                    comment: ["Error message"],
+                })
+            );
+            await AuthUtils.handleProfileAuthOnError(err, profile);
+            return;
+        }
+
+        const successMsg = vscode.l10n.t({
+            message: "Password for {0} was successfully changed",
+            args: [profile.name],
+            comment: ["Profile name"],
+        });
+        ZoweLogger.info(successMsg);
+        Gui.showMessage(successMsg);
     }
 
     public static async initializeZoweFolder(): Promise<void> {
