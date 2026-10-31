@@ -8662,7 +8662,7 @@ describe("Dataset Actions Unit Tests - read-only data sets", () => {
         globalMocks = createGlobalMocks();
         blockMocks = createBlockMocksShared();
         (ReadOnlyManagement as any).overrides.clear();
-        useRules([{ pattern: "ZXP.**" }, { pattern: "IBMUSER.JCL(PROD*)" }]);
+        useRules([{ ds: "ZXP.**" }, { ds: "IBMUSER.JCL(PROD*)" }]);
         errorMessageSpy = vi.spyOn(Gui, "errorMessage").mockResolvedValue(undefined);
     });
 
@@ -8881,7 +8881,7 @@ describe("Dataset Actions Unit Tests - read-only data sets", () => {
         it("asks to delete a writable member of a read-only PDS", async () => {
             const pds = dsNode("ZXP.PUBLIC.JCL", Constants.DS_PDS_CONTEXT);
             const member = dsNode("SCRATCH", Constants.DS_MEMBER_CONTEXT, pds);
-            useRules([{ pattern: "ZXP.**" }, { pattern: "!ZXP.PUBLIC.JCL(SCRATCH)" }]);
+            useRules([{ ds: "ZXP.**" }, { ds: "!ZXP.PUBLIC.JCL(SCRATCH)" }]);
             const warningSpy = vi.spyOn(Gui, "warningMessage").mockResolvedValue(undefined);
 
             await DatasetActions.deleteDatasetPrompt(blockMocks.testDatasetTree, member).catch(() => undefined);

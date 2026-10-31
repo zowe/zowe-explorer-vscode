@@ -456,16 +456,16 @@ const ds = (path: string, query?: string): vscode.Uri => vscode.Uri.from({ schem
 const uss = (path: string, query?: string): vscode.Uri => vscode.Uri.from({ scheme: ZoweScheme.USS, path, query });
 
 const zxploreRules = [
-    { pattern: "ZXP.**" },
-    { pattern: "SYS1.**" },
-    { pattern: "IBMUSER.LOADLIB" },
-    { pattern: "IBMUSER.JCL(PROD*)" },
+    { ds: "ZXP.**" },
+    { ds: "SYS1.**" },
+    { ds: "IBMUSER.LOADLIB" },
+    { ds: "IBMUSER.JCL(PROD*)" },
     { uss: "/PROD/**" },
     { uss: "/bin/**" },
     { uss: "/etc/**" },
     { uss: "/www/**" },
     { profile: "zosmf", uss: "/usr/lpp/**" },
-    { profile: "zosmf", pattern: "CEE.**" },
+    { profile: "zosmf", ds: "CEE.**" },
     { profile: "zosmf_prod" },
 ];
 
@@ -572,7 +572,7 @@ describe("ReadOnlyManagement - isReadOnly with zowe.readOnly.rules", () => {
         });
 
         it("does not apply data set rules to USS", () => {
-            useRules([{ pattern: "**" }]);
+            useRules([{ ds: "**" }]);
             expect(ReadOnlyManagement.isReadOnly(uss("/zosmf/z/ibmuser/hello.txt"))).toBe(false);
             expect(ReadOnlyManagement.isReadOnly(uss("/zosmf/ZXP/hello.txt"))).toBe(false);
         });
@@ -582,7 +582,7 @@ describe("ReadOnlyManagement - isReadOnly with zowe.readOnly.rules", () => {
         it.each([
             ["no rules", []],
             ["an unset setting", undefined],
-            ["a setting that is not an array", { pattern: "ZXP.**" }],
+            ["a setting that is not an array", { ds: "ZXP.**" }],
             ["empty and null rules", [null, {}]],
         ])("makes nothing read-only for %s", (_desc, rules) => {
             useRules(rules);
@@ -591,13 +591,13 @@ describe("ReadOnlyManagement - isReadOnly with zowe.readOnly.rules", () => {
         });
 
         it("makes a resource read-only if any rule matches", () => {
-            useRules([{ pattern: "IBMUSER.JCL" }, { pattern: "IBMUSER.LOADLIB" }]);
+            useRules([{ ds: "IBMUSER.JCL" }, { ds: "IBMUSER.LOADLIB" }]);
             expect(ReadOnlyManagement.isReadOnly(ds("/zosmf/IBMUSER.LOADLIB"))).toBe(true);
             expect(ReadOnlyManagement.isReadOnly(ds("/zosmf/IBMUSER.SOURCE"))).toBe(false);
         });
 
         it("applies a rule with both a data set pattern and a USS glob to both", () => {
-            useRules([{ pattern: "ZXP.**", uss: "/z/public/**" }]);
+            useRules([{ ds: "ZXP.**", uss: "/z/public/**" }]);
             expect(ReadOnlyManagement.isReadOnly(ds("/zosmf/ZXP.PUBLIC.JCL"))).toBe(true);
             expect(ReadOnlyManagement.isReadOnly(uss("/zosmf/z/public/hello.txt"))).toBe(true);
             expect(ReadOnlyManagement.isReadOnly(uss("/zosmf/z/ibmuser/hello.txt"))).toBe(false);
@@ -611,7 +611,7 @@ describe("ReadOnlyManagement - isReadOnly with zowe.readOnly.rules", () => {
         });
 
         it("is not read-only for URIs outside the data set and USS file systems", () => {
-            useRules([{ pattern: "**", uss: "/**" }]);
+            useRules([{ ds: "**", uss: "/**" }]);
             expect(ReadOnlyManagement.isReadOnly(vscode.Uri.from({ scheme: ZoweScheme.Jobs, path: "/zosmf/IBMUSER/JOB01234" }))).toBe(false);
             expect(ReadOnlyManagement.isReadOnly(vscode.Uri.file("/z/ibmuser/hello.txt"))).toBe(false);
         });
@@ -639,7 +639,7 @@ describe("ReadOnlyManagement - isReadOnly with zowe.readOnly.rules", () => {
             ReadOnlyManagement.initialize({ subscriptions: [] } as any);
 
             expect(ReadOnlyManagement.isReadOnly(ds("/zosmf/IBMUSER.JCL"))).toBe(false);
-            getDirectValueSpy.mockReturnValue([{ pattern: "IBMUSER.**" }]);
+            getDirectValueSpy.mockReturnValue([{ ds: "IBMUSER.**" }]);
             onConfigChange({ affectsConfiguration: (key: string) => key === Constants.SETTINGS_READ_ONLY_RULES });
             expect(ReadOnlyManagement.isReadOnly(ds("/zosmf/IBMUSER.JCL"))).toBe(true);
             configChangeMock[Symbol.dispose]();
@@ -659,7 +659,7 @@ describe("ReadOnlyManagement - isReadOnly with zowe.readOnly.rules", () => {
             ReadOnlyManagement.initialize({ subscriptions: [] } as any);
 
             expect(ReadOnlyManagement.isReadOnly(ds("/zosmf/IBMUSER.JCL"))).toBe(false);
-            getDirectValueSpy.mockReturnValue([{ pattern: "IBMUSER.**" }]);
+            getDirectValueSpy.mockReturnValue([{ ds: "IBMUSER.**" }]);
             onConfigChange({ affectsConfiguration: (key: string) => key === "zowe.ds.paginate.dataSetsPerPage" });
             expect(ReadOnlyManagement.isReadOnly(ds("/zosmf/IBMUSER.JCL"))).toBe(false);
             configChangeMock[Symbol.dispose]();
@@ -883,7 +883,7 @@ describe("ReadOnlyManagement - setReadOnly", () => {
             expect((ReadOnlyManagement as any).overrides.size).toBe(0);
 
             // With no override stored, later rule changes still apply
-            useRules([{ pattern: "IBMUSER.**" }]);
+            useRules([{ ds: "IBMUSER.**" }]);
             expect(ReadOnlyManagement.isReadOnly(ds("/zosmf/IBMUSER.JCL"))).toBe(true);
             expect(ReadOnlyManagement.isReadOnly(ds("/zosmf/ZXP.PUBLIC.JCL"))).toBe(false);
         });
@@ -1209,7 +1209,7 @@ describe("ReadOnlyManagement - negated rules", () => {
 
     describe("data sets: everything read-only except your own, apart from your load library", () => {
         beforeEach(() => {
-            useRules([{ pattern: "**" }, { pattern: "!IBMUSER.**" }, { pattern: "IBMUSER.LOADLIB" }]);
+            useRules([{ ds: "**" }, { ds: "!IBMUSER.**" }, { ds: "IBMUSER.LOADLIB" }]);
         });
 
         it.each([
@@ -1246,20 +1246,20 @@ describe("ReadOnlyManagement - negated rules", () => {
         });
 
         it("does nothing for a negated rule with no earlier read-only match", () => {
-            useRules([{ uss: "!/z/ibmuser/**" }, { pattern: "!IBMUSER.**" }]);
+            useRules([{ uss: "!/z/ibmuser/**" }, { ds: "!IBMUSER.**" }]);
             expect(ReadOnlyManagement.isReadOnly(uss("/zosmf/z/ibmuser/hello.txt"))).toBe(false);
             expect(ReadOnlyManagement.isReadOnly(ds("/zosmf/IBMUSER.JCL"))).toBe(false);
         });
 
         it("lets a later profile-only rule make a whole profile read-only again", () => {
-            useRules([{ pattern: "**" }, { pattern: "!IBMUSER.**" }, { profile: "zosmf" }]);
+            useRules([{ ds: "**" }, { ds: "!IBMUSER.**" }, { profile: "zosmf" }]);
             expect(ReadOnlyManagement.isReadOnly(ds("/zosmf/IBMUSER.JCL"))).toBe(true);
             expect(ReadOnlyManagement.isReadOnly(ds("/ssh/IBMUSER.JCL"))).toBe(false);
             expect(ReadOnlyManagement.isReadOnly(ds("/ssh/ZXP.PUBLIC.JCL"))).toBe(true);
         });
 
         it("can be negated more than once with the last match winning", () => {
-            useRules([{ pattern: "ZXP.**" }, { pattern: "!ZXP.PUBLIC.**" }, { pattern: "ZXP.PUBLIC.JCL" }, { pattern: "!ZXP.PUBLIC.JCL(README)" }]);
+            useRules([{ ds: "ZXP.**" }, { ds: "!ZXP.PUBLIC.**" }, { ds: "ZXP.PUBLIC.JCL" }, { ds: "!ZXP.PUBLIC.JCL(README)" }]);
             expect(ReadOnlyManagement.isReadOnly(ds("/zosmf/ZXP.PRIVATE.JCL"))).toBe(true);
             expect(ReadOnlyManagement.isReadOnly(ds("/zosmf/ZXP.PUBLIC.SOURCE/HELLO"))).toBe(false);
             expect(ReadOnlyManagement.isReadOnly(ds("/zosmf/ZXP.PUBLIC.JCL"))).toBe(true);
@@ -1282,23 +1282,23 @@ describe("ReadOnlyManagement - negated rules", () => {
         });
 
         it.each([
-            [[{ pattern: "%%%PR*" }, { pattern: "!NDRPR.TEST.**" }], "/zosmf/NDRPR.TEST.COBOL", false],
-            [[{ pattern: "%%%PR*" }, { pattern: "!NDRPR.TEST.**" }], "/zosmf/NDRPR.SRC.COBOL", true],
-            [[{ pattern: "%%%PR*" }, { pattern: "!NDRPR.TEST.**" }], "/zosmf/NXTPR.TEST.COBOL", true],
-            [[{ pattern: "ZXP.PUBLIC.JCL" }, { pattern: "!ZXP.PUBLIC.JCL(README)" }], "/zosmf/ZXP.PUBLIC.JCL/README", false],
-            [[{ pattern: "ZXP.PUBLIC.JCL" }, { pattern: "!ZXP.PUBLIC.JCL(README)" }], "/zosmf/ZXP.PUBLIC.JCL/HELLO", true],
-            [[{ pattern: "ZXP.PUBLIC.JCL" }, { pattern: "!ZXP.PUBLIC.JCL(README)" }], "/zosmf/ZXP.PUBLIC.JCL", true],
-            [[{ pattern: "IBMUSER.JCL(PROD*)" }, { pattern: "!IBMUSER.**" }], "/zosmf/IBMUSER.JCL/PRODJOB", false],
-            [[{ pattern: "IBMUSER.**" }, { pattern: "!IBMUSER.JCL(*)" }], "/zosmf/IBMUSER.JCL/HELLO", false],
-            [[{ pattern: "IBMUSER.**" }, { pattern: "!IBMUSER.JCL(*)" }], "/zosmf/IBMUSER.JCL", true],
-            [[{ pattern: "IBMUSER.**" }, { pattern: "!IBMUSER.JCL(*)" }], "/zosmf/IBMUSER.SOURCE/HELLO", true],
+            [[{ ds: "%%%PR*" }, { ds: "!NDRPR.TEST.**" }], "/zosmf/NDRPR.TEST.COBOL", false],
+            [[{ ds: "%%%PR*" }, { ds: "!NDRPR.TEST.**" }], "/zosmf/NDRPR.SRC.COBOL", true],
+            [[{ ds: "%%%PR*" }, { ds: "!NDRPR.TEST.**" }], "/zosmf/NXTPR.TEST.COBOL", true],
+            [[{ ds: "ZXP.PUBLIC.JCL" }, { ds: "!ZXP.PUBLIC.JCL(README)" }], "/zosmf/ZXP.PUBLIC.JCL/README", false],
+            [[{ ds: "ZXP.PUBLIC.JCL" }, { ds: "!ZXP.PUBLIC.JCL(README)" }], "/zosmf/ZXP.PUBLIC.JCL/HELLO", true],
+            [[{ ds: "ZXP.PUBLIC.JCL" }, { ds: "!ZXP.PUBLIC.JCL(README)" }], "/zosmf/ZXP.PUBLIC.JCL", true],
+            [[{ ds: "IBMUSER.JCL(PROD*)" }, { ds: "!IBMUSER.**" }], "/zosmf/IBMUSER.JCL/PRODJOB", false],
+            [[{ ds: "IBMUSER.**" }, { ds: "!IBMUSER.JCL(*)" }], "/zosmf/IBMUSER.JCL/HELLO", false],
+            [[{ ds: "IBMUSER.**" }, { ds: "!IBMUSER.JCL(*)" }], "/zosmf/IBMUSER.JCL", true],
+            [[{ ds: "IBMUSER.**" }, { ds: "!IBMUSER.JCL(*)" }], "/zosmf/IBMUSER.SOURCE/HELLO", true],
         ])("data set rules %j make %s read-only: %s", (rules, path, expected) => {
             useRules(rules);
             expect(ReadOnlyManagement.isReadOnly(ds(path))).toBe(expected);
         });
 
         it("ignores the file extension added to member URIs", () => {
-            useRules([{ pattern: "ZXP.**" }, { pattern: "!ZXP.PUBLIC.CBL(HELLO)" }]);
+            useRules([{ ds: "ZXP.**" }, { ds: "!ZXP.PUBLIC.CBL(HELLO)" }]);
             expect(ReadOnlyManagement.isReadOnly(ds("/zosmf/ZXP.PUBLIC.CBL/HELLO.cbl"))).toBe(false);
             expect(ReadOnlyManagement.isReadOnly(ds("/zosmf/ZXP.PUBLIC.CBL/GOODBYE.cbl"))).toBe(true);
         });
@@ -1306,7 +1306,7 @@ describe("ReadOnlyManagement - negated rules", () => {
 
     describe("profiles", () => {
         it("makes everything in a profile read-only except your own data sets and home directory", () => {
-            useRules([{ profile: "zosmf" }, { profile: "zosmf", pattern: "!IBMUSER.**", uss: "!/z/ibmuser/**" }]);
+            useRules([{ profile: "zosmf" }, { profile: "zosmf", ds: "!IBMUSER.**", uss: "!/z/ibmuser/**" }]);
             expect(ReadOnlyManagement.isReadOnly(ds("/zosmf/IBMUSER.JCL/HELLO"))).toBe(false);
             expect(ReadOnlyManagement.isReadOnly(ds("/zosmf/ZXP.PUBLIC.JCL"))).toBe(true);
             expect(ReadOnlyManagement.isReadOnly(ds("/zosmf"))).toBe(true);
@@ -1317,14 +1317,14 @@ describe("ReadOnlyManagement - negated rules", () => {
         });
 
         it("only applies a profile-scoped negated rule to that profile", () => {
-            useRules([{ pattern: "ZXP.**" }, { profile: "ssh", pattern: "!ZXP.PUBLIC.**" }]);
+            useRules([{ ds: "ZXP.**" }, { profile: "ssh", ds: "!ZXP.PUBLIC.**" }]);
             expect(ReadOnlyManagement.isReadOnly(ds("/zosmf/ZXP.PUBLIC.JCL"))).toBe(true);
             expect(ReadOnlyManagement.isReadOnly(ds("/ssh/ZXP.PUBLIC.JCL"))).toBe(false);
             expect(ReadOnlyManagement.isReadOnly(ds("/ssh/ZXP.PRIVATE.JCL"))).toBe(true);
         });
 
         it("can make a profile-only rule's profile writable again for some data sets", () => {
-            useRules([{ profile: "zosmf_prod" }, { pattern: "!IBMUSER.**" }]);
+            useRules([{ profile: "zosmf_prod" }, { ds: "!IBMUSER.**" }]);
             expect(ReadOnlyManagement.isReadOnly(ds("/zosmf_prod/IBMUSER.JCL"))).toBe(false);
             expect(ReadOnlyManagement.isReadOnly(ds("/zosmf_prod/ZXP.PUBLIC.JCL"))).toBe(true);
             expect(ReadOnlyManagement.isReadOnly(uss("/zosmf_prod/z/ibmuser/hello.txt"))).toBe(true);
@@ -1334,8 +1334,8 @@ describe("ReadOnlyManagement - negated rules", () => {
     describe("rules with both a data set pattern and a USS glob", () => {
         it("negates both when both start with !", () => {
             useRules([
-                { pattern: "**", uss: "/**" },
-                { pattern: "!IBMUSER.**", uss: "!/z/ibmuser/**" },
+                { ds: "**", uss: "/**" },
+                { ds: "!IBMUSER.**", uss: "!/z/ibmuser/**" },
             ]);
             expect(ReadOnlyManagement.isReadOnly(ds("/zosmf/IBMUSER.JCL"))).toBe(false);
             expect(ReadOnlyManagement.isReadOnly(ds("/zosmf/ZXP.PUBLIC.JCL"))).toBe(true);
@@ -1345,8 +1345,8 @@ describe("ReadOnlyManagement - negated rules", () => {
 
         it("negates each field separately", () => {
             useRules([
-                { pattern: "**", uss: "/**" },
-                { pattern: "!IBMUSER.**", uss: "/z/ibmuser/.ssh/**" },
+                { ds: "**", uss: "/**" },
+                { ds: "!IBMUSER.**", uss: "/z/ibmuser/.ssh/**" },
             ]);
             expect(ReadOnlyManagement.isReadOnly(ds("/zosmf/IBMUSER.JCL"))).toBe(false);
             expect(ReadOnlyManagement.isReadOnly(uss("/zosmf/z/ibmuser/.ssh/id_rsa"))).toBe(true);
@@ -1354,11 +1354,11 @@ describe("ReadOnlyManagement - negated rules", () => {
         });
 
         it("does not let a negated USS glob affect data sets or a negated data set pattern affect USS", () => {
-            useRules([{ pattern: "**", uss: "/**" }, { uss: "!/**" }]);
+            useRules([{ ds: "**", uss: "/**" }, { uss: "!/**" }]);
             expect(ReadOnlyManagement.isReadOnly(ds("/zosmf/IBMUSER.JCL"))).toBe(true);
             expect(ReadOnlyManagement.isReadOnly(uss("/zosmf/z/ibmuser/hello.txt"))).toBe(false);
 
-            useRules([{ pattern: "**", uss: "/**" }, { pattern: "!**" }]);
+            useRules([{ ds: "**", uss: "/**" }, { ds: "!**" }]);
             expect(ReadOnlyManagement.isReadOnly(ds("/zosmf/IBMUSER.JCL"))).toBe(false);
             expect(ReadOnlyManagement.isReadOnly(uss("/zosmf/z/ibmuser/hello.txt"))).toBe(true);
         });
@@ -1366,21 +1366,21 @@ describe("ReadOnlyManagement - negated rules", () => {
 
     describe("malformed negated rules", () => {
         it("ignores whitespace around and after the !", () => {
-            useRules([{ uss: " /** " }, { uss: " ! /z/ibmuser/** " }, { pattern: " ** " }, { pattern: "  !  IBMUSER.** " }]);
+            useRules([{ uss: " /** " }, { uss: " ! /z/ibmuser/** " }, { ds: " ** " }, { ds: "  !  IBMUSER.** " }]);
             expect(ReadOnlyManagement.isReadOnly(uss("/zosmf/z/ibmuser/hello.txt"))).toBe(false);
             expect(ReadOnlyManagement.isReadOnly(ds("/zosmf/IBMUSER.JCL"))).toBe(false);
             expect(ReadOnlyManagement.isReadOnly(ds("/zosmf/ZXP.PUBLIC.JCL"))).toBe(true);
         });
 
         it.each([["!"], ["!  "], [""], ["   "]])("ignores a rule whose pattern is only %j", (value) => {
-            useRules([{ uss: "/**", pattern: "**" }, { uss: value }, { pattern: value }]);
+            useRules([{ uss: "/**", ds: "**" }, { uss: value }, { ds: value }]);
             expect(ReadOnlyManagement.isReadOnly(uss("/zosmf/z/ibmuser/hello.txt"))).toBe(true);
             expect(ReadOnlyManagement.isReadOnly(ds("/zosmf/IBMUSER.JCL"))).toBe(true);
         });
 
         it("does not treat a profile rule with an empty negated pattern as a profile-only rule", () => {
             useRules([
-                { profile: "zosmf", pattern: "!" },
+                { profile: "zosmf", ds: "!" },
                 { profile: "zosmf", uss: "" },
             ]);
             expect(ReadOnlyManagement.isReadOnly(ds("/zosmf/IBMUSER.JCL"))).toBe(false);
@@ -1389,13 +1389,13 @@ describe("ReadOnlyManagement - negated rules", () => {
         });
 
         it("only removes the first ! so !! is not a double negation", () => {
-            useRules([{ uss: "/**" }, { uss: "!!/z/ibmuser/**" }, { pattern: "**" }, { pattern: "!!IBMUSER.**" }]);
+            useRules([{ uss: "/**" }, { uss: "!!/z/ibmuser/**" }, { ds: "**" }, { ds: "!!IBMUSER.**" }]);
             expect(ReadOnlyManagement.isReadOnly(uss("/zosmf/z/ibmuser/hello.txt"))).toBe(true);
             expect(ReadOnlyManagement.isReadOnly(ds("/zosmf/IBMUSER.JCL"))).toBe(true);
         });
 
         it("ignores rule values that are not strings", () => {
-            useRules([{ uss: "/**" }, { uss: 123 }, { pattern: ["IBMUSER.**"] }]);
+            useRules([{ uss: "/**" }, { uss: 123 }, { ds: ["IBMUSER.**"] }]);
             expect(ReadOnlyManagement.isReadOnly(uss("/zosmf/z/ibmuser/hello.txt"))).toBe(true);
             expect(ReadOnlyManagement.isReadOnly(ds("/zosmf/IBMUSER.JCL"))).toBe(false);
         });
@@ -1455,7 +1455,7 @@ describe("ReadOnlyManagement - throwIfReadOnly", () => {
     });
 
     it("does not throw for URIs outside the data set and USS file systems", () => {
-        useRules([{ pattern: "**", uss: "/**" }]);
+        useRules([{ ds: "**", uss: "/**" }]);
         expect(() => ReadOnlyManagement.throwIfReadOnly(vscode.Uri.file("/etc/profile"), { checkParent: true })).not.toThrow();
         expect(() =>
             ReadOnlyManagement.throwIfReadOnly(vscode.Uri.from({ scheme: ZoweScheme.Jobs, path: "/zosmf/JOB01234" }), { checkParent: true })
@@ -1465,7 +1465,7 @@ describe("ReadOnlyManagement - throwIfReadOnly", () => {
 
     describe("checkParent", () => {
         it("throws for a writable member in a read-only PDS, naming the PDS", () => {
-            useRules([{ pattern: "ZXP.PUBLIC.JCL" }, { pattern: "!ZXP.PUBLIC.JCL(README)" }]);
+            useRules([{ ds: "ZXP.PUBLIC.JCL" }, { ds: "!ZXP.PUBLIC.JCL(README)" }]);
             expect(() => ReadOnlyManagement.throwIfReadOnly(ds("/zosmf/ZXP.PUBLIC.JCL/README"))).not.toThrow();
             expectReadOnlyError(
                 () => ReadOnlyManagement.throwIfReadOnly(ds("/zosmf/ZXP.PUBLIC.JCL/README"), { checkParent: true }),
@@ -1600,7 +1600,7 @@ describe("ReadOnlyManagement - throwIfCannotRename", () => {
         });
 
         it("rejects renaming a member made writable by a negated rule, since its new name is not covered by the rule", () => {
-            useRules([{ pattern: "IBMUSER.CBL" }, { pattern: "!IBMUSER.CBL(BLAH)" }]);
+            useRules([{ ds: "IBMUSER.CBL" }, { ds: "!IBMUSER.CBL(BLAH)" }]);
             expectRenameError(ds("/zosmf/IBMUSER.CBL/BLAH"), ds("/zosmf/IBMUSER.CBL/BLAH2"), "IBMUSER.CBL(BLAH2)");
         });
 
@@ -1647,7 +1647,7 @@ describe("ReadOnlyManagement - throwIfCannotRename", () => {
     });
 
     it("does nothing for URIs outside the data set and USS file systems", () => {
-        useRules([{ pattern: "**", uss: "/**" }]);
+        useRules([{ ds: "**", uss: "/**" }]);
         expect(() => ReadOnlyManagement.throwIfCannotRename(vscode.Uri.file("/etc/profile"), vscode.Uri.file("/etc/profile.bak"))).not.toThrow();
         expect(() => ReadOnlyManagement.throwIfCannotRename(undefined as any, undefined as any)).not.toThrow();
     });

@@ -18,7 +18,7 @@ import { SettingsConfig } from "../configuration/SettingsConfig";
 
 interface ReadOnlyRule {
     profile?: string; // Mark whole profile read-only
-    pattern?: string; // Data set pattern, prefix with ! to make matching data sets writable
+    ds?: string; // Data set pattern, prefix with ! to make matching data sets writable
     uss?: string; // USS path glob, prefix with ! to make matching paths writable
 }
 
@@ -316,16 +316,16 @@ export class ReadOnlyManagement {
                 if (rule == null) {
                     continue;
                 }
-                const pattern = ReadOnlyManagement.parseNegation(rule.pattern);
+                const ds = ReadOnlyManagement.parseNegation(rule.ds);
                 const uss = ReadOnlyManagement.parseNegation(rule.uss);
                 const cachedRule: CachedReadOnlyRule = {
                     profile: rule.profile,
-                    matchesDs: pattern.value ? ReadOnlyManagement.compileDsPattern(pattern.value) : undefined,
-                    dsNegated: pattern.negated,
+                    matchesDs: ds.value ? ReadOnlyManagement.compileDsPattern(ds.value) : undefined,
+                    dsNegated: ds.negated,
                     uss: uss.value ? ReadOnlyManagement.ussGlobToRegex(uss.value) : undefined,
                     ussNegated: uss.negated,
                 };
-                const isProfileOnly = rule.profile != null && rule.pattern == null && rule.uss == null;
+                const isProfileOnly = rule.profile != null && rule.ds == null && rule.uss == null;
                 // Skip empty rules, and rules whose patterns are blank or only "!"
                 if (isProfileOnly || cachedRule.matchesDs != null || cachedRule.uss != null) {
                     ReadOnlyManagement.ruleCache.push(cachedRule);

@@ -1926,9 +1926,9 @@
                 "type": "string",
                 "description": "%zowe.readOnly.rules.profile%"
               },
-              "pattern": {
+              "ds": {
                 "type": "string",
-                "description": "%zowe.readOnly.rules.pattern%"
+                "description": "%zowe.readOnly.rules.ds%"
               },
               "uss": {
                 "type": "string",

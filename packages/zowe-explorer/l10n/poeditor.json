@@ -585,12 +585,12 @@
     "Make Writable": ""
   },
   "zowe.readOnly.rules": {
-    "Rules for opening data sets and z/OS Unix files in read-only mode. Each rule can have:\n- `profile`: Apply to the whole profile. \n- `pattern`: Data set mask, where `%` matches one character, `*` matches within a qualifier and `**` matches any qualifiers.\n- `uss`: Unix path glob, e.g. `/prod/**`.\n\nStart a `pattern` or `uss` with `!` to make matches writable again. Rules are checked in order and the last matching rule wins, so `[{ \"uss\": \"/**\" }, { \"uss\": \"!/u/myuser/**\" }]` makes everything read-only except your home directory.\nA rule with a profile and a pattern or uss rule applies for that rule only, so `[{ \"profile\": \"zosmf\" }, { \"pattern\": \"PROD.**\" }]` sets that pattern read-only only in the zosmf profile.\nYou can add as many rules as you'd like.\n\nRight click a profile, data set or file and select **Make Writable** to override this setting for it in the current session.": ""
+    "Rules for opening data sets and z/OS Unix files in read-only mode. Each rule can have:\n- `profile`: Apply to the whole profile. \n- `ds`: Data set mask, e.g. `PROD.**`.\n- `uss`: Unix path glob, e.g. `/prod/**`.\n\nStart a `ds` or `uss` rule with `!` to make matches writable again. Rules are checked in order so the last matching rule wins. A rule with a profile and a ds or uss rule applies for that rule only.\n\nRight click a profile, data set or file and select **Make Writable** to override this setting for it in the current session.\n\nMore info can be found on [docs.zowe.org](https://docs.zowe.org/stable/user-guide/ze-usage-tips#configure-read-only-rules)": ""
   },
   "zowe.readOnly.rules.profile": {
     "Profile name the rule applies to.": ""
   },
-  "zowe.readOnly.rules.pattern": {
+  "zowe.readOnly.rules.ds": {
     "Data set mask. Start with ! to make matching data sets writable.": ""
   },
   "zowe.readOnly.rules.uss": {
@@ -872,7 +872,7 @@
   "Added the \"Copy Name\" option to VSAM data sets. <a>#3466</a>": "",
   "Added the Issue UNIX Commands feature. <a>#1326</a>": "",
   "Added the JOBS context menu option to download all spool files in binary format. <a>#2060</a>": "",
-  "Added the Make Read-Only and Make Writable commands on profiles, data sets and z/OS Unix files for overriding the default read-only rules. Resources overriden as read-only or writable only persist for the current session. <a>#2297</a>": "",
+  "Added the Make Read-Only and Make Writable commands on profiles, data sets, and z/OS Unix files for overriding the default read-only rules. Resources overriden as read-only or writable only persist for the current session. <a>#2297</a>": "",
   "Added the ability to list all datasets, even those with Imperative Errors. <a>#235</a> & <a>#2036</a>": "",
   "Added the ability to open a data set from text selected in an Editor tab. <a>#3679</a>": "",
   "Added the ability to poll on active jobs in the current filtered jobs tree. If an active job completes while polling, a notification that the job has completed displays. <a>#3472</a>": "",
