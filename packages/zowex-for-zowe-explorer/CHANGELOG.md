@@ -4,6 +4,12 @@ All notable changes to the "zowex-for-zowe-explorer" package will be documented 
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## TBD Release
+
+### New features and enhancements
+
+### Bug fixes
+
 ## `3.6.1`
 
 ### Bug fixes
