@@ -39,6 +39,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where searching data set contents with an FTP profile failed with the error `c.searchDataSets is not a function`. Zowe Explorer now shows a message when a search starts for a profile type that does not support it. [#4511](https://github.com/zowe/zowe-explorer-vscode/issues/4511)
 - Fixed an issue where the profile actions menu (including "Hide Profile") failed to open for profiles missing required properties like host. [#4557](https://github.com/zowe/zowe-explorer-vscode/pull/4557)
 - Fixed an issue where UNIX commands were always wrapped in an `SSH_TTY` terminal redirect, even for profiles that do not use SSH. [#4564](https://github.com/zowe/zowe-explorer-vscode/pull/4564)
+- Fixed seconds precision missing for SSH profiles when displaying "Modified Date" of PDS members in the data set table view. [#4582](https://github.com/zowe/zowe-explorer-vscode/pull/4582)
 
 ## `3.6.0`
 
