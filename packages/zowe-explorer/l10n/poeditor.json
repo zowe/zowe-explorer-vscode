@@ -627,7 +627,7 @@
     "Response timeout in seconds before the originating request is forcibly timed out. Set to a higher value if responses are expected to take longer to complete.": ""
   },
   "zowe.zowex.experimentalNativeSsh": {
-    "Use an experimental native SSH client for improved performance. Not required for SSH functionality. Not yet fully tested.": ""
+"Use an experimental native SSH client rather than the default ssh2 package for improved performance when using SSH profiles with Zowe Explorer's zo backend. This setting is not a requirement for using SSH profiles with zo. Not yet fully tested.": ""
   },
   "zowe.zowex.defaultHandshakeTimeout": {
     "Time in milliseconds to wait for the SSH handshake to complete.": ""
