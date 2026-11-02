@@ -27,6 +27,11 @@ const nodeConfig = (mode) => ({
         filename: "[name].extension.js",
         libraryTarget: "commonjs2",
         devtoolModuleFilenameTemplate: "webpack:///[absolute-resource-path]",
+        // Match Node's CommonJS behavior for modules that throw while loading. By default webpack
+        // leaves the failed module in its require cache with empty exports, so a later require of
+        // the same module silently resolves to `undefined` instead of re-throwing. That turns a
+        // one-time load failure (e.g. the Secrets SDK keyring) into a confusing downstream error.
+        strictModuleErrorHandling: true,
     },
     devtool: "source-map",
     externals: ["vscode", "cpu-features"],

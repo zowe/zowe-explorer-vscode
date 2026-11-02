@@ -468,9 +468,9 @@ export class DatasetActions {
 
         const theFilter = datasetProvider.createFilterString(newDSName, currSession);
         currSession.pattern = theFilter.toUpperCase();
-        datasetProvider.refresh();
+        currSession.collapsibleState = vscode.TreeItemCollapsibleState.Expanded;
         currSession.dirty = true;
-        datasetProvider.refreshElement(currSession);
+        datasetProvider.refresh();
         const newNode = (await currSession.getChildren()).find((child) => child.label.toString() === newDSName.toUpperCase());
         await datasetProvider.getTreeView().reveal(currSession, { select: true, focus: true });
         datasetProvider.getTreeView().reveal(newNode, { select: true, focus: true });
@@ -968,8 +968,9 @@ export class DatasetActions {
         const parent = selectedNode.getParent() as IZoweDatasetTreeNode;
         const datasetName = parent.getLabel() as string;
         const memberName = selectedNode.getLabel() as string;
+        const sanitizedMemberName = SharedUtils.stripBacktrackPathSegments(memberName);
         const fullDatasetName = `${datasetName}(${memberName})`;
-        const fileName = uppercaseNames ? memberName : memberName.toLowerCase();
+        const fileName = uppercaseNames ? sanitizedMemberName : sanitizedMemberName.toLowerCase();
 
         const targetDirectory = generateDirectory
             ? DatasetActions.generateDirectoryPath(datasetName, selectedPath, generateDirectory, uppercaseNames)
@@ -1173,7 +1174,7 @@ export class DatasetActions {
         await DatasetActions.executeDownloadWithProgress(
             vscode.l10n.t("Downloading data set"),
             async () => {
-                const datasetName = node.getLabel() as string;
+                const datasetName = SharedUtils.stripBacktrackPathSegments(node.getLabel() as string);
 
                 let fileName: string;
                 let targetDirectory: string;

@@ -12,6 +12,29 @@
 import { Constants } from "../../../../src/configuration/Constants";
 import { DatasetUtils } from "../../../../src/trees/dataset/DatasetUtils";
 
+describe("Dataset utils unit tests - function getDataSetStats", () => {
+    it("preserves seconds from msec", () => {
+        const stats = DatasetUtils.getDataSetStats({
+            c4date: "2023-12-14",
+            m4date: "2023-12-15",
+            mtime: "14:30",
+            msec: "45",
+        });
+
+        expect(stats.modifiedDate).toEqual(new Date(2023, 11, 15, 14, 30, 45));
+    });
+
+    it("preserves seconds from mtime without msec", () => {
+        const stats = DatasetUtils.getDataSetStats({
+            c4date: "2023-12-14",
+            m4date: "2023-12-15",
+            mtime: "14:30:45",
+        });
+
+        expect(stats.modifiedDate).toEqual(new Date(2023, 11, 15, 14, 30, 45));
+    });
+});
+
 describe("Dataset utils unit tests - function getExtension", () => {
     it("returns the proper file extension", () => {
         const pairs = [
@@ -21,7 +44,7 @@ describe("Dataset utils unit tests - function getExtension", () => {
             { name: "TEST.DS.CBL", extension: ".cbl" },
             { name: "TEST.PDS.CPY(M1)", extension: ".cpy" },
             { name: "TEST.DS.INCLUDE", extension: ".inc" },
-            { name: "TEST.DS.PLX", extension: ".pli" },
+            { name: "TEST.DS.PLI", extension: ".pli" },
             { name: "TEST.DS.SHELL", extension: ".sh" },
             { name: "TEST.DS.EXEC", extension: ".rexx" },
             { name: "TEST.DS.XML", extension: ".xml" },
@@ -37,6 +60,11 @@ describe("Dataset utils unit tests - function getExtension", () => {
 
     it("returns null if no language was detected", () => {
         expect(DatasetUtils.getExtension("TEST.DS.X")).toBe(null);
+    });
+
+    it("does not map PL/X data sets to PL/I", () => {
+        expect(DatasetUtils.getExtension("TEST.DS.PLX")).toBe(null);
+        expect(DatasetUtils.getExtension("TEST.PLX(MEMBER)")).toBe(null);
     });
 });
 

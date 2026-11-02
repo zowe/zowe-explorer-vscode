@@ -99,8 +99,8 @@ describe("SshUssApi", () => {
             await ussApi.getContents("/u/file", { stream: { write: writeSpy, end: endSpy } as any });
 
             expect(readFileSpy).toHaveBeenCalledWith({ fspath: "/u/file", encoding: undefined, stream: undefined });
-            // "Zm9v" is base64 for "foo"; verify the response was actually B64String.decode'd before writing.
-            expect(writeSpy).toHaveBeenCalledWith("foo");
+            // "Zm9v" is base64 for "foo"; verify raw bytes are written via decodeBytes.
+            expect(writeSpy).toHaveBeenCalledWith(Buffer.from("foo"));
             expect(endSpy).toHaveBeenCalled();
         });
 
@@ -631,7 +631,7 @@ describe("SshUssApi", () => {
             vi.spyOn(ussApi, "client", "get").mockResolvedValue({ uss: { chmodFile: chmodFileSpy } });
             vi.spyOn(ussApi as any, "buildZosFilesResponse");
 
-            await ussApi.updateAttributes("/u/file", { perms: "755" });
+            await ussApi.updateAttributes("/u/file", { perms: "-rwxr-xr-x" });
 
             expect(chmodFileSpy).toHaveBeenCalledWith({ fspath: "/u/file", mode: "755", recursive: false });
         });
@@ -647,7 +647,7 @@ describe("SshUssApi", () => {
             });
             const buildSpy = vi.spyOn(ussApi as any, "buildZosFilesResponse");
 
-            await ussApi.updateAttributes("/u/file", { tag: "IBM-1047", perms: "755" });
+            await ussApi.updateAttributes("/u/file", { tag: "IBM-1047", perms: "-rwxr-xr-x" });
 
             expect(buildSpy).toHaveBeenCalledWith(undefined, false);
         });

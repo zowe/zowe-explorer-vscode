@@ -276,6 +276,13 @@ export interface TabGroups {
 }
 
 /**
+ * The tab represents a single text based resource.
+ */
+export class TabInputText {
+    constructor(public readonly uri: Uri) {}
+}
+
+/**
  * Content settings for a webview panel.
  */
 export interface WebviewPanelOptions {

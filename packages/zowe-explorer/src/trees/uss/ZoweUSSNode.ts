@@ -89,7 +89,11 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             // File or directory name only (no parent path)
             // Display name for favorited file or directory in tree view
             this.label = this.fullPath.split("/", this.fullPath.length).pop();
-            this.tooltip = this.fullPath;
+            this.tooltip = AuthUtils.buildFavoriteTooltip(
+                opts.profile?.name ?? this.fullPath,
+                opts.profile?.type ?? "",
+                `${vscode.l10n.t("Path: ")}${this.fullPath}`
+            );
         }
         this.etag = opts.etag ? opts.etag : "";
 

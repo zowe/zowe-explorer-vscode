@@ -529,6 +529,7 @@ describe("ZosJobsProvider unit tests - Function initializeFavChildNodeForProfile
             label: "testJob(JOB123)",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: favProfileNode,
+            contextOverride: Constants.JOBS_JOB_CONTEXT + Constants.FAV_SUFFIX,
             job: new MockJobDetail("testJob(JOB123)"),
             profile: blockMocks.imperativeProfile,
         });

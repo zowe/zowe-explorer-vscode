@@ -70,7 +70,14 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
         this._prefix = "*";
         this._searchId = "";
         this._jobStatus = "*";
-        this.tooltip = opts.label;
+        if (opts.parentNode?.contextValue === Constants.FAV_PROFILE_CONTEXT) {
+            const extra = opts.contextOverride?.startsWith(Constants.JOBS_JOB_CONTEXT)
+                ? `${vscode.l10n.t("Job: ")}${opts.label}`
+                : `${vscode.l10n.t("Search: ")}${finalLabel}`;
+            this.tooltip = AuthUtils.buildFavoriteTooltip(opts.profile?.name ?? opts.label, opts.profile?.type ?? "", extra);
+        } else {
+            this.tooltip = opts.label;
+        }
         this.job = opts.job ?? null; // null instead of undefined to satisfy isZoweJobTreeNode
 
         const isFavoritesNode = opts.label === vscode.l10n.t("Favorites");
@@ -112,10 +119,18 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
                 direction: sortSetting.direction,
             };
 
-            const toolTipList: string[] = [];
-            toolTipList.push(`${vscode.l10n.t("Profile: ")}${opts.label}`);
-            toolTipList.push(`${vscode.l10n.t("Profile Type: ")}${opts.profile.type}`);
-            this.tooltip = toolTipList.join("\n");
+            if (SharedContext.isFavorite(this)) {
+                this.tooltip = AuthUtils.buildFavoriteTooltip(
+                    opts.profile?.name ?? opts.label,
+                    opts.profile?.type ?? "",
+                    `${vscode.l10n.t("Search: ")}${this.label as string}`
+                );
+            } else {
+                const toolTipList: string[] = [];
+                toolTipList.push(`${vscode.l10n.t("Profile: ")}${opts.label}`);
+                toolTipList.push(`${vscode.l10n.t("Profile Type: ")}${opts.profile.type}`);
+                this.tooltip = toolTipList.join("\n");
+            }
 
             if (this.getParent()?.label !== vscode.l10n.t("Favorites") && !SharedContext.isFavorite(this)) {
                 this.id = this.label as string;

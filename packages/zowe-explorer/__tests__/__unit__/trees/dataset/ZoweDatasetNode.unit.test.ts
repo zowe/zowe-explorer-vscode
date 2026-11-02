@@ -148,6 +148,45 @@ describe("ZoweDatasetNode Unit Tests", () => {
         expect(testNode.getSession()).toBeDefined();
     });
 
+    it("Tests that a favorited search node's tooltip displays the profile name and type instead of the search pattern", () => {
+        const parentNode = new ZoweDatasetNode({
+            label: profileOne.name,
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+        });
+        parentNode.contextValue = Constants.FAV_PROFILE_CONTEXT;
+
+        const favSearchNode = new ZoweDatasetNode({
+            label: "HLQ.*",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode,
+            contextOverride: Constants.DS_SESSION_CONTEXT,
+            profile: profileOne,
+        });
+
+        expect(favSearchNode.tooltip).toContain(`Profile: ${profileOne.name}`);
+        expect(favSearchNode.tooltip).toContain(`Profile Type: ${profileOne.type}`);
+        expect(favSearchNode.tooltip).toContain(`Pattern: HLQ.*`);
+    });
+
+    it("Tests that a favorited data set node's tooltip displays the profile name and type", () => {
+        const parentNode = new ZoweDatasetNode({
+            label: profileOne.name,
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+        });
+        parentNode.contextValue = Constants.FAV_PROFILE_CONTEXT;
+
+        const favDsNode = new ZoweDatasetNode({
+            label: "HLQ.DATASET",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode,
+            contextOverride: Constants.DS_DS_CONTEXT,
+            profile: profileOne,
+        });
+
+        expect(favDsNode.tooltip).toContain(`Profile: ${profileOne.name}`);
+        expect(favDsNode.tooltip).toContain(`Profile Type: ${profileOne.type}`);
+    });
+
     it("calls setEncoding when constructing a node with encoding", () => {
         vi.spyOn(BaseProvider.prototype, "setEncodingForFile").mockImplementationOnce(() => {});
         const makeEmptyDsWithEncodingMock = vi.spyOn(DatasetFSProvider.instance, "makeEmptyDsWithEncoding").mockImplementationOnce(() => {});

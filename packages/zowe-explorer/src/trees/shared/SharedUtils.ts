@@ -50,6 +50,10 @@ export class SharedUtils {
         }
     }
 
+    public static stripBacktrackPathSegments(input: string): string {
+        return input.replace(/(?<=[\\/])\.{2}[\\/]/g, "");
+    }
+
     public static filterTreeByString(value: string, treeItems: vscode.QuickPickItem[]): vscode.QuickPickItem[] {
         ZoweLogger.trace("shared.utils.filterTreeByString called.");
         const filteredArray: vscode.QuickPickItem[] = [];

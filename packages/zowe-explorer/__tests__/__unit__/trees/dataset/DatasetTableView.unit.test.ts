@@ -1890,9 +1890,11 @@ describe("DatasetTableView", () => {
                 // Mock Intl.DateTimeFormat to return a specific locale
                 const originalDateTimeFormat = Intl.DateTimeFormat;
                 const mockResolvedOptions = vi.fn().mockReturnValue({ locale: "fr-FR" });
-                (global as any).Intl.DateTimeFormat = vi.fn().mockImplementation(() => ({
-                    resolvedOptions: mockResolvedOptions,
-                }));
+                (global as any).Intl.DateTimeFormat = vi.fn().mockImplementation(function () {
+                    return {
+                        resolvedOptions: mockResolvedOptions,
+                    };
+                });
 
                 await (datasetTableView as any).generateTable(mockContext);
 
@@ -1907,9 +1909,11 @@ describe("DatasetTableView", () => {
                 // Mock Intl.DateTimeFormat to return German locale
                 const originalDateTimeFormat = Intl.DateTimeFormat;
                 const mockResolvedOptions = vi.fn().mockReturnValue({ locale: "de-DE" });
-                (global as any).Intl.DateTimeFormat = vi.fn().mockImplementation(() => ({
-                    resolvedOptions: mockResolvedOptions,
-                }));
+                (global as any).Intl.DateTimeFormat = vi.fn().mockImplementation(function () {
+                    return {
+                        resolvedOptions: mockResolvedOptions,
+                    };
+                });
 
                 await (datasetTableView as any).generateTable(mockContext);
 
@@ -3108,6 +3112,23 @@ describe("buildMemberInfo", () => {
             expect(result.modifiedDate).toEqual(expectedDate);
             expect(result.modifiedDate?.getHours()).toBe(14);
             expect(result.modifiedDate?.getMinutes()).toBe(30);
+            expect(result.modifiedDate?.getSeconds()).toBe(45);
+        });
+
+        it("should preserve seconds from mtime without msec", () => {
+            const member = {
+                member: "MEMBER1",
+                m4date: "2023-12-15",
+                mtime: "14:30:45",
+                user: "USER1",
+            };
+
+            const result = buildMemberInfo(member, parentUri);
+
+            const expectedDate = new Date("2023-12-15");
+            expectedDate.setHours(14, 30, 45);
+
+            expect(result.modifiedDate).toEqual(expectedDate);
             expect(result.modifiedDate?.getSeconds()).toBe(45);
         });
 

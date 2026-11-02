@@ -223,7 +223,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         const spoolEntry = this._lookupAsFile(uri) as SpoolEntry;
 
         // we need to fetch the contents from the mainframe since the file hasn't been accessed yet
-        const bufBuilder = new BufferBuilder();
+        let bufBuilder: BufferBuilder = new BufferBuilder();
 
         const metadata = spoolEntry.metadata ?? this._getInfoFromUri(uri);
         // Assign metadata to the entry if it was resolved from URI
@@ -254,6 +254,7 @@ export class JobFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
 
         await AuthUtils.retryRequest(metadata.profile, async () => {
+            bufBuilder = new BufferBuilder();
             const spoolEncoding = spoolEntry.encoding?.kind === "other" ? spoolEntry.encoding.codepage : profileEncoding;
             if (jesApi.downloadSingleSpool) {
                 const spoolDownloadObject: IDownloadSpoolContentParms = {

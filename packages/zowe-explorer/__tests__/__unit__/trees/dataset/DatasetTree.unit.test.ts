@@ -244,8 +244,9 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
         };
     }
     it("Checking function for PDS favorite", () => {
-        createGlobalMocks();
+        const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks();
+        globalMocks.mockProfileInstance.loadNamedProfile.mockReturnValue(blockMocks.imperativeProfile);
         const testTree = new DatasetTree();
         const favProfileNode = new ZoweDatasetNode({
             label: "testProfile",
@@ -257,6 +258,7 @@ describe("Dataset Tree Unit tests - Function initializeFavChildNodeForProfile", 
             label: "IBMUSER.PUBLIC",
             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
             parentNode: favProfileNode,
+            profile: blockMocks.imperativeProfile,
             contextOverride: Constants.PDS_FAV_CONTEXT,
         });
         node.resourceUri = blockMocks.datasetSessionNode.resourceUri?.with({
@@ -6874,6 +6876,25 @@ describe("Dataset Tree Unit Tests - Sorting and Filtering operations", () => {
             const filterFn = ZoweDatasetNode.filterBy({ method: Sorting.DatasetFilterOpts.Name, value: "testPds" });
             expect(filterFn(nodes.pds)).toBe(true);
             expect(filterFn(nodes.session)).toBe(true);
+        });
+
+        it("filterBy matches user ID regardless of letter case", () => {
+            const nodes = nodesForSuite();
+            // nodeB has user ID "anotherUser"; filtering should not be case-sensitive
+            for (const filterValue of ["anotheruser", "ANOTHERUSER", "AnotherUser"]) {
+                const filterFn = ZoweDatasetNode.filterBy({ method: Sorting.DatasetFilterOpts.UserId, value: filterValue });
+                expect(filterFn(nodes.pds.children[0])).toBe(false);
+                expect(filterFn(nodes.pds.children[1])).toBe(true);
+                expect(filterFn(nodes.pds.children[2])).toBe(false);
+            }
+        });
+
+        it("filterBy does not match any member for an unknown user ID", () => {
+            const nodes = nodesForSuite();
+            const filterFn = ZoweDatasetNode.filterBy({ method: Sorting.DatasetFilterOpts.UserId, value: "unknownUser" });
+            for (const child of nodes.pds.children) {
+                expect(filterFn(child)).toBe(false);
+            }
         });
 
         it("validates date filter input correctly via validateInput callback", async () => {

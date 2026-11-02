@@ -48,9 +48,26 @@ export class ProfilesCache {
         this.cwd = cwd != null ? FileManagement.getFullPath(cwd) : undefined;
     }
 
+    /**
+     * Loads the keyring module from the Secrets SDK.
+     *
+     * @throws If the Secrets SDK could not be loaded, or if it loaded without exporting a keyring.
+     * The latter happens when the module threw on a previous attempt in the same session: bundlers
+     * such as webpack keep the failed module in their require cache with empty exports, so
+     * re-requiring it silently yields `undefined` rather than re-throwing the original error.
+     * Callers rely on this function throwing to detect that secure credential storage is
+     * unavailable, so a nullish keyring must never be returned.
+     */
     public static requireKeyring(this: void): NodeJS.Module {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-var-requires
-        return require("@zowe/secrets-for-zowe-sdk").keyring;
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const keyring = require("@zowe/secrets-for-zowe-sdk").keyring as NodeJS.Module;
+        if (keyring == null) {
+            throw new Error(
+                "The @zowe/secrets-for-zowe-sdk module was loaded, but it did not export a keyring. " +
+                    "This usually means that the module failed to load earlier in this session."
+            );
+        }
+        return keyring;
     }
 
     /**

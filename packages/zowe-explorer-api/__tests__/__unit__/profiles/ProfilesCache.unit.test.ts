@@ -20,6 +20,7 @@ import * as crypto from "crypto";
 import { ZosmfProfile } from "@zowe/zosmf-for-zowe-sdk";
 import { ZosTsoProfile } from "@zowe/zos-tso-for-zowe-sdk";
 import { ZosUssProfile } from "@zowe/zos-uss-for-zowe-sdk";
+import * as secretsSdkModule from "@zowe/secrets-for-zowe-sdk";
 
 vi.mock("crypto", async () => ({
     ...(await vi.importActual<typeof import("crypto")>("crypto")),
@@ -185,7 +186,7 @@ function createProfInfoMock(profiles: Partial<imperative.IProfileLoaded>[]): imp
 describe("ProfilesCache", () => {
     const fakeLogger = { debug: vi.fn(), error: vi.fn(), warn: vi.fn() };
     const fakeZoweDir = path.join(__dirname, "..");
-    const readProfilesFromDiskSpy = vi.spyOn(imperative.ProfileInfo.prototype, "readProfilesFromDisk");
+    const readProfilesFromDiskSpy = vi.spyOn(imperative.ProfileInfo.prototype, "readProfilesFromDisk").mockResolvedValue(undefined);
     const defaultCredMgrWithKeytarSpy = vi.spyOn(imperative.ProfileCredentials, "defaultCredMgrWithKeytar");
 
     afterEach(() => {
@@ -199,14 +200,8 @@ describe("ProfilesCache", () => {
         expect(readProfilesFromDiskSpy).toHaveBeenCalledTimes(1);
         expect(defaultCredMgrWithKeytarSpy).toHaveBeenCalledTimes(1);
         expect(defaultCredMgrWithKeytarSpy).toHaveBeenCalledWith(ProfilesCache.requireKeyring);
-        const teamConfig = profInfo.getTeamConfig();
-        expect(teamConfig.appName).toBe("zowe");
-        expect(teamConfig.paths).toEqual([
-            path.join(__dirname, teamConfig.userConfigName),
-            path.join(__dirname, teamConfig.configName),
-            path.join(fakeZoweDir, teamConfig.userConfigName),
-            path.join(fakeZoweDir, teamConfig.configName),
-        ]);
+        expect(profInfo).toBeInstanceOf(imperative.ProfileInfo);
+        expect(readProfilesFromDiskSpy).toHaveBeenCalledWith({ homeDir: fakeZoweDir, projectDir: __dirname });
         existsSync.mockRestore();
     });
 
@@ -316,6 +311,20 @@ describe("ProfilesCache", () => {
         const keyring = ProfilesCache.requireKeyring();
         expect(keyring).toBeDefined();
         expect(Object.keys(keyring).length).toBe(6);
+    });
+
+    it("requireKeyring throws if the Secrets SDK does not export a keyring", () => {
+        // Bundlers keep a module that threw while loading in their require cache with empty exports, so a later
+        // require resolves to `undefined` instead of re-throwing. Callers detect an unavailable credential manager by
+        // catching, so a nullish keyring has to surface as an error rather than be returned.
+        const secretsSdk = secretsSdkModule as { keyring?: unknown };
+        const realKeyring = secretsSdk.keyring;
+        delete secretsSdk.keyring;
+        try {
+            expect(() => ProfilesCache.requireKeyring()).toThrow(/did not export a keyring/);
+        } finally {
+            secretsSdk.keyring = realKeyring;
+        }
     });
 
     it("addToConfigArray should set the profileTypeConfigurations array (deprecated value test)", () => {
@@ -748,24 +757,28 @@ describe("ProfilesCache", () => {
     describe("isCertFileValid", () => {
         it("should return true with valid certificate file", () => {
             vi.spyOn(fs, "readFileSync");
-            vi.spyOn(crypto, "X509Certificate").mockImplementationOnce(() => ({
-                subject: "CN=Test",
-                fingerprint256: "mockedFingerprint",
-                validFrom: "2022-01-01",
-                validTo: `${new Date().getFullYear() + 1}-01-01`,
-            }));
+            vi.spyOn(crypto, "X509Certificate").mockImplementationOnce(function () {
+                return {
+                    subject: "CN=Test",
+                    fingerprint256: "mockedFingerprint",
+                    validFrom: "2022-01-01",
+                    validTo: `${new Date().getFullYear() + 1}-01-01`,
+                };
+            });
             const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger, __dirname);
             expect(profCache.isCertFileValid("mockedCertFilePath")).toBe(true);
         });
         it("should log invalid cert message and return false with invalid certificate file", () => {
             const logger = fakeLogger as unknown as imperative.Logger;
             vi.spyOn(fs, "readFileSync");
-            vi.spyOn(crypto, "X509Certificate").mockImplementationOnce(() => ({
-                subject: "CN=Test",
-                fingerprint256: "mockedFingerprint",
-                validFrom: "2022-01-01",
-                validTo: "2024-01-01",
-            }));
+            vi.spyOn(crypto, "X509Certificate").mockImplementationOnce(function () {
+                return {
+                    subject: "CN=Test",
+                    fingerprint256: "mockedFingerprint",
+                    validFrom: "2022-01-01",
+                    validTo: "2024-01-01",
+                };
+            });
             const profCache = new ProfilesCache(logger, __dirname);
             const response = profCache.isCertFileValid("mockedCertFilePath");
             expect(logger.error).toHaveBeenCalledWith("Certificate file mockedCertFilePath is outside its validity period.");
