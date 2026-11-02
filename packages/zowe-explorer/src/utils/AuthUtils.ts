@@ -88,7 +88,10 @@ export class AuthUtils {
      */
     public static async profileUsesTokenAuth(profile: imperative.IProfileLoaded): Promise<boolean> {
         const sessTypeFromProf = AuthHandler.sessTypeFromProfile(profile);
+        const allowedLoginMethod = Constants.PROFILES_CACHE.getAllowedLoginMethod(profile);
         return (
+            allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_BASIC ||
+            allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_CERT_PEM ||
             sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_TOKEN ||
             sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_BEARER ||
             (await Constants.PROFILES_CACHE.profileHasSecureToken(profile))
@@ -224,14 +227,11 @@ export class AuthUtils {
                     imperativeError.mDetails.additionalDetails = additionalDetails.join("\n");
                 }
 
-                const sessTypeFromProf = AuthHandler.sessTypeFromProfile(profile);
                 AuthHandler.enableSequentialRequests(profile);
                 const stillLocked = await AuthHandler.getOrCreateAuthFlow(profile, {
                     authMethods: Constants.PROFILES_CACHE,
                     imperativeError,
-                    isUsingTokenAuth:
-                        sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_TOKEN ||
-                        sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_BEARER,
+                    isUsingTokenAuth: await AuthUtils.profileUsesTokenAuth(profile),
                     errorCorrelation,
                 });
                 return !stillLocked;
