@@ -16,7 +16,7 @@ module.exports = {
             level: "patch"
         },
         {
-            name: "release/3.*",
+            name: "temp/release-3.6-skip-npm",
             channel: "latest",
             level: "minor"
         }
@@ -52,7 +52,8 @@ module.exports = {
                 aliasTags: {
                     "latest": ["zowe-v3-lts"],
                 },
-                npmPublish: true,
+                // npmPublish: true,
+                npmPublish: false,
                 tarballDir: "dist",
             },
         ],

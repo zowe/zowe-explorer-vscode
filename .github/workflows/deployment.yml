@@ -7,6 +7,7 @@ on:
       - v1-lts
       - v2-lts
       - release/3.*
+      - temp/release-3.6-skip-npm
     paths:
       - .github/release.config.js
       - .github/workflows/deployment.yml
@@ -19,7 +20,7 @@ on:
 
 jobs:
   release:
-    if: github.event_name == 'workflow_dispatch' || github.ref_protected
+    # if: github.event_name == 'workflow_dispatch' || github.ref_protected
     runs-on: ubuntu-22.04
     permissions:
       contents: write
