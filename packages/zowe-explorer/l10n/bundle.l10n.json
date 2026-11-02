@@ -1289,6 +1289,7 @@
   "Fixed regression where getProviderForNode returned the wrong tree provider after performing an action on a Zowe tree node, causing some commands to fail silently. <a>#2967</a>": "Fixed regression where getProviderForNode returned the wrong tree provider after performing an action on a Zowe tree node, causing some commands to fail silently. <a>#2967</a>",
   "Fixed release notes displaying when Zowe Explorer is installed for the first time. <a>#3966</a>": "Fixed release notes displaying when Zowe Explorer is installed for the first time. <a>#3966</a>",
   "Fixed release notes displaying when the Zowe Explorer version is downgraded. <a>#3966</a>": "Fixed release notes displaying when the Zowe Explorer version is downgraded. <a>#3966</a>",
+  "Fixed seconds precision missing for SSH profiles when displaying \"Modified Date\" of PDS members in the data set table view. <a>#4582</a>": "Fixed seconds precision missing for SSH profiles when displaying \"Modified Date\" of PDS members in the data set table view. <a>#4582</a>",
   "Fixed secure credential storage not possible to enable in Theia.": "Fixed secure credential storage not possible to enable in Theia.",
   "Fixed settings not persisting in Theia versions >=1.29.0. <a>#2065</a>": "Fixed settings not persisting in Theia versions >=1.29.0. <a>#2065</a>",
   "Fixed several linter errors throughout the codebase and consolidated linter rules. <a>#2184</a>": "Fixed several linter errors throughout the codebase and consolidated linter rules. <a>#2184</a>",

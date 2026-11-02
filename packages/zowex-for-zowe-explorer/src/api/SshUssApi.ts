@@ -11,7 +11,7 @@
 
 import { createReadStream, createWriteStream } from "node:fs";
 import type * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
-import { imperative, type MainframeInteraction, type Types } from "@zowe/zowe-explorer-api";
+import { FileManagement, imperative, type MainframeInteraction, type Types } from "@zowe/zowe-explorer-api";
 import { B64String, type uss } from "@zowe/zowex-for-zowe-sdk";
 import { SshCommonApi } from "./SshCommonApi";
 import type Stream from "node:stream";
@@ -219,7 +219,7 @@ export class SshUssApi extends SshCommonApi implements MainframeInteraction.IUss
                 await this.client
             ).uss.chmodFile({
                 fspath: ussPath,
-                mode: attributes.perms,
+                mode: FileManagement.permStringToOctal(attributes.perms).toString(),
                 recursive: isDir,
             });
             success &&= response.success;
