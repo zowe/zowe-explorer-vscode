@@ -791,6 +791,46 @@ describe("Profiles Unit Tests - function validateProfile", () => {
         });
         expect(blockMocks.getStatusSpy).toHaveBeenCalledTimes(1);
     });
+    it("should fire onProfileValidated when the profile is validated as 'active'", async () => {
+        const blockMocks = createBlockMocks();
+        blockMocks.getStatusSpy.mockResolvedValue("active");
+        const validatedSpy = vi.spyOn(ZoweExplorerApiRegister.getInstance().onProfileValidatedEmitter, "fire");
+        const invalidatedSpy = vi.spyOn(ZoweExplorerApiRegister.getInstance().onProfileInvalidatedEmitter, "fire");
+        const profile = { name: "test1", message: "", type: "", failNotFound: false };
+        await Profiles.getInstance().validateProfiles(profile);
+        expect(validatedSpy).toHaveBeenCalledTimes(1);
+        expect(validatedSpy).toHaveBeenCalledWith(profile);
+        expect(invalidatedSpy).not.toHaveBeenCalled();
+    });
+    it("should not fire onProfileValidated when the profile was already validated as 'active'", async () => {
+        const blockMocks = createBlockMocks();
+        blockMocks.profilesForValidation.push({ name: "test1", status: "active" });
+        const validatedSpy = vi.spyOn(ZoweExplorerApiRegister.getInstance().onProfileValidatedEmitter, "fire");
+        await Profiles.getInstance().validateProfiles({ name: "test1", message: "", type: "", failNotFound: false });
+        expect(validatedSpy).not.toHaveBeenCalled();
+    });
+    it("should fire onProfileInvalidated when the profile is validated as 'inactive'", async () => {
+        const blockMocks = createBlockMocks();
+        blockMocks.getStatusSpy.mockResolvedValue("inactive");
+        const validatedSpy = vi.spyOn(ZoweExplorerApiRegister.getInstance().onProfileValidatedEmitter, "fire");
+        const invalidatedSpy = vi.spyOn(ZoweExplorerApiRegister.getInstance().onProfileInvalidatedEmitter, "fire");
+        const profile = { name: "test1", message: "", type: "", failNotFound: false };
+        await Profiles.getInstance().validateProfiles(profile);
+        expect(invalidatedSpy).toHaveBeenCalledTimes(1);
+        expect(invalidatedSpy).toHaveBeenCalledWith(profile);
+        expect(validatedSpy).not.toHaveBeenCalled();
+    });
+    it("should fire onProfileInvalidated when getStatus fails and the error is not resolved", async () => {
+        const blockMocks = createBlockMocks();
+        blockMocks.getStatusSpy.mockImplementation(() => {
+            throw new Error("failed to validate profile");
+        });
+        vi.spyOn(AuthUtils, "errorHandling").mockResolvedValue(false);
+        const invalidatedSpy = vi.spyOn(ZoweExplorerApiRegister.getInstance().onProfileInvalidatedEmitter, "fire");
+        const profile = { name: "test1", message: "", type: "", failNotFound: false };
+        await Profiles.getInstance().validateProfiles(profile);
+        expect(invalidatedSpy).toHaveBeenCalledWith(profile);
+    });
     it("should return an object with profile validation status of 'inactive' from session status if validated profiles does not exist", async () => {
         const blockMocks = createBlockMocks();
         blockMocks.getStatusSpy.mockResolvedValue("inactive");

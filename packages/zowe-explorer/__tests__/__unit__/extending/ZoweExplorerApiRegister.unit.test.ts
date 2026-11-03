@@ -276,6 +276,30 @@ describe("ZoweExplorerApiRegister unit testing", () => {
         expect(ZoweExplorerApiRegister.getInstance().onProfilesUpdate).toEqual({});
     });
 
+    it("provides access to the onProfileValidated event", () => {
+        Object.defineProperty(ZoweExplorerApiRegister.getInstance().onProfileValidatedEmitter, "event", {
+            value: {},
+            configurable: true,
+        });
+        expect(ZoweExplorerApiRegister.getInstance().onProfileValidated).toEqual({});
+    });
+
+    it("provides access to the onProfileInvalidated event", () => {
+        Object.defineProperty(ZoweExplorerApiRegister.getInstance().onProfileInvalidatedEmitter, "event", {
+            value: {},
+            configurable: true,
+        });
+        expect(ZoweExplorerApiRegister.getInstance().onProfileInvalidated).toEqual({});
+    });
+
+    it("provides access to the onProfileHidden event", () => {
+        Object.defineProperty(ZoweExplorerApiRegister.getInstance().onProfileHiddenEmitter, "event", {
+            value: {},
+            configurable: true,
+        });
+        expect(ZoweExplorerApiRegister.getInstance().onProfileHidden).toEqual({});
+    });
+
     it("provides access to the appropriate event for onResourceChanged", () => {
         ZoweExplorerApiRegister.addFileSystemEvent(ZoweScheme.DS, DatasetFSProvider.instance.onDidChangeFile);
         expect(ZoweExplorerApiRegister.onResourceChanged(ZoweScheme.DS)).toBe(DatasetFSProvider.instance.onDidChangeFile);

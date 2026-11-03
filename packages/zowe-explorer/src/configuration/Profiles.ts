@@ -912,6 +912,7 @@ export class Profiles extends ProfilesCache {
                             name: theProfile.name,
                         };
                         this.profilesForValidation.push(filteredProfile);
+                        ZoweExplorerApiRegister.getInstance().onProfileValidatedEmitter.fire(theProfile);
                         break;
                     case "inactive":
                         filteredProfile = {
@@ -919,6 +920,7 @@ export class Profiles extends ProfilesCache {
                             name: theProfile.name,
                         };
                         this.profilesForValidation.push(filteredProfile);
+                        ZoweExplorerApiRegister.getInstance().onProfileInvalidatedEmitter.fire(theProfile);
                         break;
                     // default will cover "unverified" and undefined
                     default:
@@ -947,6 +949,7 @@ export class Profiles extends ProfilesCache {
                     name: theProfile.name,
                 };
                 this.profilesForValidation.push(filteredProfile);
+                ZoweExplorerApiRegister.getInstance().onProfileInvalidatedEmitter.fire(theProfile);
             }
         }
 

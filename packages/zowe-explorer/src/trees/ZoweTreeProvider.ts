@@ -235,6 +235,10 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
             treeProvider.removeSession(node.getLabel() as string);
             treeProvider.refresh();
         }
+        const profile = node.getProfile?.();
+        if (profile) {
+            ZoweExplorerApiRegister.getInstance().onProfileHiddenEmitter.fire(profile);
+        }
     }
 
     public async editSession(node: IZoweTreeNode): Promise<void> {
