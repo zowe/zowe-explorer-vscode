@@ -32,6 +32,7 @@ import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister
 import { IconGenerator } from "../../icons/IconGenerator";
 import { ZoweTreeProvider } from "../ZoweTreeProvider";
 import { ZoweLogger } from "../../tools/ZoweLogger";
+import { ReadOnlyManagement } from "../../management/ReadOnlyManagement";
 import { TreeViewUtils } from "../../utils/TreeViewUtils";
 import { SharedContext } from "../shared/SharedContext";
 import { SharedTreeProviders } from "../shared/SharedTreeProviders";
@@ -291,6 +292,19 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 this.draggedNodes = {};
                 return;
             }
+
+            // A move deletes the source and creates the destination, so neither can be read-only
+            const destUri = vscode.Uri.from({
+                scheme: ZoweScheme.USS,
+                path: path.posix.join("/", target.getProfile().name, target.fullPath, nodeLabel),
+            });
+            if (
+                (await ReadOnlyManagement.showErrorIfReadOnly(node.resourceUri)) ||
+                (await ReadOnlyManagement.showErrorIfReadOnly(destUri, { checkParent: true }))
+            ) {
+                this.draggedNodes = {};
+                return;
+            }
         }
 
         // Proceed with the moves if validation passed for all relevant items.
@@ -343,6 +357,9 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         ZoweLogger.trace("USSTree.rename called.");
         await Profiles.getInstance().checkCurrentProfile(originalNode.getProfile(), originalNode);
         if (await TreeViewUtils.errorForUnsavedResource(originalNode)) {
+            return;
+        }
+        if (await ReadOnlyManagement.showErrorIfReadOnly(originalNode.resourceUri)) {
             return;
         }
 

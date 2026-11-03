@@ -359,6 +359,14 @@ describe("Test src/shared/extension", () => {
                 mock: [{ spy: vi.spyOn(LocalFileManagement, "compareChosenFileContent"), arg: [test.value] }],
             },
             {
+                name: "zowe.readOnly.makeReadOnly",
+                mock: [{ spy: vi.spyOn(SharedActions, "toggleNodeReadOnly"), arg: [test.value, true] }],
+            },
+            {
+                name: "zowe.readOnly.makeReadWrite",
+                mock: [{ spy: vi.spyOn(SharedActions, "toggleNodeReadOnly"), arg: [test.value, false] }],
+            },
+            {
                 name: "zowe.compareWithSelectedReadOnly",
                 mock: [{ spy: vi.spyOn(LocalFileManagement, "compareChosenFileContent"), arg: [test.value, true] }],
             },

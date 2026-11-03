@@ -24,6 +24,7 @@ import {
     DirEntry,
     MainframeInteraction,
     DsType,
+    ZoweScheme,
 } from "@zowe/zowe-explorer-api";
 import { DatasetFSProvider } from "../../../../src/trees/dataset/DatasetFSProvider";
 import { Workspace } from "../../../../src/configuration/Workspace";
@@ -67,6 +68,7 @@ import { DatasetTree } from "../../../../src/trees/dataset/DatasetTree";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 import { ZoweLocalStorage } from "../../../../src/tools/ZoweLocalStorage";
 import { LocalFileManagement } from "../../../../src/management/LocalFileManagement";
+import { ReadOnlyManagement } from "../../../../src/management/ReadOnlyManagement";
 
 // Missing the definition of path module, because I need the original logic for tests
 vi.mock("fs");
@@ -8621,5 +8623,355 @@ describe("Dataset Actions Unit Tests - Function submitMember", () => {
         // When user dismisses, neither button action should execute
         expect(executeCommandSpy).not.toHaveBeenCalled();
         expect(pollSubmittedJobSpy).not.toHaveBeenCalled();
+    });
+});
+
+describe("Dataset Actions Unit Tests - read-only data sets", () => {
+    const originalGetDirectValue = SettingsConfig.getDirectValue;
+    let globalMocks: ReturnType<typeof createGlobalMocks>;
+    let blockMocks: ReturnType<typeof createBlockMocksShared>;
+    let errorMessageSpy: MockInstance;
+
+    const useRules = (rules: unknown): void => {
+        (ReadOnlyManagement as any).ruleCache = undefined;
+        vi.spyOn(SettingsConfig, "getDirectValue").mockImplementation((key: string, defaultValue?: unknown) =>
+            key === Constants.SETTINGS_READ_ONLY_RULES ? rules : originalGetDirectValue.call(SettingsConfig, key, defaultValue)
+        );
+    };
+
+    const dsNode = (label: string, contextOverride: string, parentNode?: ZoweDatasetNode): ZoweDatasetNode =>
+        new ZoweDatasetNode({
+            label,
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode: parentNode ?? blockMocks.datasetSessionNode,
+            session: blockMocks.session,
+            profile: blockMocks.imperativeProfile,
+            contextOverride,
+        });
+
+    const mockMvsApi = (method: string): Mock => {
+        const fn = vi.fn();
+        (blockMocks.mvsApi as any)[method] = fn;
+        return fn;
+    };
+
+    const runProgress = (): MockInstance =>
+        vi.spyOn(Gui, "withProgress").mockImplementation((_opts: any, task: any) => task({ report: vi.fn() }, { isCancellationRequested: false }));
+
+    beforeEach(() => {
+        globalMocks = createGlobalMocks();
+        blockMocks = createBlockMocksShared();
+        (ReadOnlyManagement as any).overrides.clear();
+        useRules([{ ds: "ZXP.**" }, { ds: "IBMUSER.JCL(PROD*)" }]);
+        errorMessageSpy = vi.spyOn(Gui, "errorMessage").mockResolvedValue(undefined);
+    });
+
+    afterEach(() => {
+        (ReadOnlyManagement as any).ruleCache = undefined;
+        (ReadOnlyManagement as any).overrides.clear();
+        vi.restoreAllMocks();
+    });
+
+    describe("createMember", () => {
+        it("does not ask for a member name in a read-only PDS", async () => {
+            const parent = dsNode("ZXP.PUBLIC.JCL", Constants.DS_PDS_CONTEXT);
+            const inputBoxSpy = vi.spyOn(Gui, "showInputBox");
+            const createMemberSpy = mockMvsApi("createDataSetMember");
+
+            await DatasetActions.createMember(parent, blockMocks.testDatasetTree);
+
+            expect(errorMessageSpy).toHaveBeenCalledWith("ZXP.PUBLIC.JCL is read-only.");
+            expect(inputBoxSpy).not.toHaveBeenCalled();
+            expect(createMemberSpy).not.toHaveBeenCalled();
+        });
+
+        it("does not create a member whose name a rule makes read-only", async () => {
+            const parent = dsNode("IBMUSER.JCL", Constants.DS_PDS_CONTEXT);
+            vi.spyOn(Gui, "showInputBox").mockResolvedValue("prodjob");
+            const createMemberSpy = mockMvsApi("createDataSetMember");
+            const writeFileSpy = vi.spyOn(vscode.workspace.fs, "writeFile");
+
+            await DatasetActions.createMember(parent, blockMocks.testDatasetTree);
+
+            expect(errorMessageSpy).toHaveBeenCalledWith("IBMUSER.JCL(PRODJOB) is read-only.");
+            expect(createMemberSpy).not.toHaveBeenCalled();
+            expect(writeFileSpy).not.toHaveBeenCalled();
+        });
+
+        it("does not create a member in a PDS made read-only from the tree", async () => {
+            const parent = dsNode("IBMUSER.JCL", Constants.DS_PDS_CONTEXT);
+            ReadOnlyManagement.setReadOnly(parent.resourceUri, true);
+            const inputBoxSpy = vi.spyOn(Gui, "showInputBox");
+
+            await DatasetActions.createMember(parent, blockMocks.testDatasetTree);
+
+            expect(errorMessageSpy).toHaveBeenCalledWith("IBMUSER.JCL is read-only.");
+            expect(inputBoxSpy).not.toHaveBeenCalled();
+        });
+
+        it("creates a writable member", async () => {
+            const parent = dsNode("IBMUSER.JCL", Constants.DS_PDS_CONTEXT);
+            vi.spyOn(Gui, "showInputBox").mockResolvedValue("hello");
+            vi.spyOn(DatasetActions, "determineReplacement").mockResolvedValue("notFound");
+            const createMemberSpy = mockMvsApi("createDataSetMember").mockResolvedValue({ success: true } as any);
+            vi.spyOn(parent, "getChildren").mockResolvedValue([]);
+
+            await DatasetActions.createMember(parent, blockMocks.testDatasetTree).catch(() => undefined);
+
+            expect(createMemberSpy).toHaveBeenCalledWith("IBMUSER.JCL(HELLO)", expect.anything());
+            expect(errorMessageSpy).not.toHaveBeenCalledWith(expect.stringContaining("is read-only."));
+        });
+    });
+
+    describe("allocating data sets", () => {
+        it("does not allocate a data set like another with a read-only name", async () => {
+            const node = dsNode("IBMUSER.JCL", Constants.DS_PDS_CONTEXT);
+            vi.spyOn(Gui, "showInputBox").mockResolvedValue("zxp.new.jcl");
+            const allocateLikeSpy = mockMvsApi("allocateLikeDataSet");
+
+            await DatasetActions.allocateLike(blockMocks.testDatasetTree, node);
+
+            expect(errorMessageSpy).toHaveBeenCalledWith("ZXP.NEW.JCL is read-only.");
+            expect(allocateLikeSpy).not.toHaveBeenCalled();
+        });
+
+        it("does not create a data set with a read-only name", async () => {
+            const createDataSetSpy = mockMvsApi("createDataSet");
+
+            await (DatasetActions as any).allocateNewDataSet(blockMocks.datasetSessionNode, "ZXP.NEW.PS", {}, blockMocks.testDatasetTree);
+
+            expect(errorMessageSpy).toHaveBeenCalledWith("ZXP.NEW.PS is read-only.");
+            expect(createDataSetSpy).not.toHaveBeenCalled();
+        });
+
+        it("does not create a data set in a profile made read-only from the tree", async () => {
+            const profileName = blockMocks.imperativeProfile.name;
+            ReadOnlyManagement.setReadOnly(vscode.Uri.from({ scheme: ZoweScheme.DS, path: `/${profileName}` }), true);
+            ReadOnlyManagement.setReadOnly(vscode.Uri.from({ scheme: ZoweScheme.DS, path: `/${profileName}/IBMUSER.NEW.PS` }), false);
+            const createDataSetSpy = mockMvsApi("createDataSet");
+
+            await (DatasetActions as any).allocateNewDataSet(blockMocks.datasetSessionNode, "IBMUSER.NEW.PS", {}, blockMocks.testDatasetTree);
+
+            expect(errorMessageSpy).toHaveBeenCalledWith(`${profileName} is read-only.`);
+            expect(createDataSetSpy).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("uploading", () => {
+        it("does not show the file picker for a read-only PDS", async () => {
+            const node = dsNode("ZXP.PUBLIC.JCL", Constants.DS_PDS_CONTEXT);
+            const openDialogSpy = vi.spyOn(Gui, "showOpenDialog");
+            const putContentsSpy = mockMvsApi("putContents");
+
+            await DatasetActions.uploadDialog(node, blockMocks.testDatasetTree);
+
+            expect(errorMessageSpy).toHaveBeenCalledWith("ZXP.PUBLIC.JCL is read-only.");
+            expect(openDialogSpy).not.toHaveBeenCalled();
+            expect(putContentsSpy).not.toHaveBeenCalled();
+        });
+
+        it("does not ask for an encoding when uploading with encoding to a read-only PDS", async () => {
+            const node = dsNode("ZXP.PUBLIC.JCL", Constants.DS_PDS_CONTEXT);
+            vi.spyOn(SharedContext, "isPds").mockReturnValue(true);
+            const promptEncodingSpy = vi.spyOn(SharedUtils, "promptForUploadEncoding");
+            const openDialogSpy = vi.spyOn(Gui, "showOpenDialog");
+
+            await DatasetActions.uploadDialogWithEncoding(node, blockMocks.testDatasetTree);
+
+            expect(errorMessageSpy).toHaveBeenCalledWith("ZXP.PUBLIC.JCL is read-only.");
+            expect(promptEncodingSpy).not.toHaveBeenCalled();
+            expect(openDialogSpy).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("uploading to read-only members", () => {
+        const localFile = (name: string): vscode.Uri => vscode.Uri.file(path.join("/tmp/zxplore", name));
+
+        beforeEach(() => {
+            // Earlier tests in this file can leave SharedContext.isPds mocked
+            vi.spyOn(SharedContext, "isPds").mockImplementation((node: any) => node?.contextValue?.startsWith(Constants.DS_PDS_CONTEXT));
+        });
+
+        it("does not upload a file to a member a rule makes read-only", async () => {
+            const node = dsNode("IBMUSER.JCL", Constants.DS_PDS_CONTEXT);
+            vi.spyOn(Gui, "showOpenDialog").mockResolvedValue([localFile("prodjob.jcl")]);
+            const putContentsSpy = mockMvsApi("putContents");
+            const progressSpy = vi.spyOn(Gui, "withProgress");
+
+            await DatasetActions.uploadDialog(node, blockMocks.testDatasetTree);
+
+            expect(errorMessageSpy).toHaveBeenCalledWith("IBMUSER.JCL(PRODJOB) is read-only.");
+            expect(progressSpy).not.toHaveBeenCalled();
+            expect(putContentsSpy).not.toHaveBeenCalled();
+        });
+
+        it("derives the member name from the file name the same way the upload does", async () => {
+            const node = dsNode("IBMUSER.JCL", Constants.DS_PDS_CONTEXT);
+            vi.spyOn(Gui, "showOpenDialog").mockResolvedValue([localFile("prod-job_2.jcl")]);
+            const putContentsSpy = mockMvsApi("putContents");
+
+            await DatasetActions.uploadDialog(node, blockMocks.testDatasetTree);
+
+            expect(errorMessageSpy).toHaveBeenCalledWith("IBMUSER.JCL(PRODJOB2) is read-only.");
+            expect(putContentsSpy).not.toHaveBeenCalled();
+        });
+
+        it("does not upload any files when one of the members is read-only", async () => {
+            const node = dsNode("IBMUSER.JCL", Constants.DS_PDS_CONTEXT);
+            vi.spyOn(Gui, "showOpenDialog").mockResolvedValue([localFile("hello.jcl"), localFile("prodjob.jcl")]);
+            const putContentsSpy = mockMvsApi("putContents");
+
+            await DatasetActions.uploadDialog(node, blockMocks.testDatasetTree);
+
+            expect(errorMessageSpy).toHaveBeenCalledWith("IBMUSER.JCL(PRODJOB) is read-only.");
+            expect(putContentsSpy).not.toHaveBeenCalled();
+        });
+
+        it("does not upload with encoding to a member a rule makes read-only", async () => {
+            const node = dsNode("IBMUSER.JCL", Constants.DS_PDS_CONTEXT);
+            vi.spyOn(SharedUtils, "promptForUploadEncoding").mockResolvedValue({ kind: "text" });
+            vi.spyOn(Gui, "showOpenDialog").mockResolvedValue([localFile("prodjob.jcl")]);
+            const putContentsSpy = mockMvsApi("putContents");
+
+            await DatasetActions.uploadDialogWithEncoding(node, blockMocks.testDatasetTree);
+
+            expect(errorMessageSpy).toHaveBeenCalledWith("IBMUSER.JCL(PRODJOB) is read-only.");
+            expect(putContentsSpy).not.toHaveBeenCalled();
+        });
+
+        it("uploads files to writable members", async () => {
+            runProgress();
+            const node = dsNode("IBMUSER.JCL", Constants.DS_PDS_CONTEXT);
+            vi.spyOn(Gui, "showOpenDialog").mockResolvedValue([localFile("hello.jcl")]);
+            const putContentsSpy = mockMvsApi("putContents");
+            putContentsSpy.mockResolvedValue({ success: true });
+
+            await DatasetActions.uploadDialog(node, blockMocks.testDatasetTree).catch(() => undefined);
+
+            expect(errorMessageSpy).not.toHaveBeenCalledWith(expect.stringContaining("is read-only."));
+            expect(putContentsSpy).toHaveBeenCalledWith(localFile("hello.jcl").fsPath, "IBMUSER.JCL", expect.anything());
+        });
+    });
+
+    describe("deleteDatasetPrompt", () => {
+        it("does not ask to delete a member of a read-only PDS", async () => {
+            const pds = dsNode("ZXP.PUBLIC.JCL", Constants.DS_PDS_CONTEXT);
+            const member = dsNode("README", Constants.DS_MEMBER_CONTEXT, pds);
+            const warningSpy = vi.spyOn(Gui, "warningMessage");
+
+            await DatasetActions.deleteDatasetPrompt(blockMocks.testDatasetTree, member);
+
+            expect(errorMessageSpy).toHaveBeenCalledWith("ZXP.PUBLIC.JCL(README) is read-only.");
+            expect(warningSpy).not.toHaveBeenCalled();
+            expect(globalMocks.fspDelete).not.toHaveBeenCalled();
+        });
+
+        it("does not delete any data sets when one of the selected data sets is read-only", async () => {
+            const writable = dsNode("IBMUSER.OUTPUT", Constants.DS_DS_CONTEXT);
+            const readOnly = dsNode("ZXP.PUBLIC.JCL", Constants.DS_PDS_CONTEXT);
+            const warningSpy = vi.spyOn(Gui, "warningMessage");
+
+            await DatasetActions.deleteDatasetPrompt(blockMocks.testDatasetTree, writable, [writable, readOnly]);
+
+            expect(errorMessageSpy).toHaveBeenCalledWith("ZXP.PUBLIC.JCL is read-only.");
+            expect(warningSpy).not.toHaveBeenCalled();
+            expect(globalMocks.fspDelete).not.toHaveBeenCalled();
+        });
+
+        it("asks to delete a writable member of a read-only PDS", async () => {
+            const pds = dsNode("ZXP.PUBLIC.JCL", Constants.DS_PDS_CONTEXT);
+            const member = dsNode("SCRATCH", Constants.DS_MEMBER_CONTEXT, pds);
+            useRules([{ ds: "ZXP.**" }, { ds: "!ZXP.PUBLIC.JCL(SCRATCH)" }]);
+            const warningSpy = vi.spyOn(Gui, "warningMessage").mockResolvedValue(undefined);
+
+            await DatasetActions.deleteDatasetPrompt(blockMocks.testDatasetTree, member).catch(() => undefined);
+
+            expect(errorMessageSpy).not.toHaveBeenCalledWith(expect.stringContaining("is read-only."));
+            expect(warningSpy).toHaveBeenCalled();
+        });
+    });
+
+    describe("pasting", () => {
+        beforeEach(() => {
+            vi.spyOn(Profiles, "getInstance").mockReturnValue({ allProfiles: [blockMocks.imperativeProfile] } as any);
+        });
+
+        it("does not paste members into a read-only PDS", async () => {
+            const node = dsNode("ZXP.PUBLIC.JCL", Constants.DS_PDS_CONTEXT);
+            clipboard.writeText(
+                JSON.stringify([
+                    { profileName: "sestest", dataSetName: "IBMUSER.JCL", memberName: "HELLO", contextValue: Constants.DS_MEMBER_CONTEXT },
+                ])
+            );
+            const inputBoxSpy = vi.spyOn(Gui, "showInputBox");
+            const copyMemberSpy = mockMvsApi("copyDataSetMember");
+
+            await DatasetActions.pasteDataSet(blockMocks.testDatasetTree, node);
+
+            expect(errorMessageSpy).toHaveBeenCalledWith("ZXP.PUBLIC.JCL is read-only.");
+            expect(inputBoxSpy).not.toHaveBeenCalled();
+            expect(copyMemberSpy).not.toHaveBeenCalled();
+        });
+
+        it("does not paste a member with a read-only name", async () => {
+            runProgress();
+            const node = dsNode("IBMUSER.JCL", Constants.DS_PDS_CONTEXT);
+            vi.spyOn(Gui, "showInputBox").mockResolvedValue("PRODJOB");
+            const determineReplacementSpy = vi.spyOn(DatasetActions, "determineReplacement");
+            const copyMemberSpy = mockMvsApi("copyDataSetMember");
+
+            await DatasetActions.copyDatasetMembers([{ profileName: "sestest", dataSetName: "IBMUSER.SOURCE", memberName: "PRODJOB" }], node);
+
+            expect(errorMessageSpy).toHaveBeenCalledWith("IBMUSER.JCL(PRODJOB) is read-only.");
+            expect(determineReplacementSpy).not.toHaveBeenCalled();
+            expect(copyMemberSpy).not.toHaveBeenCalled();
+        });
+
+        it("does not copy a data set to a read-only name in the same profile", async () => {
+            vi.spyOn(Gui, "showInputBox").mockResolvedValue("ZXP.COPY.JCL");
+            const allocateLikeSpy = mockMvsApi("allocateLikeDataSet");
+            const determineReplacementSpy = vi.spyOn(DatasetActions, "determineReplacement");
+            const action = vi.fn();
+
+            await DatasetActions.copyProcessor([{ dataSetName: "IBMUSER.JCL", profileName: "sestest" }], "po", action);
+
+            expect(errorMessageSpy).toHaveBeenCalledWith("ZXP.COPY.JCL is read-only.");
+            expect(determineReplacementSpy).not.toHaveBeenCalled();
+            expect(allocateLikeSpy).not.toHaveBeenCalled();
+            expect(action).not.toHaveBeenCalled();
+        });
+
+        it("skips a read-only copy and continues with the next data set", async () => {
+            vi.spyOn(Gui, "showInputBox").mockResolvedValueOnce("ZXP.COPY.JCL").mockResolvedValueOnce("IBMUSER.COPY.JCL");
+            vi.spyOn(DatasetActions, "determineReplacement").mockResolvedValue("replace");
+            const action = vi.fn();
+
+            await DatasetActions.copyProcessor(
+                [
+                    { dataSetName: "IBMUSER.JCL", profileName: "sestest" },
+                    { dataSetName: "IBMUSER.SOURCE", profileName: "sestest" },
+                ],
+                "po",
+                action
+            );
+
+            expect(action).toHaveBeenCalledTimes(1);
+            expect(action).toHaveBeenCalledWith(expect.objectContaining({ dataSetName: "IBMUSER.SOURCE" }), "IBMUSER.COPY.JCL", "replace");
+        });
+
+        it("does not copy a data set from another profile to a read-only name", async () => {
+            runProgress();
+            const sshProfile = { ...blockMocks.imperativeProfile, name: "ssh" };
+            vi.spyOn(Profiles, "getInstance").mockReturnValue({ allProfiles: [blockMocks.imperativeProfile, sshProfile] } as any);
+            (blockMocks.mvsApi as any).copyDataSetCrossLpar = vi.fn();
+            vi.spyOn(Gui, "showInputBox").mockResolvedValue("ZXP.PUBLIC.DATA");
+            const determineReplacementSpy = vi.spyOn(DatasetActions, "determineReplacement");
+
+            await DatasetActions.copySequentialDatasets([{ profileName: "ssh", dataSetName: "ZXP.PUBLIC.DATA" }], blockMocks.datasetSessionNode);
+
+            expect(errorMessageSpy).toHaveBeenCalledWith("ZXP.PUBLIC.DATA is read-only.");
+            expect(determineReplacementSpy).not.toHaveBeenCalled();
+            expect((blockMocks.mvsApi as any).copyDataSetCrossLpar).not.toHaveBeenCalled();
+        });
     });
 });

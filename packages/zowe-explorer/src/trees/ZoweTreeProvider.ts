@@ -13,6 +13,7 @@ import * as vscode from "vscode";
 import { IZoweTreeNode, imperative, Types, IZoweTree, PersistenceSchemaEnum, Validation, AuthHandler } from "@zowe/zowe-explorer-api";
 import { ZowePersistentFilters } from "../tools/ZowePersistentFilters";
 import { ZoweLogger } from "../tools/ZoweLogger";
+import { ReadOnlyManagement } from "../management/ReadOnlyManagement";
 import { Profiles } from "../configuration/Profiles";
 import { SharedContext } from "./shared/SharedContext";
 import { Constants, JwtCheckResult } from "../configuration/Constants";
@@ -49,7 +50,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
      */
     public getTreeItem(element: IZoweTreeNode): vscode.TreeItem | Thenable<vscode.TreeItem> {
         ZoweLogger.trace("ZoweTreeProvider.getTreeItem called.");
-        return element;
+        return ReadOnlyManagement.getTreeItem(element);
     }
 
     public getParent(element: T): vscode.ProviderResult<T> {

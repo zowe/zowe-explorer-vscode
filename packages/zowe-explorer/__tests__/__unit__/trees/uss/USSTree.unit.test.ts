@@ -10,6 +10,7 @@
  */
 
 import * as vscode from "vscode";
+import { MockInstance } from "vitest";
 import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
 import * as zosfiles from "@zowe/zos-files-for-zowe-sdk";
 import { AuthHandler, Gui, imperative, IZoweUSSTreeNode, ProfilesCache, Validation, ZoweScheme } from "@zowe/zowe-explorer-api";
@@ -41,6 +42,7 @@ import { Constants, JwtCheckResult } from "../../../../src/configuration/Constan
 import { IconGenerator } from "../../../../src/icons/IconGenerator";
 import { IconUtils } from "../../../../src/icons/IconUtils";
 import { FilterDescriptor, FilterItem } from "../../../../src/management/FilterManagement";
+import { ReadOnlyManagement } from "../../../../src/management/ReadOnlyManagement";
 import { AuthUtils } from "../../../../src/utils/AuthUtils";
 import { Icon } from "../../../../src/icons/Icon";
 import { ZoweTreeProvider } from "../../../../src/trees/ZoweTreeProvider";
@@ -2953,5 +2955,173 @@ describe("USSTree.handleDrop - payload/argument normalization branches", () => {
         expect((ussTree as any).draggedNodes).toEqual({});
 
         dragged[Symbol.dispose]();
+    });
+});
+
+describe("USSTree Unit Tests - read-only files and directories", () => {
+    let globalMocks: ReturnType<typeof createGlobalMocks>;
+    let errorMessageSpy: MockInstance;
+    let session: imperative.Session;
+    let profile: imperative.IProfileLoaded;
+    let sessionNode: ZoweUSSNode;
+
+    const makeReadOnly = (...paths: string[]): MockInstance =>
+        vi.spyOn(ReadOnlyManagement, "isReadOnly").mockImplementation((uri: vscode.Uri) => paths.includes(uri?.path));
+
+    const ussNode = (fullPath: string, contextOverride: string, parentNode: ZoweUSSNode = sessionNode): ZoweUSSNode => {
+        const node = new ZoweUSSNode({
+            label: fullPath.split("/").pop(),
+            collapsibleState:
+                contextOverride === Constants.USS_DIR_CONTEXT ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None,
+            session,
+            profile,
+            parentNode,
+            parentPath: fullPath.substring(0, fullPath.lastIndexOf("/")) || "/",
+            contextOverride,
+        });
+        return node;
+    };
+
+    beforeEach(() => {
+        globalMocks = createGlobalMocks();
+        session = createISession();
+        profile = createIProfile();
+        sessionNode = createUSSSessionNode(session, profile);
+        errorMessageSpy = vi.spyOn(Gui, "errorMessage").mockResolvedValue(undefined);
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    describe("rename", () => {
+        beforeEach(() => {
+            vi.spyOn(TreeViewUtils, "errorForUnsavedResource").mockResolvedValue(false);
+        });
+
+        it("does not ask for a new name for a read-only file", async () => {
+            const file = ussNode("/etc/profile", Constants.USS_TEXT_FILE_CONTEXT);
+            makeReadOnly(file.resourceUri.path);
+            const inputBoxSpy = vi.spyOn(Gui, "showInputBox");
+            const renameSpy = vi.spyOn(vscode.workspace.fs, "rename");
+
+            await globalMocks.testTree.rename(file);
+
+            expect(errorMessageSpy).toHaveBeenCalledWith("/etc/profile is read-only.");
+            expect(inputBoxSpy).not.toHaveBeenCalled();
+            expect(renameSpy).not.toHaveBeenCalled();
+        });
+
+        it("does not ask for a new name for a file that inherits read-only from its directory", async () => {
+            const dir = ussNode("/etc", Constants.USS_DIR_CONTEXT);
+            const file = ussNode("/etc/profile", Constants.USS_TEXT_FILE_CONTEXT, dir);
+            makeReadOnly(dir.resourceUri.path, file.resourceUri.path);
+            const inputBoxSpy = vi.spyOn(Gui, "showInputBox");
+
+            await globalMocks.testTree.rename(file);
+
+            expect(errorMessageSpy).toHaveBeenCalledWith("/etc/profile is read-only.");
+            expect(inputBoxSpy).not.toHaveBeenCalled();
+        });
+
+        it("asks for a new name for a writable file in a read-only directory", async () => {
+            const dir = ussNode("/z/ibmuser/cobol", Constants.USS_DIR_CONTEXT);
+            const file = ussNode("/z/ibmuser/cobol/scratch.cbl", Constants.USS_TEXT_FILE_CONTEXT, dir);
+            makeReadOnly(dir.resourceUri.path);
+            vi.spyOn(globalMocks.testTree, "getAllLoadedItems").mockResolvedValue([]);
+            const inputBoxSpy = vi.spyOn(Gui, "showInputBox").mockResolvedValue(undefined);
+
+            await globalMocks.testTree.rename(file);
+
+            expect(errorMessageSpy).not.toHaveBeenCalled();
+            expect(inputBoxSpy).toHaveBeenCalled();
+        });
+    });
+
+    describe("handleDrop", () => {
+        let ussTree: USSTree;
+        let sourceDir: ZoweUSSNode;
+        let sourceFile: ZoweUSSNode;
+        let targetDir: ZoweUSSNode;
+        let draggedNodesMock: MockedProperty;
+        let moveSpy: MockInstance;
+        let crossLparMoveSpy: MockInstance;
+
+        const dropFile = (): Promise<void> =>
+            ussTree.handleDrop(
+                targetDir,
+                { get: vi.fn().mockReturnValueOnce({ value: [{ label: sourceFile.label, uri: sourceFile.resourceUri }] }) } as any,
+                undefined
+            );
+
+        beforeEach(() => {
+            ussTree = new USSTree();
+            sourceDir = ussNode("/z/ibmuser/cobol", Constants.USS_DIR_CONTEXT);
+            sourceFile = ussNode("/z/ibmuser/cobol/hello.cbl", Constants.USS_TEXT_FILE_CONTEXT, sourceDir);
+            targetDir = ussNode("/z/public", Constants.USS_DIR_CONTEXT);
+            vi.spyOn(targetDir, "getChildren").mockResolvedValue([]);
+            draggedNodesMock = new MockedProperty(ussTree, "draggedNodes", undefined, { [sourceFile.resourceUri.path]: sourceFile });
+            vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue({ move: vi.fn() } as any);
+            moveSpy = vi.spyOn(UssFSProvider.instance, "move").mockResolvedValue(true);
+            crossLparMoveSpy = vi.spyOn(ussTree as any, "crossLparMove").mockResolvedValue(undefined);
+            vi.spyOn(ussTree, "refreshElement").mockImplementation(() => undefined);
+        });
+
+        afterEach(() => {
+            draggedNodesMock[Symbol.dispose]();
+        });
+
+        it("does not move a file that inherits read-only from its directory", async () => {
+            makeReadOnly(sourceDir.resourceUri.path, sourceFile.resourceUri.path);
+            await dropFile();
+            expect(errorMessageSpy).toHaveBeenCalledWith("/z/ibmuser/cobol/hello.cbl is read-only.");
+            expect(moveSpy).not.toHaveBeenCalled();
+            expect(crossLparMoveSpy).not.toHaveBeenCalled();
+        });
+
+        it("moves a writable file out of a read-only directory", async () => {
+            makeReadOnly(sourceDir.resourceUri.path);
+            await dropFile();
+            expect(errorMessageSpy).not.toHaveBeenCalled();
+            expect(moveSpy).toHaveBeenCalled();
+        });
+
+        it("names the target directory when the file would inherit read-only from it", async () => {
+            makeReadOnly(targetDir.resourceUri.path, `${targetDir.resourceUri.path}/hello.cbl`);
+            await dropFile();
+            expect(errorMessageSpy).toHaveBeenCalledWith("/z/public is read-only.");
+            expect(moveSpy).not.toHaveBeenCalled();
+        });
+
+        it("names the target directory when moving a writable file out of one read-only directory into another", async () => {
+            makeReadOnly(sourceDir.resourceUri.path, targetDir.resourceUri.path, `${targetDir.resourceUri.path}/hello.cbl`);
+            await dropFile();
+            expect(errorMessageSpy).toHaveBeenCalledTimes(1);
+            expect(errorMessageSpy).toHaveBeenCalledWith("/z/public is read-only.");
+            expect(moveSpy).not.toHaveBeenCalled();
+        });
+
+        it("does not move a file into a read-only directory", async () => {
+            makeReadOnly(targetDir.resourceUri.path);
+            await dropFile();
+            expect(errorMessageSpy).toHaveBeenCalledWith("/z/public is read-only.");
+            expect(moveSpy).not.toHaveBeenCalled();
+            expect(crossLparMoveSpy).not.toHaveBeenCalled();
+        });
+
+        it("does not move a read-only file", async () => {
+            makeReadOnly(sourceFile.resourceUri.path);
+            await dropFile();
+            expect(errorMessageSpy).toHaveBeenCalledWith("/z/ibmuser/cobol/hello.cbl is read-only.");
+            expect(moveSpy).not.toHaveBeenCalled();
+        });
+
+        it("moves a writable file into a writable directory", async () => {
+            makeReadOnly();
+            const sourceUri = sourceFile.resourceUri;
+            await dropFile();
+            expect(errorMessageSpy).not.toHaveBeenCalled();
+            expect(moveSpy).toHaveBeenCalledWith(sourceUri, expect.objectContaining({ path: `/${profile.name}/z/public/hello.cbl` }));
+        });
     });
 });
