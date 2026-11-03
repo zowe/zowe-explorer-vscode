@@ -6,6 +6,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
+- Added the optional `proxyJump` SSH profile property for explicit jump routes.
 - Deprecated the `CertificateOptions` interface in the `PromptCredentials.ts` file, which was formerly only used by a private method in the `ZoweVsCodeExtension` class. [#4531](https://github.com/zowe/zowe-explorer-vscode/pull/4531)
 - Added the `promptCertificate` method to the `ProfilesCache` class, which opens a certificate wizard UI allowing the user to save certificate file paths used for authentication. [#4531](https://github.com/zowe/zowe-explorer-vscode/pull/4531)
 - Added the `supportsCertAuth` method to the `MainframeInteraction.ICommon` interface so that extenders can indicate if their API supports certificate authentication. [#4531](https://github.com/zowe/zowe-explorer-vscode/pull/4531)

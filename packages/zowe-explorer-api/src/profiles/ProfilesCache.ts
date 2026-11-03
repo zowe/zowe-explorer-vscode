@@ -542,7 +542,31 @@ export class ProfilesCache {
     }
 
     public getCoreProfileTypes(): imperative.IProfileTypeConfiguration[] {
-        return [ZosmfProfile, ZosTsoProfile, ZosUssProfile];
+        const proxyJump: imperative.ICommandProfileProperty = {
+            type: "string",
+            optionDefinition: {
+                name: "proxy-jump",
+                aliases: ["J"],
+                type: "string",
+                description:
+                    "Explicit SSH jump hosts as [user@]host[:port], separated by commas. Omitted or 'none' connects directly. " +
+                    "SSH-config ProxyJump is only copied when importing an SSH connection.",
+            },
+        };
+        return [
+            ZosmfProfile,
+            ZosTsoProfile,
+            {
+                ...ZosUssProfile,
+                schema: {
+                    ...ZosUssProfile.schema,
+                    properties: {
+                        ...ZosUssProfile.schema.properties,
+                        proxyJump,
+                    },
+                },
+            },
+        ];
     }
 
     protected getMergedAttrs(mProfileInfo: imperative.ProfileInfo, profAttrs: imperative.IProfAttrs): imperative.IProfile {

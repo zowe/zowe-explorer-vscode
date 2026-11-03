@@ -448,6 +448,24 @@ describe("ProfilesCache", () => {
         expect((profCache as any).allExternalTypes.size).toBe(1);
     });
 
+    describe("getCoreProfileTypes", () => {
+        it("adds an optional jump route while preserving the existing SSH profile schema", () => {
+            const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
+            const originalProperties = { ...ZosUssProfile.schema.properties };
+            const [zosmfProfile, tsoProfile, sshProfile] = profCache.getCoreProfileTypes();
+
+            expect([zosmfProfile, tsoProfile]).toEqual([ZosmfProfile, ZosTsoProfile]);
+            expect(sshProfile).toMatchObject(ZosUssProfile);
+            expect(sshProfile.schema.properties.proxyJump).toMatchObject({
+                type: "string",
+                optionDefinition: { name: "proxy-jump", aliases: ["J"], type: "string" },
+            });
+            expect(sshProfile.schema.required ?? []).not.toContain("proxyJump");
+            expect(ZosUssProfile.schema.properties).toEqual(originalProperties);
+            expect(sshProfile.schema.properties).not.toBe(ZosUssProfile.schema.properties);
+        });
+    });
+
     describe("refresh", () => {
         const profileTypes = ["zosmf", "zftp"];
         const fakeApiRegister = {
@@ -504,7 +522,7 @@ describe("ProfilesCache", () => {
             expect(setCensoredOptionsSpy).toHaveBeenCalledTimes(1);
             expect(setCensoredOptionsSpy).toHaveBeenCalledWith({
                 config: profInfoMock1.getTeamConfig(),
-                profiles: expect.arrayContaining([ZosmfProfile, ZosTsoProfile, ZosUssProfile, ...profileMetadata]),
+                profiles: expect.arrayContaining([...profCache.getCoreProfileTypes(), ...profileMetadata]),
             });
             const oldZosmfProfile = profCache.allProfiles[0];
             const newZosmfProfile = { ...lpar1Profile, profile: lpar2Profile.profile };
@@ -517,7 +535,7 @@ describe("ProfilesCache", () => {
             expect(setCensoredOptionsSpy).toHaveBeenCalledTimes(2);
             expect(setCensoredOptionsSpy).toHaveBeenCalledWith({
                 config: profInfoMock2.getTeamConfig(),
-                profiles: expect.arrayContaining([ZosmfProfile, ZosTsoProfile, ZosUssProfile, ...profileMetadata]),
+                profiles: expect.arrayContaining([...profCache.getCoreProfileTypes(), ...profileMetadata]),
             });
         });
 
