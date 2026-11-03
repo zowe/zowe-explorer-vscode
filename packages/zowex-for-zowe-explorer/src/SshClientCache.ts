@@ -74,7 +74,7 @@ export class SshClientCache extends vscode.Disposable {
 
     public static readonly WRITE_ACCESS_TO_SERVER_PATH_ERR =
         `You do not have write access to the deployment directory '{0}'. ` +
-        `The SSH server could not be started. Configure a different directory, ` +
+        `The zo server could not be started. Configure a different directory, ` +
         `or grant yourself write permission to the deployment directory if possible. `;
 
     public dispose(opts?: ZSshRestartOptions): void {
@@ -96,9 +96,9 @@ export class SshClientCache extends vscode.Disposable {
         return this.mProfilesCache;
     }
     /**
-     * Store the SSH server path for the given host
+     * Store the zo server path for the given host
      * @param host - host from the profile
-     * @param path - parent directory of the SSH server binary
+     * @param path - parent directory of the zo server binary
      */
     public storeServerPath(host: string, serverPath: string): void {
         const config = vscode.workspace.getConfiguration("zowe");
@@ -150,7 +150,7 @@ export class SshClientCache extends vscode.Disposable {
         if (!this.mClientSessionMap.has(clientId)) {
             using _lock = this.acquireProfileLock(clientId);
             const statusBarMsg = Gui.setStatusBarMessage(
-                `$(sync~spin) ${opts.restart ? "Restarting" : "Starting"} Zowe Remote SSH server for profile "${profile.name as string}"...`
+                `$(sync~spin) ${opts.restart ? "Restarting" : "Starting"} zo server for profile "${profile.name as string}"...`
             );
             const session = ZSshUtils.buildSession(profile.profile!);
             using sessionHandle = new SessionContext(session);
@@ -227,7 +227,7 @@ export class SshClientCache extends vscode.Disposable {
                     if (serverShouldDeploy) {
                         if (await ZSshUtils.lacksWriteAccess(sessionHandle, serverPath)) {
                             if (serverNotFound) {
-                                // the user has no usable instance of the SSH server so we should notify them
+                                // the user has no usable instance of the zo server so we should notify them
                                 const errMsg = vscode.l10n.t(SshClientCache.WRITE_ACCESS_TO_SERVER_PATH_ERR, serverPath);
                                 imperative.Logger.getAppLogger().error(errMsg);
                                 throw new ImperativeError({ msg: errMsg });
@@ -281,13 +281,13 @@ export class SshClientCache extends vscode.Disposable {
         const connectButton = vscode.l10n.t("Connect");
         const connectDontAskButton = vscode.l10n.t("Connect, don't ask me again");
         const selection = await Gui.showMessage(
-            vscode.l10n.t("The SSH server must be installed or updated on z/OS UNIX before connecting. Would you like to proceed?"),
+            vscode.l10n.t("The zo server must be installed or updated on z/OS UNIX before connecting. Would you like to proceed?"),
             { items: [vscode.l10n.t("Cancel"), connectButton, connectDontAskButton] }
         );
         if (selection === connectDontAskButton) {
             await config.update("confirmSshServerDeploy", false, vscode.ConfigurationTarget.Global);
         } else if (selection !== connectButton) {
-            imperative.Logger.getAppLogger().info("User declined SSH server deployment");
+            imperative.Logger.getAppLogger().info("User declined zo server deployment");
             return false;
         }
         return true;
@@ -330,7 +330,7 @@ export class SshClientCache extends vscode.Disposable {
                 }
             );
             Gui.setStatusBarMessage(
-                `$(sync~spin) ${clientSession != null ? "Restarting" : "Starting"} Zowe Remote SSH server for profile "${profile.name as string}"...`,
+                `$(sync~spin) ${clientSession != null ? "Restarting" : "Starting"} zo server for profile "${profile.name as string}"...`,
                 reconnectPromise
             );
             await reconnectPromise;

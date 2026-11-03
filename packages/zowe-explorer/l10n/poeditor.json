@@ -450,13 +450,13 @@
     "Allow commands to be executed using integrated terminals": ""
   },
   "zowe.commands.zowex.connect": {
-    "Deploy SSH server to host...": ""
+    "Deploy zo server to host...": ""
   },
   "zowe.commands.zowex.restart": {
-    "Restart SSH server on host...": ""
+    "Restart zo server on host...": ""
   },
   "zowe.commands.zowex.uninstall": {
-    "Uninstall SSH server from host...": ""
+    "Uninstall zo server from host...": ""
   },
   "zowe.automaticProfileValidation": {
     "Allow automatic validation of profiles.": ""
@@ -621,7 +621,7 @@
     "Mapping of SSH hostname to server install path for that host. Defaults to '~/.zowe-server'.": ""
   },
   "zowe.zowex.workerCount": {
-    "Number of workers for the Zowe Remote SSH server. Each worker runs as a separate thread within a single address space.": ""
+    "Number of workers for the zo server. Each worker runs as a separate thread within a single address space.": ""
   },
   "zowe.zowex.responseTimeout": {
     "Response timeout in seconds before the originating request is forcibly timed out. Set to a higher value if responses are expected to take longer to complete.": ""
@@ -633,7 +633,7 @@
     "Time in milliseconds to wait for the SSH handshake to complete.": ""
   },
   "zowe.confirmSshServerDeploy": {
-    "Require user confirmation before automatically installing or updating the SSH server": ""
+    "Require user confirmation before automatically installing or updating the zo server": ""
   },
   "#### Connecting to a host": "",
   "#### Copy across LPAR updates": "",
