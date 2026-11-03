@@ -645,7 +645,7 @@
     "Response timeout in seconds before the originating request is forcibly timed out. Set to a higher value if responses are expected to take longer to complete.": ""
   },
   "zowe.zowex.experimentalNativeSsh": {
-    "Use an experimental native SSH client for improved performance. Not yet fully tested.": ""
+    "Use an experimental native SSH client rather than the default ssh2 package for improved performance when using SSH profiles with Zowe Explorer's zo backend. This setting is not a requirement for using SSH profiles with zo. Not yet fully tested.": ""
   },
   "zowe.zowex.defaultHandshakeTimeout": {
     "Time in milliseconds to wait for the SSH handshake to complete.": ""
@@ -1551,6 +1551,7 @@
   "Fixed regression where getProviderForNode returned the wrong tree provider after performing an action on a Zowe tree node, causing some commands to fail silently. <a>#2967</a>": "",
   "Fixed release notes displaying when Zowe Explorer is installed for the first time. <a>#3966</a>": "",
   "Fixed release notes displaying when the Zowe Explorer version is downgraded. <a>#3966</a>": "",
+  "Fixed seconds precision missing for SSH profiles when displaying \"Modified Date\" of PDS members in the data set table view. <a>#4582</a>": "",
   "Fixed secure credential storage not possible to enable in Theia.": "",
   "Fixed settings not persisting in Theia versions >=1.29.0. <a>#2065</a>": "",
   "Fixed several linter errors throughout the codebase and consolidated linter rules. <a>#2184</a>": "",
