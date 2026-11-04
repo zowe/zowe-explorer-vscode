@@ -1933,6 +1933,7 @@
   "Replace profile names and their references in the defaults section": "",
   "Replace string properties (e.g. user, host) with placeholder values": "",
   "Replaced an import of ILocalStorageAccess from \"@zowe/zowe-explorer-api/src/extend/ILocalStorageAccess\" to \"@zowe/zowe-explorer-api\". <a>#3606</a>": "",
+  "Replaced confusing \"SSH server\" terminology with \"zo server\" in deployment prompts, status messages, settings descriptions, and Command Palette labels. <a>#4583</a>": "",
   "Replaced keytar dependency with keyring module from <a>@zowe/secrets-for-zowe-sdk</a>. <a>#2358</a> <a>#2348</a>": "",
   "Replaced lodash dependency with es-toolkit to reduce webview bundle size and add technical currency. <a>#3060</a>": "",
   "Replaced the comparison of checksums of the backend SSH server zowex with comparing version numbers when checking if the remote server version is outdated. <a>#4436</a>": "",
