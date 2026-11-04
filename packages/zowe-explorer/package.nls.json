@@ -149,9 +149,9 @@
   "zowe.commands.uss.history": "Toggle if Unix Commands persist locally",
   "zowe.commands.alwaysEdit": "Allow commands to be edited before submitting",
   "zowe.commands.useIntegratedTerminals": "Allow commands to be executed using integrated terminals",
-  "zowe.commands.zowex.connect": "Deploy SSH server to host...",
-  "zowe.commands.zowex.restart": "Restart SSH server on host...",
-  "zowe.commands.zowex.uninstall": "Uninstall SSH server from host...",
+  "zowe.commands.zowex.connect": "Deploy zo server to host...",
+  "zowe.commands.zowex.restart": "Restart zo server on host...",
+  "zowe.commands.zowex.uninstall": "Uninstall zo server from host...",
   "zowe.automaticProfileValidation": "Allow automatic validation of profiles.",
   "zowe.pollInterval.info": "Default interval (in milliseconds) when polling spool files.",
   "zowe.jobs.paginate.enabled": "Toggle to enable job spool pagination.",
@@ -206,9 +206,9 @@
   "zowe.table.hidePinnedRowsWarning": "Hide the warning message when pinning many rows to table views.",
   "zowe.zowex.keepAliveInterval": "Number of seconds between keep-alive messages to keep connection active. Set to 0 to disable keep-alive.",
   "zowe.zowex.serverInstallPath": "Mapping of SSH hostname to server install path for that host. Defaults to '~/.zowe-server'.",
-  "zowe.zowex.workerCount": "Number of workers for the Zowe Remote SSH server. Each worker runs as a separate thread within a single address space.",
+  "zowe.zowex.workerCount": "Number of workers for the zo server. Each worker runs as a separate thread within a single address space.",
   "zowe.zowex.responseTimeout": "Response timeout in seconds before the originating request is forcibly timed out. Set to a higher value if responses are expected to take longer to complete.",
   "zowe.zowex.experimentalNativeSsh": "Use an experimental native SSH client rather than the default ssh2 package for improved performance when using SSH profiles with Zowe Explorer's zo backend. This setting is not a requirement for using SSH profiles with zo. Not yet fully tested.",
   "zowe.zowex.defaultHandshakeTimeout": "Time in milliseconds to wait for the SSH handshake to complete.",
-  "zowe.confirmSshServerDeploy": "Require user confirmation before automatically installing or updating the SSH server"
+  "zowe.confirmSshServerDeploy": "Require user confirmation before automatically installing or updating the zo server"
 }
