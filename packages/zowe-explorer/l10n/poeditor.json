@@ -450,13 +450,13 @@
     "Allow commands to be executed using integrated terminals": ""
   },
   "zowe.commands.zowex.connect": {
-    "Deploy SSH server to host...": ""
+    "Deploy zo server to host...": ""
   },
   "zowe.commands.zowex.restart": {
-    "Restart SSH server on host...": ""
+    "Restart zo server on host...": ""
   },
   "zowe.commands.zowex.uninstall": {
-    "Uninstall SSH server from host...": ""
+    "Uninstall zo server from host...": ""
   },
   "zowe.automaticProfileValidation": {
     "Allow automatic validation of profiles.": ""
@@ -621,7 +621,7 @@
     "Mapping of SSH hostname to server install path for that host. Defaults to '~/.zowe-server'.": ""
   },
   "zowe.zowex.workerCount": {
-    "Number of workers for the Zowe Remote SSH server. Each worker runs as a separate thread within a single address space.": ""
+    "Number of workers for the zo server. Each worker runs as a separate thread within a single address space.": ""
   },
   "zowe.zowex.responseTimeout": {
     "Response timeout in seconds before the originating request is forcibly timed out. Set to a higher value if responses are expected to take longer to complete.": ""
@@ -633,7 +633,7 @@
     "Time in milliseconds to wait for the SSH handshake to complete.": ""
   },
   "zowe.confirmSshServerDeploy": {
-    "Require user confirmation before automatically installing or updating the SSH server": ""
+    "Require user confirmation before automatically installing or updating the zo server": ""
   },
   "#### Connecting to a host": "",
   "#### Copy across LPAR updates": "",
@@ -691,8 +691,8 @@
   "**Search options:**": "",
   "**USS:** list directories, read and write files, create, copy, move, rename, delete, and change file attributes.": "",
   "**Write access check.** If you do not have write access to the deploy directory, Zowe Explorer warns you instead of deploying.": "",
-  "**Zowe Explorer: Restart SSH server on host...** restarts a server that is not responding.": "",
-  "**Zowe Explorer: Uninstall SSH server from host...** removes the server from the host.": "",
+  "**Zowe Explorer: Restart zo server on host...** restarts a server that is not responding.": "",
+  "**Zowe Explorer: Uninstall zo server from host...** removes the server from the host.": "",
   "---": "",
   "/u/username/directory": "",
   "1 member": "",
@@ -1359,6 +1359,7 @@
   "Fixed an issue where saving contents to a data set or USS file could trigger built-in conflict detection, specifically when the API does not include a timestamp for that resource. Now, the modification time of a data set or USS file in Zowe Explorer's filesystem is kept as-is if the API does not provide a timestamp. Users can continue to use the \"Pull from Mainframe\" context-menu option to fetch the latest contents of a data set or USS file in an opened editor. <a>#4206</a>": "",
   "Fixed an issue where screen readers could not read data set attributes from the data set attribute webview.<a>#4023</a>": "",
   "Fixed an issue where screen readers could not read dataset attributes from the dataset attribute webview.<a>#4023</a>": "",
+  "Fixed an issue where searching data set contents with an FTP profile failed with the error c.searchDataSets is not a function. Zowe Explorer now shows a message when a search starts for a profile type that does not support it. <a>#4511</a>": "",
   "Fixed an issue where searching for the root directory (/) under a profile caused the profile to show a placeholder rather than a list of the files and folders at that path. <a>#3603</a>": "",
   "Fixed an issue where selecting items in table views would reset the column sort order. <a>#3473</a>": "",
   "Fixed an issue where sequential data sets open in the text editor were not refreshing after a remote save, because the cache bypass that forces a network check when a file is open in the editor was only applied to PDS members and not sequential data sets in stat(), the filesystem provider method VS Code calls to detect file changes. <a>#4481</a>": "",
@@ -1955,7 +1956,7 @@
   "Right-click a filtered data sets profile, a data set, or a favorite, and select **Show as Table**.": "",
   "Right-click a profile: **Search filtered data sets**": "",
   "Right-click on a directory or partitioned data set in the **USS** or **DATA SETS** tree and select **Upload with Encoding...** to choose a character encoding for the uploaded files.": "",
-  "Run **Zowe Explorer: Deploy SSH server on host and connect...** from the command palette and pick an ssh profile. Zowe Explorer checks the host for a server, deploys one if it is missing, and adds the profile to the **DATA SETS**, **USS**, and **JOBS** trees.": "",
+  "Run **Zowe Explorer: Deploy zo server to host...** from the command palette and pick an ssh profile. Zowe Explorer checks the host for a server, deploys one if it is missing, and adds the profile to the **DATA SETS**, **USS**, and **JOBS** trees.": "",
   "SCLM": "",
   "SSH Key": "",
   "SSH profile missing connection details. Please update.": "",
@@ -1974,6 +1975,7 @@
   "Search data sets": "",
   "Search data sets: use a comma to separate multiple patterns": "",
   "Search: ": "",
+  "Searching data set contents is not supported for this profile type, {0}.": "",
   "Searching for \"{0}\"": "",
   "Secure Credentials Enabled: ": "",
   "See the <a>FileSystemProvider wiki page</a> for more information on the FileSystemProvider.": "",

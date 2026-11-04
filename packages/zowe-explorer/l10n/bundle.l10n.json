@@ -61,8 +61,8 @@
   "**Search options:**": "**Search options:**",
   "**USS:** list directories, read and write files, create, copy, move, rename, delete, and change file attributes.": "**USS:** list directories, read and write files, create, copy, move, rename, delete, and change file attributes.",
   "**Write access check.** If you do not have write access to the deploy directory, Zowe Explorer warns you instead of deploying.": "**Write access check.** If you do not have write access to the deploy directory, Zowe Explorer warns you instead of deploying.",
-  "**Zowe Explorer: Restart SSH server on host...** restarts a server that is not responding.": "**Zowe Explorer: Restart SSH server on host...** restarts a server that is not responding.",
-  "**Zowe Explorer: Uninstall SSH server from host...** removes the server from the host.": "**Zowe Explorer: Uninstall SSH server from host...** removes the server from the host.",
+  "**Zowe Explorer: Restart zo server on host...** restarts a server that is not responding.": "**Zowe Explorer: Restart zo server on host...** restarts a server that is not responding.",
+  "**Zowe Explorer: Uninstall zo server from host...** removes the server from the host.": "**Zowe Explorer: Uninstall zo server from host...** removes the server from the host.",
   "---": "---",
   "/u/username/directory": "/u/username/directory",
   "1 member": "1 member",
@@ -1118,6 +1118,7 @@
   "Fixed an issue where saving contents to a data set or USS file could trigger built-in conflict detection, specifically when the API does not include a timestamp for that resource. Now, the modification time of a data set or USS file in Zowe Explorer's filesystem is kept as-is if the API does not provide a timestamp. Users can continue to use the \"Pull from Mainframe\" context-menu option to fetch the latest contents of a data set or USS file in an opened editor. <a>#4206</a>": "Fixed an issue where saving contents to a data set or USS file could trigger built-in conflict detection, specifically when the API does not include a timestamp for that resource. Now, the modification time of a data set or USS file in Zowe Explorer's filesystem is kept as-is if the API does not provide a timestamp. Users can continue to use the \"Pull from Mainframe\" context-menu option to fetch the latest contents of a data set or USS file in an opened editor. <a>#4206</a>",
   "Fixed an issue where screen readers could not read data set attributes from the data set attribute webview.<a>#4023</a>": "Fixed an issue where screen readers could not read data set attributes from the data set attribute webview.<a>#4023</a>",
   "Fixed an issue where screen readers could not read dataset attributes from the dataset attribute webview.<a>#4023</a>": "Fixed an issue where screen readers could not read dataset attributes from the dataset attribute webview.<a>#4023</a>",
+  "Fixed an issue where searching data set contents with an FTP profile failed with the error c.searchDataSets is not a function. Zowe Explorer now shows a message when a search starts for a profile type that does not support it. <a>#4511</a>": "Fixed an issue where searching data set contents with an FTP profile failed with the error c.searchDataSets is not a function. Zowe Explorer now shows a message when a search starts for a profile type that does not support it. <a>#4511</a>",
   "Fixed an issue where searching for the root directory (/) under a profile caused the profile to show a placeholder rather than a list of the files and folders at that path. <a>#3603</a>": "Fixed an issue where searching for the root directory (/) under a profile caused the profile to show a placeholder rather than a list of the files and folders at that path. <a>#3603</a>",
   "Fixed an issue where selecting items in table views would reset the column sort order. <a>#3473</a>": "Fixed an issue where selecting items in table views would reset the column sort order. <a>#3473</a>",
   "Fixed an issue where sequential data sets open in the text editor were not refreshing after a remote save, because the cache bypass that forces a network check when a file is open in the editor was only applied to PDS members and not sequential data sets in stat(), the filesystem provider method VS Code calls to detect file changes. <a>#4481</a>": "Fixed an issue where sequential data sets open in the text editor were not refreshing after a remote save, because the cache bypass that forces a network check when a file is open in the editor was only applied to PDS members and not sequential data sets in stat(), the filesystem provider method VS Code calls to detect file changes. <a>#4481</a>",
@@ -2011,7 +2012,7 @@
   "Right-click a filtered data sets profile, a data set, or a favorite, and select **Show as Table**.": "Right-click a filtered data sets profile, a data set, or a favorite, and select **Show as Table**.",
   "Right-click a profile: **Search filtered data sets**": "Right-click a profile: **Search filtered data sets**",
   "Right-click on a directory or partitioned data set in the **USS** or **DATA SETS** tree and select **Upload with Encoding...** to choose a character encoding for the uploaded files.": "Right-click on a directory or partitioned data set in the **USS** or **DATA SETS** tree and select **Upload with Encoding...** to choose a character encoding for the uploaded files.",
-  "Run **Zowe Explorer: Deploy SSH server on host and connect...** from the command palette and pick an ssh profile. Zowe Explorer checks the host for a server, deploys one if it is missing, and adds the profile to the **DATA SETS**, **USS**, and **JOBS** trees.": "Run **Zowe Explorer: Deploy SSH server on host and connect...** from the command palette and pick an ssh profile. Zowe Explorer checks the host for a server, deploys one if it is missing, and adds the profile to the **DATA SETS**, **USS**, and **JOBS** trees.",
+  "Run **Zowe Explorer: Deploy zo server to host...** from the command palette and pick an ssh profile. Zowe Explorer checks the host for a server, deploys one if it is missing, and adds the profile to the **DATA SETS**, **USS**, and **JOBS** trees.": "Run **Zowe Explorer: Deploy zo server to host...** from the command palette and pick an ssh profile. Zowe Explorer checks the host for a server, deploys one if it is missing, and adds the profile to the **DATA SETS**, **USS**, and **JOBS** trees.",
   "SCLM": "SCLM",
   "SSH Key": "SSH Key",
   "SSH profile missing connection details. Please update.": "SSH profile missing connection details. Please update.",
@@ -2035,6 +2036,12 @@
   "Search data sets": "Search data sets",
   "Search data sets: use a comma to separate multiple patterns": "Search data sets: use a comma to separate multiple patterns",
   "Search: ": "Search: ",
+  "Searching data set contents is not supported for this profile type, {0}./Profile type": {
+    "message": "Searching data set contents is not supported for this profile type, {0}.",
+    "comment": [
+      "Profile type"
+    ]
+  },
   "Searching for \"{0}\"/The string to search data sets for.": {
     "message": "Searching for \"{0}\"",
     "comment": [

@@ -19,6 +19,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Renamed the "Edit History" command to "Manage Saved Data". [#3804](https://github.com/zowe/zowe-explorer-vscode/issues/3804)
 - Migrated webviews from the deprecated Webview UI Toolkit to VS Code Elements. [#3443](https://github.com/zowe/zowe-explorer-vscode/issues/3443)
 - Added SSH host key verification when issuing UNIX commands so the identity of a z/OS SSH server is confirmed before credentials are sent. [#4529](https://github.com/zowe/zowe-explorer-vscode/pull/4529)
+- Replaced confusing "SSH server" terminology with "zo server" in deployment prompts, status messages, settings descriptions, and Command Palette labels. [#4583](https://github.com/zowe/zowe-explorer-vscode/issues/4583)
 
 ### Bug fixes
 
@@ -34,6 +35,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where using "Allocate Like" on a data set caused the tree nodes to disappear until the profile was collapsed and re-expanded. [#4444](https://github.com/zowe/zowe-explorer-vscode/issues/4444)
 - Fixed an issue where filtering PDS members by user ID was case-sensitive, so a lowercase user ID filter would not match any members. User ID filtering is now case-insensitive. [#3723](https://github.com/zowe/zowe-explorer-vscode/issues/3723)
 - Fixed an issue where data sets with a `PLX` qualifier, and their members, opened as PL/I files. Use the VS Code `files.associations` setting to choose a language for those data sets. [#3801](https://github.com/zowe/zowe-explorer-vscode/issues/3801)
+- Fixed an issue where searching data set contents with an FTP profile failed with the error `c.searchDataSets is not a function`. Zowe Explorer now shows a message when a search starts for a profile type that does not support it. [#4511](https://github.com/zowe/zowe-explorer-vscode/issues/4511)
 - Fixed an issue where the profile actions menu (including "Hide Profile") failed to open for profiles missing required properties like host. [#4557](https://github.com/zowe/zowe-explorer-vscode/pull/4557)
 - Fixed an issue where UNIX commands were always wrapped in an `SSH_TTY` terminal redirect, even for profiles that do not use SSH. [#4564](https://github.com/zowe/zowe-explorer-vscode/pull/4564)
 - Fixed redundant SSH server deployment confirmations when connecting to an already installed, up-to-date server. Confirmation is now requested only when automatic installation or updating is needed. [#4563](https://github.com/zowe/zowe-explorer-vscode/pull/4563)
