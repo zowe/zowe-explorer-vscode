@@ -366,6 +366,12 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
 
         return newMocks;
     }
+
+    beforeEach(() => {
+        // Some tests queue quick pick values they never consume, so drop them before the next test.
+        vi.restoreAllMocks();
+    });
+
     it("Tests that createZoweSession presents correct message when escaping selection of quickpick", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
@@ -453,10 +459,7 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
         const addSessionSpy = vi.spyOn(blockMocks.testDatasetTree, "addSession");
-        // Drop values an earlier test queued but never consumed, so this test picks the profile.
-        vi.spyOn(Gui, "resolveQuickPick")
-            .mockReset()
-            .mockResolvedValueOnce(new FilterItem({ text: "sestest" }));
+        vi.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(new FilterItem({ text: "sestest" }));
         vi.spyOn(Profiles, "handleChangeForAllTrees").mockResolvedValueOnce(undefined);
         await Profiles.getInstance().createZoweSession(blockMocks.testDatasetTree);
         expect(addSessionSpy).not.toHaveBeenCalled();
@@ -467,10 +470,7 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
         const addSessionSpy = vi.spyOn(blockMocks.testDatasetTree, "addSession");
-        // Drop values an earlier test queued but never consumed, so this test picks the profile.
-        vi.spyOn(Gui, "resolveQuickPick")
-            .mockReset()
-            .mockResolvedValueOnce(new FilterItem({ text: "sestest" }));
+        vi.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(new FilterItem({ text: "sestest" }));
         vi.spyOn(Profiles, "handleChangeForAllTrees").mockResolvedValueOnce(false);
         await Profiles.getInstance().createZoweSession(blockMocks.testDatasetTree);
         expect(addSessionSpy).toHaveBeenCalledWith({ sessionName: "sestest", addToAllTrees: false });
