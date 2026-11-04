@@ -10,3 +10,10 @@
  */
 
 export * from "../../zowe-explorer-api/__mocks__/vscode.ts";
+
+export class CancellationError extends Error {
+    public constructor() {
+        super("Canceled");
+        this.name = "Canceled";
+    }
+}

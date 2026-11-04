@@ -331,6 +331,7 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
             dsname: dataSetName,
             primary: 1,
             lrecl: 80,
+            vol: options?.volser,
             ...(options || {}),
         };
 
