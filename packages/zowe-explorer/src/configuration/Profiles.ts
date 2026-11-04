@@ -252,6 +252,7 @@ export class Profiles extends ProfilesCache {
                     theProfile = Profiles.getInstance().loadNamedProfile(theProfile.name);
 
                     if (!loggedIn) {
+                        ZoweExplorerApiRegister.getInstance().onProfileInvalidatedEmitter.fire(theProfile);
                         return { ...profileStatus, status: "inactive" };
                     }
                 } catch (error) {
@@ -277,6 +278,7 @@ export class Profiles extends ProfilesCache {
                 theProfile.profile.password = values[1];
             } else {
                 this.validProfile = Validation.ValidationType.INVALID;
+                ZoweExplorerApiRegister.getInstance().onProfileInvalidatedEmitter.fire(theProfile);
                 return { ...profileStatus, status: "inactive" };
             }
         } else if (!usingTokenAuth && !usingBasicAuth && usingCertAuth) {
@@ -298,6 +300,7 @@ export class Profiles extends ProfilesCache {
                         })
                     );
                     this.validProfile = Validation.ValidationType.INVALID;
+                    ZoweExplorerApiRegister.getInstance().onProfileInvalidatedEmitter.fire(theProfile);
                     return { ...profileStatus, status: "inactive" };
                 } else {
                     Profiles.getInstance().updateCachedProfile({
@@ -308,6 +311,7 @@ export class Profiles extends ProfilesCache {
             }
             profileStatus.status = "active";
             this.profilesForValidation.push(profileStatus);
+            ZoweExplorerApiRegister.getInstance().onProfileValidatedEmitter.fire(theProfile);
         }
 
         if (node !== undefined) {
