@@ -1384,6 +1384,34 @@ describe("Dataset Search Unit Tests - function search", () => {
             expect(tableBuilderTitleSpy).not.toHaveBeenCalled();
         });
 
+        it("should fail to perform a search if the profile type does not support searching data sets", async () => {
+            const profile = createIProfile();
+            profile.type = "zftp";
+            const node = createDatasetSessionNode(createISession(), profile);
+            node.pattern = "FAKE.*.DS";
+            const context = { context: "fake" } as any;
+
+            // Close the search prompt right away if it is ever shown
+            (DatasetSearch as any).searchQuickPick.onDidHide = vi.fn().mockImplementation((listener) => {
+                listener();
+            });
+            // An MVS API without the optional searchDataSets method, like the one from the FTP extension
+            const getMvsApiSpy = vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({} as any);
+
+            try {
+                await DatasetSearch.search(context, node);
+
+                expect(getMvsApiSpy).toHaveBeenCalledWith(profile);
+                expect(errorMessageSpy).toHaveBeenCalledWith("Searching data set contents is not supported for this profile type, zftp.");
+                expect(constructQuickPicksSpy).not.toHaveBeenCalled();
+                expect(performSearchSpy).not.toHaveBeenCalled();
+                expect(withProgressSpy).not.toHaveBeenCalled();
+                expect(tableBuilderTitleSpy).not.toHaveBeenCalled();
+            } finally {
+                getMvsApiSpy.mockRestore();
+            }
+        });
+
         it("should fail to perform a search if the user does not specify a search string", async () => {
             const profile = createIProfile();
             const node = createDatasetSessionNode(createISession(), profile);

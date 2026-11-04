@@ -41,6 +41,19 @@ export class DatasetSearch {
     private static optionsQuickPickEntry: vscode.QuickPickItem;
 
     public static async search(this: void, context: vscode.ExtensionContext, node: IZoweDatasetTreeNode): Promise<void> {
+        // Some profile types (e.g. FTP) do not implement the optional searchDataSets API. Stop before prompting the user.
+        const profile = node.getProfile();
+        if (!ZoweExplorerApiRegister.getMvsApi(profile).searchDataSets) {
+            Gui.errorMessage(
+                vscode.l10n.t({
+                    message: "Searching data set contents is not supported for this profile type, {0}.",
+                    args: [profile.type],
+                    comment: ["Profile type"],
+                })
+            );
+            return;
+        }
+
         const isSessionNotFav = SharedContext.isSessionNotFav(node);
         const generateFullUri = (isSessionNotFav && node.pattern != null) || SharedContext.isFavoriteSearch(node);
         const pattern = isSessionNotFav ? node.pattern : (node.label as string);
