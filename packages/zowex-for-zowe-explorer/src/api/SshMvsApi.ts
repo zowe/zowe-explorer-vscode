@@ -215,7 +215,7 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
             stream: options.file ? (): Stream.Writable => writeStream : undefined,
         });
         if (options.stream != null) {
-            options.stream.write(B64String.decode(response.data));
+            options.stream.write(B64String.decodeBytes(response.data));
             options.stream.end();
         }
         return this.buildZosFilesResponse({ etag: response.etag });
@@ -331,6 +331,7 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
             dsname: dataSetName,
             primary: 1,
             lrecl: 80,
+            vol: options?.volser,
             ...(options || {}),
         };
 

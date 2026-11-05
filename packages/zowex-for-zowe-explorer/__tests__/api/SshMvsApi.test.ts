@@ -386,8 +386,8 @@ describe("SshMvsApi", () => {
             await mvsApi.getContents("USER.DATA", { stream } as any);
 
             expect(readDatasetSpy).toHaveBeenCalledWith({ dsname: "USER.DATA", encoding: undefined, stream: undefined });
-            // "Zm9v" is base64 for "foo"; verify the response was actually B64String.decode'd before writing.
-            expect(writeSpy).toHaveBeenCalledWith("foo");
+            // "Zm9v" is base64 for "foo"; verify raw bytes are written via decodeBytes.
+            expect(writeSpy).toHaveBeenCalledWith(Buffer.from("foo"));
             expect(endSpy).toHaveBeenCalled();
         });
 
@@ -604,11 +604,11 @@ describe("SshMvsApi", () => {
             vi.spyOn(mvsApi as any, "buildZosFilesResponse");
             vi.spyOn(mvsApi, "client", "get").mockResolvedValue({ ds: { createDataset: createDatasetSpy } });
 
-            await mvsApi.createDataSet(0, "USER.NEW", { lrecl: 133, recfm: "FB" });
+            await mvsApi.createDataSet(0, "USER.NEW", { lrecl: 133, recfm: "FB", volser: "VOL001" });
 
             expect(createDatasetSpy).toHaveBeenCalledWith({
                 dsname: "USER.NEW",
-                attributes: { dsname: "USER.NEW", primary: 1, lrecl: 133, recfm: "FB" },
+                attributes: { dsname: "USER.NEW", primary: 1, lrecl: 133, recfm: "FB", volser: "VOL001", vol: "VOL001" },
             });
         });
 

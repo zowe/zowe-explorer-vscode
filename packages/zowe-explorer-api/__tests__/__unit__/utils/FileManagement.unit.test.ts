@@ -112,6 +112,11 @@ describe("reloadWorkspacesForProfile", () => {
 });
 
 describe("reloadTabsForProfile", () => {
+    beforeEach(() => {
+        // Shared/hoisted mock history is not cleared :'(
+        vi.clearAllMocks();
+    });
+
     function buildFakeFsEntry(path: string): IFileSystemEntry {
         return {
             name: "aFile.txt",

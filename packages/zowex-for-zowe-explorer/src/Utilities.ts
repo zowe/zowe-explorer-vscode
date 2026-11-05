@@ -11,7 +11,7 @@
 
 import { Gui, imperative, ZoweExplorerApiType, type IApiExplorerExtender } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
-import { ZSshClient, ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
+import { SessionContext, ZSshClient, ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
 import { ConfigUtils } from "./ConfigUtils";
 import { VscePromptApi } from "./VscePromptApi";
 import { SshClientCache } from "./SshClientCache";
@@ -44,9 +44,10 @@ export class Utilities {
         }
         let configuredServerPath = ConfigUtils.getServerPath(profile.profile);
         const sshSession = ZSshUtils.buildSession(profile.profile);
+        using sessionHandle = new SessionContext(sshSession);
         let onEnvPathServer: string | undefined = undefined;
         if (configuredServerPath == null) {
-            onEnvPathServer = await SshClientCache.inst.detectServerOnPath(sshSession);
+            onEnvPathServer = await SshClientCache.inst.detectServerOnPath(sessionHandle);
             configuredServerPath = onEnvPathServer ?? ZSshClient.DEFAULT_SERVER_PATH;
         }
 
@@ -57,8 +58,8 @@ export class Utilities {
             return;
         }
         let deployStatus = false;
-        if (!(await ZSshUtils.lacksWriteAccess(sshSession, deployDirectory))) {
-            deployStatus = await deployWithProgress(sshSession, deployDirectory);
+        if (!(await ZSshUtils.lacksWriteAccess(sessionHandle, deployDirectory))) {
+            deployStatus = await deployWithProgress(sessionHandle, deployDirectory);
             if (!deployStatus) {
                 return;
             }
@@ -70,7 +71,7 @@ export class Utilities {
 
         await ConfigUtils.showSessionInTree(profile.name!, true, zoweExplorerApi);
         if (deployStatus) {
-            const infoMsg = `Installed Zowe Remote SSH server on ${(profile.profile.host as string) ?? profile.name}`;
+            const infoMsg = `Installed zo server on ${(profile.profile.host as string) ?? profile.name}`;
             imperative.Logger.getAppLogger().info(infoMsg);
             await Gui.showMessage(infoMsg);
         }
@@ -87,8 +88,8 @@ export class Utilities {
 
         await SshClientCache.inst.connect(profile, { restart: true, retryRequests: false });
 
-        imperative.Logger.getAppLogger().info(`Restarted Zowe Remote SSH server on ${(profile.profile?.host as string) ?? profile.name}`);
-        const statusMsg = Gui.setStatusBarMessage("Restarted Zowe Remote SSH server");
+        imperative.Logger.getAppLogger().info(`Restarted zo server on ${(profile.profile?.host as string) ?? profile.name}`);
+        const statusMsg = Gui.setStatusBarMessage("Restarted zo server");
         setTimeout(() => {
             statusMsg.dispose();
             // eslint-disable-next-line no-magic-numbers
@@ -118,7 +119,7 @@ export class Utilities {
             onError: errorCallback,
         });
 
-        const infoMsg = `Uninstalled Zowe Remote SSH server from ${(profile.profile.host as string) ?? profile.name}`;
+        const infoMsg = `Uninstalled zo server from ${(profile.profile.host as string) ?? profile.name}`;
         imperative.Logger.getAppLogger().info(infoMsg);
         await Gui.showMessage(infoMsg);
     }
