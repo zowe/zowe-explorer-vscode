@@ -456,8 +456,8 @@ importers:
         specifier: workspace:*
         version: link:../zowe-explorer-api
       '@zowe/zowex-for-zowe-sdk':
-        specifier: ^1.0.2
-        version: 1.0.2(@zowe/imperative@8.41.0(supports-color@8.1.1))(@zowe/zos-uss-for-zowe-sdk@8.41.0(@zowe/imperative@8.41.0(supports-color@8.1.1)))(rxjs@7.8.2)
+        specifier: ^1.1.0
+        version: 1.1.0(@zowe/imperative@8.41.0(supports-color@8.1.1))(@zowe/zos-uss-for-zowe-sdk@8.41.0(@zowe/imperative@8.41.0(supports-color@8.1.1)))(rxjs@7.8.2)
       ssh2:
         specifier: ^1.17.0
         version: 1.17.0
@@ -2354,11 +2354,11 @@ packages:
       '@zowe/core-for-zowe-sdk': ^8.0.0
       '@zowe/imperative': ^8.0.0
 
-  '@zowe/zowex-for-zowe-sdk@1.0.2':
-    resolution: {integrity: sha512-85RAk26DltvMBIZyPmR8u0d/f5awZ1idMqh9KkSlBiPkoKktiYPcRwRUoqihGQ1CYE/pNzGiVfb0JxJ2Cf6XjQ==}
+  '@zowe/zowex-for-zowe-sdk@1.1.0':
+    resolution: {integrity: sha512-+ZdErxZgi4011v37d2QY835/0n4OGrRU4yi/cwJZbnZfFdfJAxssFF6KnzPa9GPHmzIPjI4s6HkLKxQUa9Iz+w==}
     peerDependencies:
-      '@zowe/imperative': ^8.11.0
-      '@zowe/zos-uss-for-zowe-sdk': ^8.11.0
+      '@zowe/imperative': ^8.39.0
+      '@zowe/zos-uss-for-zowe-sdk': ^8.39.0
 
   abbrev@1.1.1:
     resolution: {integrity: sha512-nne9/IiQ/hzIhY6pdDnbBtz7DjPTKrY00P/zvPSm5pOFkl6xuGrGnXn/VtTNNfNtAfZ9/1RtehkszU9qcTii0Q==}
@@ -9516,7 +9516,7 @@ snapshots:
       '@zowe/core-for-zowe-sdk': 8.41.0(@zowe/imperative@8.41.0(supports-color@8.1.1))
       '@zowe/imperative': 8.41.0(supports-color@8.1.1)
 
-  '@zowe/zowex-for-zowe-sdk@1.0.2(@zowe/imperative@8.41.0(supports-color@8.1.1))(@zowe/zos-uss-for-zowe-sdk@8.41.0(@zowe/imperative@8.41.0(supports-color@8.1.1)))(rxjs@7.8.2)':
+  '@zowe/zowex-for-zowe-sdk@1.1.0(@zowe/imperative@8.41.0(supports-color@8.1.1))(@zowe/zos-uss-for-zowe-sdk@8.41.0(@zowe/imperative@8.41.0(supports-color@8.1.1)))(rxjs@7.8.2)':
     dependencies:
       '@zowe/imperative': 8.41.0(supports-color@8.1.1)
       '@zowe/zos-uss-for-zowe-sdk': 8.41.0(@zowe/imperative@8.41.0(supports-color@8.1.1))
