@@ -128,6 +128,24 @@ export interface IRegisterClient {
     onCredMgrUpdate?: vscode.Event<Validation.EventType>;
 
     /**
+     * Fires when a profile is successfully validated as active (for any profile type).
+     * The event payload is the full profile that was validated.
+     */
+    onProfileValidated?: vscode.Event<imperative.IProfileLoaded>;
+
+    /**
+     * Fires when a profile is validated as inactive (for any profile type), e.g. when its
+     * password has expired or the host is unreachable. The event payload is the full profile.
+     */
+    onProfileInvalidated?: vscode.Event<imperative.IProfileLoaded>;
+
+    /**
+     * Fires when a profile is hidden (removed) from the Zowe Explorer tree views.
+     * The event payload is the full profile that was hidden.
+     */
+    onProfileHidden?: vscode.Event<imperative.IProfileLoaded>;
+
+    /**
      * Lookup of any registered API (Uss, Mvs, Jes, or Command).
      * @param {string} profile
      * @returns the registered API instance

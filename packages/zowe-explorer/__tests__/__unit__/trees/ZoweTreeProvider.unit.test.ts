@@ -174,6 +174,16 @@ async function createGlobalMocks() {
 
     return globalMocks;
 }
+describe("ZoweTreeProvider unit tests - Function deleteSession", () => {
+    it("fires onProfileHidden with the profile of the hidden session node", async () => {
+        const globalMocks = await createGlobalMocks();
+        const hiddenSpy = vi.spyOn(ZoweExplorerApiRegister.getInstance().onProfileHiddenEmitter, "fire");
+        const provider = globalMocks.testUSSTree as ZoweTreeProvider<any>;
+        provider.deleteSession(globalMocks.testSessionNode);
+        expect(hiddenSpy).toHaveBeenCalledTimes(1);
+        expect(hiddenSpy).toHaveBeenCalledWith(globalMocks.testProfile);
+    });
+});
 
 describe("ZoweJobNode unit tests - Function editSession", () => {
     async function createBlockMocks(globalMocks) {

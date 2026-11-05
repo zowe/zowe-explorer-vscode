@@ -121,6 +121,9 @@ export class ZoweExplorerApiRegister implements Types.IApiRegisterClient {
     public onProfilesUpdateEmitter = new vscode.EventEmitter<Validation.EventType>();
     public onVaultUpdateEmitter = new vscode.EventEmitter<Validation.EventType>();
     public onCredMgrUpdateEmitter = new vscode.EventEmitter<Validation.EventType>();
+    public onProfileValidatedEmitter = new vscode.EventEmitter<imperative.IProfileLoaded>();
+    public onProfileInvalidatedEmitter = new vscode.EventEmitter<imperative.IProfileLoaded>();
+    public onProfileHiddenEmitter = new vscode.EventEmitter<imperative.IProfileLoaded>();
 
     /**
      * Private constructor that creates the singleton instance of ZoweExplorerApiRegister.
@@ -394,6 +397,30 @@ export class ZoweExplorerApiRegister implements Types.IApiRegisterClient {
      */
     public get onCredMgrUpdate(): vscode.Event<Validation.EventType> {
         return this.onCredMgrUpdateEmitter.event;
+    }
+
+    /**
+     * Event for extenders to subscribe to that will fire when a profile is validated as active.
+     * @returns event that can be attached that will be called with the validated profile
+     */
+    public get onProfileValidated(): vscode.Event<imperative.IProfileLoaded> {
+        return this.onProfileValidatedEmitter.event;
+    }
+
+    /**
+     * Event for extenders to subscribe to that will fire when a profile is validated as inactive.
+     * @returns event that can be attached that will be called with the inactive profile
+     */
+    public get onProfileInvalidated(): vscode.Event<imperative.IProfileLoaded> {
+        return this.onProfileInvalidatedEmitter.event;
+    }
+
+    /**
+     * Event for extenders to subscribe to that will fire when a profile is hidden from the tree views.
+     * @returns event that can be attached that will be called with the hidden profile
+     */
+    public get onProfileHidden(): vscode.Event<imperative.IProfileLoaded> {
+        return this.onProfileHiddenEmitter.event;
     }
 
     /**
