@@ -3,7 +3,6 @@ import { VscodeToolbarButton } from "@vscode-elements/react-elements";
 import { Footer } from "./Footer";
 import * as l10n from "@vscode/l10n";
 import { RenderProfiles } from "./renderProfiles";
-import { RenderDefaults } from "./renderDefaults";
 import { RenderProfileDetails } from "./RenderProfileDetails";
 import { useEditorFields } from "../context/EditorStoreContext";
 import { SortDropdown } from "./SortDropdown";
@@ -108,23 +107,15 @@ export function Panels() {
   const { setWizardModalOpen, toggleViewMode } = useEditorFields("setWizardModalOpen", "toggleViewMode");
   const onProfileWizard = () => setWizardModalOpen(true);
   const onViewModeToggle = toggleViewMode;
-  const {
-    configurations,
-    selectedTab,
-    configEditorSettings,
-    setDefaultsCollapsedWithStorage,
-    setProfilesCollapsedWithStorage,
-    setProfileSortOrderWithStorage,
-  } = useEditorFields(
+  const { configurations, selectedTab, configEditorSettings, setProfilesCollapsedWithStorage, setProfileSortOrderWithStorage } = useEditorFields(
     "configurations",
     "selectedTab",
     "configEditorSettings",
-    "setDefaultsCollapsedWithStorage",
     "setProfilesCollapsedWithStorage",
     "setProfileSortOrderWithStorage"
   );
 
-  const { viewMode, defaultsCollapsed, profilesCollapsed, profileSortOrder } = configEditorSettings;
+  const { viewMode, profilesCollapsed, profileSortOrder } = configEditorSettings;
 
   const profileSortDisplayNames: Record<ProfileSortOrder, string> = {
     natural: l10n.t("File Order"),
@@ -132,10 +123,6 @@ export function Panels() {
     "reverse-alphabetical": l10n.t("Reverse Alphabetical"),
     type: l10n.t("By Type"),
     defaults: l10n.t("By Defaults"),
-  };
-
-  const toggleDefaultsCollapse = () => {
-    setDefaultsCollapsedWithStorage(!defaultsCollapsed);
   };
 
   const toggleProfilesCollapse = () => {
@@ -197,23 +184,6 @@ export function Panels() {
                   </div>
                 )}
               </div>
-
-              {/* Collapsible Defaults Section */}
-              {selectedTab === index && (
-                <div className="config-section defaults-section section-card" data-tutorial-id="defaults-section">
-                  <div className="defaults-heading-container">
-                    <button className="defaults-toggle-button" onClick={toggleDefaultsCollapse}>
-                      <span className={`codicon ${defaultsCollapsed ? "codicon-chevron-right" : "codicon-chevron-down"}`}></span>
-                      <h2>{l10n.t("Defaults")}</h2>
-                    </button>
-                  </div>
-                  {!defaultsCollapsed && (
-                    <div className="defaults-content">
-                      <RenderDefaults defaults={config.properties.defaults ?? {}} />
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
             <div className="resize-divider" id={`resize-divider-${index}`}></div>
             <div className="config-section profile-details-section section-card" data-tutorial-id="profile-details-panel">

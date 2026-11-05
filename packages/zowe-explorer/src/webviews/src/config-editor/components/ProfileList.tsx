@@ -10,6 +10,7 @@ import { useIsLightTheme } from "../hooks/useIsLightTheme";
 import { useScrollToSelected } from "../hooks/useScrollToSelected";
 import { ProfileTypeBadge } from "./ProfileTypeBadge";
 import { DefaultStarButton } from "./DefaultStarButton";
+import { DefaultBadge } from "./DefaultBadge";
 import { useEditorStore } from "../context/EditorStoreContext";
 
 interface ProfileListProps {
@@ -391,6 +392,7 @@ export function ProfileList({
                         }}
                       />
                     )}
+                    {isProfileDefault(profileKey) && getProfileType(profileKey) && <DefaultBadge profileType={getProfileType(profileKey)!} />}
                     {getProfileType(profileKey) && (
                       <DefaultStarButton
                         variant="flat"

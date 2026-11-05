@@ -132,13 +132,15 @@ export class ConfigEditorContextMenu {
         await (await node.$(":scope > .profile-tree-item.is-cut")).waitForExist({ timeout: TIMEOUT });
     }
 
-    public async expandDefaults(): Promise<void> {
-        await this.closeTutorial();
-        const content = await browser.$(".panel.active .defaults-content");
-        if (!(await content.isExisting()) || !(await content.isDisplayed())) {
-            await (await browser.$(".panel.active .defaults-toggle-button")).click();
-        }
-        await content.waitForDisplayed({ timeout: TIMEOUT });
+    /** Marks a tree profile as the default for its type via the star toggle, unless it already is. */
+    public async setAsDefault(profileKey: string): Promise<void> {
+        const node = await this.revealNode(profileKey);
+        const row = await node.$(":scope > .profile-tree-item");
+        const badge = await row.$("[data-testid='profile-default-badge']");
+        if (await badge.isExisting()) return;
+        await browser.execute((element: HTMLElement) => element.scrollIntoView({ block: "center" }), row);
+        await (await row.$(".profile-star-button")).click();
+        await badge.waitForExist({ timeout: TIMEOUT, timeoutMsg: `${profileKey} was not set as default` });
     }
 
     public async waitForUnsavedLayer(layer: ConfigEditorLayer): Promise<void> {

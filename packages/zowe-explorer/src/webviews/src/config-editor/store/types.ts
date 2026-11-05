@@ -149,7 +149,6 @@ export interface EditorCoreActions {
     setViewModeWithStorage: (value: EditorData["configEditorSettings"]["viewMode"]) => void;
     setPropertySortOrderWithStorage: (value: EditorData["configEditorSettings"]["propertySortOrder"]) => void;
     setProfileSortOrderWithStorage: (value: EditorData["configEditorSettings"]["profileSortOrder"]) => void;
-    setDefaultsCollapsedWithStorage: (value: boolean) => void;
     setProfilesCollapsedWithStorage: (value: boolean) => void;
     toggleViewMode: () => void;
 }

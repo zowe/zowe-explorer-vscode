@@ -79,7 +79,6 @@ export interface ConfigEditorSettings {
     propertySortOrder: PropertySortOrder;
     profileSortOrder: "natural" | "alphabetical" | "reverse-alphabetical" | "type" | "defaults";
     profilesWidthPercent: number;
-    defaultsCollapsed: boolean;
     profilesCollapsed: boolean;
 }
 
