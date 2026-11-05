@@ -50,6 +50,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Enhanced data set member download to allow multiple members - including across unique partitioned data sets - to be selected and downloaded in the same action. [#4274](https://github.com/zowe/zowe-explorer-vscode/issues/4274)
 - Replaced the comparison of checksums of the backend SSH server `zowex` with comparing version numbers when checking if the remote server version is outdated. [#4436](https://github.com/zowe/zowe-explorer-vscode/pull/4436)
 - Added a new "Export Redacted Configuration Files" command to export team configuration files with sensitive values redacted, for sharing with others when troubleshooting. [#4432](https://github.com/zowe/zowe-explorer-vscode/pull/4432)
 - Added functionality to automatically detect the backend SSH server on the user's `$PATH` on USS, and use it by default if no serverPath exists in your configuration. Also updated the plug-in to avoid deploying the SSH server binary to directories to which the user does not have write access. [#4367](https://github.com/zowe/zowe-explorer-vscode/pull/4367)
