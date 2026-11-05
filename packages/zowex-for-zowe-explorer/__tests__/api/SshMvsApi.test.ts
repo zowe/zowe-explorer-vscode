@@ -14,7 +14,7 @@ import { SshMvsApi } from "../../src/api/SshMvsApi";
 import { Gui, imperative } from "@zowe/zowe-explorer-api";
 import * as fs from "node:fs";
 import * as vscode from "vscode";
-import { SshClientCache } from "../../src/SshClientCache";
+import { SshClientManager } from "../../src/SshClientManager";
 
 // `node:fs` named imports are not configurable for spyOn under ESM, so mock the module.
 vi.mock("node:fs", async (importActual) => {
@@ -984,7 +984,7 @@ describe("SshMvsApi", () => {
         };
 
         function setupClients(mvsApi: SshMvsApi, sourceClient: any, targetClient: any): void {
-            vi.spyOn(SshClientCache, "inst", "get").mockReturnValue({ connect: vi.fn().mockResolvedValue(sourceClient) } as any);
+            vi.spyOn(SshClientManager, "inst", "get").mockReturnValue({ connect: vi.fn().mockResolvedValue(sourceClient) } as any);
             vi.spyOn(mvsApi, "client", "get").mockResolvedValue(targetClient);
         }
 

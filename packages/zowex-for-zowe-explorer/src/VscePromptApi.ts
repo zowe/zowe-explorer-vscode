@@ -12,7 +12,7 @@ import {
     type qpItem,
     type qpOpts,
 } from "@zowe/zowex-for-zowe-sdk";
-import { SshClientCache } from "./SshClientCache";
+import { SshClientManager } from "./SshClientManager";
 
 export class VscePromptApi extends AbstractConfigManager {
     protected showMessage(message: string, messageType: MESSAGE_TYPE): void {
@@ -122,7 +122,7 @@ export class VscePromptApi extends AbstractConfigManager {
     }
 
     protected getProfileSchemas(): imperative.IProfileTypeConfiguration[] {
-        const profCache = SshClientCache.inst.profilesCache;
+        const profCache = SshClientManager.inst.profilesCache;
 
         return [
             ...profCache.getCoreProfileTypes(),
@@ -183,7 +183,7 @@ export class VscePromptApi extends AbstractConfigManager {
     }
 
     protected storeServerPath(host: string, path: string): void {
-        SshClientCache.inst.storeServerPath(host, path);
+        SshClientManager.inst.storeServerPath(host, path);
     }
 
     protected getClientSetting<T>(setting: keyof ISshSession): T | undefined {

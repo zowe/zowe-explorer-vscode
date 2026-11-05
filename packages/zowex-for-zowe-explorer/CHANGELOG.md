@@ -8,6 +8,12 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ### New features and enhancements
 
+- Renamed the Explorer connection adapter to `SshClientManager` to distinguish its profile, settings, and UI responsibilities from the SDK's `SshClientCache`. [Deployment branch](https://github.com/zowe/zowe-explorer-vscode/tree/test/deploy-over-ssh)
+
+- Invalidated cached transports on expired passwords and SSH connection errors while retaining them on request failures, and documented that native SSH startup requires separate authentication after SFTP deployment. [Deployment branch](https://github.com/zowe/zowe-explorer-vscode/tree/test/deploy-over-ssh)
+
+- Reused SDK-cached SSH connections across profile validation, SFTP deployment, and server startup to support MFA, and closed cached transports on extension shutdown. [Deployment branch](https://github.com/zowe/zowe-explorer-vscode/tree/test/deploy-over-ssh)
+
 ### Bug fixes
 
 - Updated Zowex SDK to `1.0.2` for technical currency. [#4526](https://github.com/zowe/zowe-explorer-vscode/pull/4526)

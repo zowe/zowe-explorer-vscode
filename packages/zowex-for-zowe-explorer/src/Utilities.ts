@@ -11,10 +11,10 @@
 
 import { Gui, imperative, ZoweExplorerApiType, type IApiExplorerExtender } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
-import { SessionContext, ZSshClient, ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
+import { ZSshClient, ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
 import { ConfigUtils } from "./ConfigUtils";
 import { VscePromptApi } from "./VscePromptApi";
-import { SshClientCache } from "./SshClientCache";
+import { SshClientManager } from "./SshClientManager";
 import { SshErrorHandler } from "./SshErrorHandler";
 import { deployWithProgress } from "./ServerDeployment";
 import { ImperativeError } from "@zowe/imperative";
@@ -38,16 +38,22 @@ export class Utilities {
         imperative.Logger.getAppLogger().trace("Running connect command for profile %s", profName);
         const profCache = zoweExplorerApi.getProfilesCache();
         const vscePromptApi = new VscePromptApi(await profCache.getProfileInfo());
-        const profile = await vscePromptApi.promptForProfile(profName, { prioritizeProjectLevelConfig: false });
+        const profile = await vscePromptApi.promptForProfile(profName, {
+            prioritizeProjectLevelConfig: false,
+            keepAliveInterval: vscode.workspace.getConfiguration("zowe").get<number>("zowex.keepAliveInterval"),
+        });
         if (!profile?.profile) {
             return;
         }
         let configuredServerPath = ConfigUtils.getServerPath(profile.profile);
         const sshSession = ZSshUtils.buildSession(profile.profile);
-        using sessionHandle = new SessionContext(sshSession);
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Keeps the transport alive for the workflow.
+        using _connectionLease = await SshClientManager.inst.acquire(sshSession, {
+            keepaliveInterval: vscode.workspace.getConfiguration("zowe").get<number>("zowex.keepAliveInterval"),
+        });
         let onEnvPathServer: string | undefined = undefined;
         if (configuredServerPath == null) {
-            onEnvPathServer = await SshClientCache.inst.detectServerOnPath(sessionHandle);
+            onEnvPathServer = await SshClientManager.inst.detectServerOnPath(sshSession);
             configuredServerPath = onEnvPathServer ?? ZSshClient.DEFAULT_SERVER_PATH;
         }
 
@@ -58,13 +64,13 @@ export class Utilities {
             return;
         }
         let deployStatus = false;
-        if (!(await ZSshUtils.lacksWriteAccess(sessionHandle, deployDirectory))) {
-            deployStatus = await deployWithProgress(sessionHandle, deployDirectory);
+        if (!(await ZSshUtils.lacksWriteAccess(sshSession, deployDirectory))) {
+            deployStatus = await deployWithProgress(sshSession, deployDirectory);
             if (!deployStatus) {
                 return;
             }
         } else {
-            const errMsg = vscode.l10n.t(SshClientCache.WRITE_ACCESS_TO_SERVER_PATH_ERR, deployDirectory);
+            const errMsg = vscode.l10n.t(SshClientManager.WRITE_ACCESS_TO_SERVER_PATH_ERR, deployDirectory);
             imperative.Logger.getAppLogger().error(errMsg);
             throw new ImperativeError({ msg: errMsg });
         }
@@ -86,7 +92,7 @@ export class Utilities {
             return;
         }
 
-        await SshClientCache.inst.connect(profile, { restart: true, retryRequests: false });
+        await SshClientManager.inst.connect(profile, { restart: true, retryRequests: false });
 
         imperative.Logger.getAppLogger().info(`Restarted zo server on ${(profile.profile?.host as string) ?? profile.name}`);
         const statusMsg = Gui.setStatusBarMessage("Restarted zo server");
@@ -105,7 +111,7 @@ export class Utilities {
             return;
         }
 
-        SshClientCache.inst.end(profile);
+        SshClientManager.inst.end(profile);
         const serverPath = ConfigUtils.getServerPath(profile.profile);
         if (serverPath == null) {
             return;

@@ -1,10 +1,9 @@
-import type { SshSession } from "@zowe/zos-uss-for-zowe-sdk";
 import { Gui, imperative, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 import { SshErrorHandler } from "./SshErrorHandler";
-import { type SessionContext, ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
+import { ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
 
-export function deployWithProgress(session: SshSession | SessionContext, serverPath: string): Thenable<boolean> {
+export function deployWithProgress(session: Parameters<typeof ZSshUtils.installServer>[0], serverPath: string): Thenable<boolean> {
     return Gui.withProgress(
         {
             location: vscode.ProgressLocation.Notification,

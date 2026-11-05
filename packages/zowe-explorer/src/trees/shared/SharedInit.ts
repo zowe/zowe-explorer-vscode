@@ -198,7 +198,7 @@ export class SharedInit {
         // Zowe Native registrations
         const zoweExplorerApi = ZoweExplorerApiRegister.getInstance().getExplorerExtenderApi();
         context.subscriptions.push(...zowex.Utilities.registerCommands(context, zoweExplorerApi));
-        context.subscriptions.push(zowex.SshClientCache.initialize(zoweExplorerApi.getProfilesCache()));
+        context.subscriptions.push(zowex.SshClientManager.initialize(zoweExplorerApi.getProfilesCache()));
         zowex.handleNativeSshSettings(context);
 
         zowex.registerSshErrorCorrelations();

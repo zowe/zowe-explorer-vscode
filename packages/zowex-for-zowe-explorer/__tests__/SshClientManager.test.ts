@@ -12,13 +12,14 @@
 import { Gui, imperative, ZoweExplorerApiType, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as vscode from "vscode";
-import { SessionContext, ZSshClient, ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
-import { SshClientCache } from "../src/SshClientCache";
+import { SshClientCache, ZSshClient, ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
+import { SshClientManager } from "../src/SshClientManager";
 import { deployWithProgress } from "../src/ServerDeployment";
 import { ConfigUtils } from "../src/ConfigUtils";
 import { SshErrorHandler } from "../src/SshErrorHandler";
 
-vi.mock("@zowe/zowe-explorer-api", () => {
+vi.mock("@zowe/zowe-explorer-api", async () => {
+    const { ImperativeError } = await import("@zowe/imperative");
     class MockDeferredPromise {
         public promise: Promise<unknown>;
         public resolve!: (value?: unknown) => void;
@@ -62,37 +63,13 @@ vi.mock("@zowe/zowe-explorer-api", () => {
                 }),
             },
 
-            ImperativeError: class extends Error {
-                public errorCode: string;
-                public constructor(msg: string) {
-                    super(msg);
-                    this.errorCode = "ENOTFOUND";
-                }
-            },
+            ImperativeError,
             DeferredPromise: MockDeferredPromise,
         },
         ErrorCorrelator: {
             getInstance: () => ({
                 displayError: vi.fn().mockResolvedValue({ userResponse: "Hello tests" }),
             }),
-        },
-    };
-});
-
-vi.mock("@zowe/zowex-for-zowe-sdk", () => {
-    return {
-        SessionContext: class {
-            public constructor(public readonly session: unknown) {}
-            public [Symbol.dispose](): void {}
-        },
-        ZSshClient: {
-            create: vi.fn(),
-        },
-        ZSshUtils: {
-            buildSession: vi.fn(),
-            detectServerOnPath: vi.fn(),
-            checkIfOutdated: vi.fn(),
-            lacksWriteAccess: vi.fn(),
         },
     };
 });
@@ -131,8 +108,8 @@ const mockVSCodeConfig = {
     "zowex.responseTimeout": 60,
     "zowex.experimentalNativeSsh": false,
 };
-describe("SshClientCache", () => {
-    let cache: SshClientCache;
+describe("SshClientManager", () => {
+    let cache: SshClientManager;
     let mockGetLoadedProfConfig: ReturnType<typeof vi.fn>;
     let mockGetProfilesCache: any;
 
@@ -145,9 +122,12 @@ describe("SshClientCache", () => {
     const clientId = "testProfile_ssh";
 
     beforeEach(() => {
+        vi.spyOn(ZSshClient, "create");
+        vi.spyOn(ZSshUtils, "buildSession");
+        vi.spyOn(ZSshUtils, "detectServerOnPath").mockResolvedValue({ hasExecutePermission: false });
+        vi.spyOn(ZSshUtils, "checkIfOutdated");
+        vi.spyOn(ZSshUtils, "lacksWriteAccess").mockResolvedValue(false);
         const mockCollectedRequests = new Set([{ id: "mock-inflight-request-1" }]);
-        // Reset the singleton instance for clean tests
-        (SshClientCache as any).mInstance = undefined;
 
         // Create mock ProfilesCache
         mockGetProfilesCache = {
@@ -157,7 +137,8 @@ describe("SshClientCache", () => {
         };
 
         // Initialize cache with mock ProfilesCache
-        cache = SshClientCache.initialize(mockGetProfilesCache);
+        cache = SshClientManager.initialize(mockGetProfilesCache);
+        vi.spyOn(cache, "acquire").mockResolvedValue({ [Symbol.dispose]: vi.fn() } as any);
 
         // Default mocks
         vi.mocked(vscode.l10n.t).mockImplementation((message) => (typeof message === "string" ? message : message.message));
@@ -182,7 +163,7 @@ describe("SshClientCache", () => {
 
     describe("connect()", () => {
         beforeEach(() => {
-            vi.mocked(ZSshUtils.buildSession).mockReturnValue({ host: "fake-mock-host" } as any);
+            vi.mocked(ZSshUtils.buildSession).mockReturnValue({ ISshSession: { hostname: "example.com", user: "admin", port: 22 } } as any);
         });
 
         it("should harvest in-flight requests and pass them to the new client when retryRequests is true", async () => {
@@ -191,14 +172,8 @@ describe("SshClientCache", () => {
                 dispose: vi.fn(),
                 collectAllRequests: vi.fn().mockReturnValue(reqSet),
             };
-            (cache as any).mClientSessionMap.set(clientId, {
-                client: existingClientMock,
-                profile: mockProfile,
-                status: 0,
-                startTime: Date.now(),
-                responseTimeoutMillis: 60000,
-            });
-
+            vi.mocked(ZSshClient.create).mockResolvedValueOnce(existingClientMock as any);
+            await cache.connect(mockProfile);
             vi.mocked(ZSshClient.create).mockClear();
 
             await cache.connect(mockProfile, { restart: true, retryRequests: true });
@@ -218,7 +193,8 @@ describe("SshClientCache", () => {
                 dispose: vi.fn(),
                 collectAllRequests: vi.fn(),
             };
-            (cache as any).mClientSessionMap.set(clientId, { client: existingClientMock });
+            vi.mocked(ZSshClient.create).mockResolvedValueOnce(existingClientMock as any);
+            await cache.connect(mockProfile);
             vi.mocked(ZSshClient.create).mockClear();
 
             await cache.connect(mockProfile, { restart: true, retryRequests: false });
@@ -417,17 +393,18 @@ describe("SshClientCache", () => {
             expect(ZSshClient.create).toHaveBeenCalledTimes(1);
         });
 
-        it("shares one utility connection scope across detection, permission check, and deployment", async () => {
+        it("holds a cache lease across detection, permission check, and deployment", async () => {
             vi.mocked(ZSshClient.create)
                 .mockRejectedValueOnce(new imperative.ImperativeError({ msg: "Not found", errorCode: "ENOTFOUND" }))
                 .mockResolvedValueOnce({ dispose: vi.fn() } as any);
             const detectSpy = vi.spyOn(cache, "detectServerOnPath").mockResolvedValue(undefined);
-            const disposeSpy = vi.spyOn(SessionContext.prototype, Symbol.dispose);
+            const disposeSpy = vi.fn();
+            vi.mocked(cache.acquire).mockResolvedValue({ [Symbol.dispose]: disposeSpy } as any);
 
             await cache.connect(mockProfile);
 
             const context = detectSpy.mock.calls[0][0];
-            expect(context).toBeInstanceOf(SessionContext);
+            expect(context).toBe(vi.mocked(ZSshUtils.buildSession).mock.results[0].value);
             expect(ZSshUtils.lacksWriteAccess).toHaveBeenCalledWith(context, "/mock/server/path");
             expect(deployWithProgress).toHaveBeenCalledWith(context, "/mock/server/path");
             expect(disposeSpy).toHaveBeenCalledTimes(1);
@@ -439,7 +416,7 @@ describe("SshClientCache", () => {
             vi.mocked(ZSshUtils.lacksWriteAccess).mockResolvedValue(true);
             cache.detectServerOnPath = vi.fn().mockResolvedValue(undefined);
             await expect(cache.connect(mockProfile)).rejects.toThrow(
-                vscode.l10n.t(SshClientCache.WRITE_ACCESS_TO_SERVER_PATH_ERR, "/mock/server/path")
+                vscode.l10n.t(SshClientManager.WRITE_ACCESS_TO_SERVER_PATH_ERR, "/mock/server/path")
             );
 
             expect(deployWithProgress).not.toHaveBeenCalled();
@@ -534,6 +511,7 @@ describe("SshClientCache", () => {
         });
 
         it("should expose the singleton instance and the profiles cache", () => {
+            expect(SshClientManager.inst).toBe(cache);
             expect(SshClientCache.inst).toBe(cache);
             expect(cache.profilesCache).toBe(mockGetProfilesCache);
         });
@@ -783,6 +761,13 @@ describe("SshClientCache", () => {
     });
 
     describe("handleClientError() / promptErrorAndReload()", () => {
+        it("does not infer connection failures from request error text", () => {
+            const invalidate = vi.spyOn(cache, "invalidate");
+            (cache as any).handleClientError(clientId, new Error("Request timed out"));
+            (cache as any).handleClientError(clientId, new Error("ECONNRESET from an RPC request"));
+            expect(invalidate).not.toHaveBeenCalled();
+        });
+
         beforeEach(() => {
             // Inject a mock session
             (cache as any).mClientSessionMap.set(clientId, {
@@ -1004,13 +989,14 @@ describe("SshClientCache", () => {
     });
 
     describe("buildClient()", () => {
-        const mockSession = { host: "fake-host" } as any;
+        const mockSession = { ISshSession: { hostname: "fake-host", user: "admin", port: 22 } } as any;
         const mockOpts = { serverPath: "/test/path", keepAliveInterval: 30, numWorkers: 2 } as any;
 
         it("should call ZSshClient.create with the correct options and callbacks", async () => {
             const endSpy = vi.spyOn(cache, "end");
             const handleErrorSpy = vi.spyOn(cache as any, "handleClientError").mockImplementation(() => {});
-            await (cache as any).buildClient(mockSession, clientId, mockOpts);
+            const client = await (cache as any).buildClient(mockSession, clientId, mockOpts);
+            (cache as any).mClientSessionMap.set(clientId, { client });
 
             expect(ZSshClient.create).toHaveBeenCalledWith(
                 mockSession,

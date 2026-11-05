@@ -11,8 +11,8 @@
 import { ExtensionContext } from "vscode";
 import { Utilities } from "../src/Utilities";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { SessionContext, ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
-import { SshClientCache } from "../src/SshClientCache";
+import { ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
+import { SshClientManager } from "../src/SshClientManager";
 
 vi.mock("vscode", () => ({
     l10n: {
@@ -108,12 +108,13 @@ vi.mock("../src/ConfigUtils", () => ({
         showSessionInTree: vi.fn().mockResolvedValue(undefined),
     },
 }));
-vi.mock("../src/SshClientCache", async (importOriginal) => {
+vi.mock("../src/SshClientManager", async (importOriginal) => {
     const original: any = await importOriginal();
     return {
-        SshClientCache: {
-            WRITE_ACCESS_TO_SERVER_PATH_ERR: original.SshClientCache.WRITE_ACCESS_TO_SERVER_PATH_ERR,
+        SshClientManager: {
+            WRITE_ACCESS_TO_SERVER_PATH_ERR: original.SshClientManager.WRITE_ACCESS_TO_SERVER_PATH_ERR,
             inst: {
+                acquire: vi.fn(),
                 connect: vi.fn().mockResolvedValue({}),
                 end: vi.fn(),
                 detectServerOnPath: vi.fn().mockResolvedValue(false),
@@ -128,11 +129,8 @@ vi.mock("../src/SshErrorHandler", () => ({
         }),
     },
 }));
-vi.mock("@zowe/zowex-for-zowe-sdk", () => ({
-    SessionContext: class {
-        public constructor(public readonly session: unknown) {}
-        public [Symbol.dispose](): void {}
-    },
+vi.mock("@zowe/zowex-for-zowe-sdk", async (importOriginal) => ({
+    ...(await importOriginal<typeof import("@zowe/zowex-for-zowe-sdk")>()),
     ZSshUtils: {
         buildSession: vi.fn().mockReturnValue({ ISshSession: {} }),
         uninstallServer: vi.fn().mockResolvedValue(undefined),
@@ -144,6 +142,9 @@ vi.mock("@zowe/zowex-for-zowe-sdk", () => ({
 }));
 
 describe("Utilities", () => {
+    beforeEach(() => {
+        vi.spyOn(SshClientManager.inst, "acquire").mockResolvedValue({ [Symbol.dispose]: vi.fn() } as any);
+    });
     afterEach(() => {
         vi.restoreAllMocks();
     });
@@ -191,7 +192,7 @@ describe("Utilities", () => {
                 return { promptForProfile: vi.fn().mockResolvedValue(profile) };
             });
 
-            vi.spyOn(SshClientCache.inst, "connect").mockResolvedValue({} as any);
+            vi.spyOn(SshClientManager.inst, "connect").mockResolvedValue({} as any);
 
             const disposeSpy = vi.fn();
             vi.spyOn(mockedExplorer.Gui, "setStatusBarMessage").mockReturnValue({ dispose: disposeSpy } as any);
@@ -227,16 +228,20 @@ describe("Utilities", () => {
             const showMessageSpy = vi.spyOn(mockedExplorer.Gui, "showMessage");
             const deploySpy = vi.spyOn(mockedDeploy, "deployWithProgress").mockResolvedValue(true);
             const buildSessionSpy = vi.spyOn(ZSshUtils, "buildSession").mockReturnValue({ ISshSession: {} });
-            const disposeSpy = vi.spyOn(SessionContext.prototype, Symbol.dispose);
+            const disposeSpy = vi.fn();
+            vi.mocked(SshClientManager.inst.acquire).mockResolvedValue({ [Symbol.dispose]: disposeSpy } as any);
 
             const api = mockedExplorer.ZoweVsCodeExtension.getZoweExplorerApi().getExplorerExtenderApi();
             await (Utilities as any).connectCallback(api, "myProf");
 
-            expect(promptForProfile).toHaveBeenCalledWith("myProf", { prioritizeProjectLevelConfig: false });
+            expect(promptForProfile).toHaveBeenCalledWith("myProf", {
+                prioritizeProjectLevelConfig: false,
+                keepAliveInterval: undefined,
+            });
             expect(promptForDeployDirectory).toHaveBeenCalledWith("myHost", "/default/path");
             expect(buildSessionSpy).toHaveBeenCalledWith(profile.profile);
             const context = deploySpy.mock.calls[0][0];
-            expect(context).toBeInstanceOf(SessionContext);
+            expect(context).toBe(buildSessionSpy.mock.results[0].value);
             expect(ZSshUtils.lacksWriteAccess).toHaveBeenCalledWith(context, "/deploy/dir");
             expect(deploySpy).toHaveBeenCalledWith(context, "/deploy/dir");
             expect(disposeSpy).toHaveBeenCalledTimes(1);
@@ -363,7 +368,7 @@ describe("Utilities", () => {
                 };
             });
 
-            const connectSpy = vi.spyOn(SshClientCache.inst, "connect").mockResolvedValue({} as any);
+            const connectSpy = vi.spyOn(SshClientManager.inst, "connect").mockResolvedValue({} as any);
 
             const api = mockedExplorer.ZoweVsCodeExtension.getZoweExplorerApi().getExplorerExtenderApi();
             await (Utilities as any).restartCallback(api, "myProf");
@@ -377,7 +382,7 @@ describe("Utilities", () => {
                 return { promptForProfile: vi.fn().mockResolvedValue(undefined) };
             });
 
-            const connectSpy = vi.spyOn(SshClientCache.inst, "connect");
+            const connectSpy = vi.spyOn(SshClientManager.inst, "connect");
             const api = (await vi.importMock("@zowe/zowe-explorer-api")).ZoweVsCodeExtension.getZoweExplorerApi().getExplorerExtenderApi();
             await (Utilities as any).restartCallback(api);
 
@@ -391,7 +396,7 @@ describe("Utilities", () => {
             VscePromptApi.mockImplementation(function () {
                 return { promptForProfile: vi.fn().mockResolvedValue(profile) };
             });
-            vi.spyOn(SshClientCache.inst, "connect").mockResolvedValue({} as any);
+            vi.spyOn(SshClientManager.inst, "connect").mockResolvedValue({} as any);
             const infoSpy = vi.fn();
             vi.spyOn(mockedExplorer.imperative.Logger, "getAppLogger").mockReturnValue({ trace: vi.fn(), info: infoSpy } as any);
 
@@ -409,7 +414,7 @@ describe("Utilities", () => {
                     promptForProfile: vi.fn().mockResolvedValue(profile),
                 };
             });
-            vi.spyOn(SshClientCache.inst, "connect").mockRejectedValue(new Error("connect failed"));
+            vi.spyOn(SshClientManager.inst, "connect").mockRejectedValue(new Error("connect failed"));
 
             const api = (await vi.importMock("@zowe/zowe-explorer-api")).ZoweVsCodeExtension.getZoweExplorerApi().getExplorerExtenderApi();
             await expect((Utilities as any).restartCallback(api, "myProf")).rejects.toThrow("connect failed");
@@ -430,7 +435,7 @@ describe("Utilities", () => {
 
             vi.spyOn(mockedConfig.ConfigUtils, "getServerPath").mockReturnValue("/server/path");
             const showSessionSpy = vi.spyOn(mockedConfig.ConfigUtils, "showSessionInTree").mockResolvedValue(undefined);
-            const endSpy = vi.spyOn(SshClientCache.inst, "end");
+            const endSpy = vi.spyOn(SshClientManager.inst, "end");
             const uninstallSpy = vi.spyOn(ZSshUtils, "uninstallServer").mockResolvedValue(undefined);
             vi.spyOn(ZSshUtils, "buildSession").mockReturnValue({ ISshSession: {} });
             const showMessageSpy = vi.spyOn(mockedExplorer.Gui, "showMessage");
@@ -450,7 +455,7 @@ describe("Utilities", () => {
                 return { promptForProfile: vi.fn().mockResolvedValue(undefined) };
             });
 
-            const endSpy = vi.spyOn(SshClientCache.inst, "end");
+            const endSpy = vi.spyOn(SshClientManager.inst, "end");
             const api = (await vi.importMock("@zowe/zowe-explorer-api")).ZoweVsCodeExtension.getZoweExplorerApi().getExplorerExtenderApi();
             await (Utilities as any).uninstallCallback(api);
 
@@ -468,7 +473,7 @@ describe("Utilities", () => {
 
             vi.spyOn(mockedConfig.ConfigUtils, "getServerPath").mockReturnValue("/server/path");
             vi.spyOn(mockedConfig.ConfigUtils, "showSessionInTree").mockResolvedValue(undefined);
-            vi.spyOn(SshClientCache.inst, "end");
+            vi.spyOn(SshClientManager.inst, "end");
             vi.spyOn(ZSshUtils, "uninstallServer").mockResolvedValue(undefined);
             vi.spyOn(ZSshUtils, "buildSession").mockReturnValue({ ISshSession: {} });
             const showMessageSpy = vi.spyOn(mockedExplorer.Gui, "showMessage");

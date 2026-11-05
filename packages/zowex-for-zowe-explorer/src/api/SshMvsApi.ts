@@ -16,7 +16,7 @@ import { imperative, Gui, type MainframeInteraction } from "@zowe/zowe-explorer-
 import { B64String, type Dataset, type DatasetAttributes, type ds, parseSearchOutput, type SearchMatch } from "@zowe/zowex-for-zowe-sdk";
 import { SshCommonApi } from "./SshCommonApi";
 import type Stream from "node:stream";
-import { SshClientCache } from "../SshClientCache";
+import { SshClientManager } from "../SshClientManager";
 
 export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs {
     private readonly dsAttrMapping: Record<string, string> = {
@@ -457,7 +457,7 @@ export class SshMvsApi extends SshCommonApi implements MainframeInteraction.IMvs
             let targetFound = false;
             let targetMemberFound = false;
 
-            const sourceClient = await SshClientCache.inst.connect(sourceProfile);
+            const sourceClient = await SshClientManager.inst.connect(sourceProfile);
             const targetClient = await this.client;
 
             // Verify source dataset exists

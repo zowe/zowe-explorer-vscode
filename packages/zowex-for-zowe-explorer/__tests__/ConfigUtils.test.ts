@@ -17,7 +17,7 @@ import * as vscode from "vscode";
 import { type AbstractConfigManager, MESSAGE_TYPE, type PrivateKeyWarningOptions, ZSshClient } from "@zowe/zowex-for-zowe-sdk";
 import { ConfigUtils } from "../src/ConfigUtils";
 import { VscePromptApi } from "../src/VscePromptApi";
-import { SshClientCache } from "../src/SshClientCache";
+import { SshClientManager } from "../src/SshClientManager";
 
 vi.mock("vscode", () => ({
     Disposable: vi.fn(),
@@ -64,16 +64,16 @@ vi.mock("@zowe/zowe-explorer-api", () => ({
     },
 }));
 
-vi.mock("../src/SshClientCache", async (importOriginal) => {
+vi.mock("../src/SshClientManager", async (importOriginal) => {
     const original: any = await importOriginal();
     return {
-        SshClientCache: {
+        SshClientManager: {
             inst: {
                 connect: vi.fn().mockResolvedValue({}),
                 end: vi.fn(),
                 detectServerOnPath: vi.fn().mockResolvedValue(undefined),
                 // patch in the original storeServerPath so that we can still test that VS Code config methods are called
-                storeServerPath: original.SshClientCache.prototype.storeServerPath,
+                storeServerPath: original.SshClientManager.prototype.storeServerPath,
             },
         },
     };
@@ -376,8 +376,8 @@ describe("SshConfigUtils", () => {
                     getConfigArray: vi.fn().mockReturnValue([{ type: "config1" }]),
                 };
 
-                // Mock SshClientCache.inst.profilesCache
-                vi.spyOn(SshClientCache, "inst", "get").mockReturnValue({
+                // Mock SshClientManager.inst.profilesCache
+                vi.spyOn(SshClientManager, "inst", "get").mockReturnValue({
                     profilesCache: mockGetProfilesCache,
                 } as any);
             });

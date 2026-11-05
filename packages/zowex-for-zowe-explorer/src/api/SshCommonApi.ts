@@ -14,7 +14,7 @@ import { type SshSession, ZosUssProfile } from "@zowe/zos-uss-for-zowe-sdk";
 import { AuthHandler, ErrorCorrelator, type IAuthMethods, imperative, type MainframeInteraction, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 import { ZSshClient, ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
-import { SshClientCache } from "../SshClientCache";
+import { SshClientManager } from "../SshClientManager";
 import { SshErrorHandler } from "../SshErrorHandler";
 
 export class SshCommonApi implements MainframeInteraction.ICommon {
@@ -40,7 +40,7 @@ export class SshCommonApi implements MainframeInteraction.ICommon {
     public async getStatus(profile: imperative.IProfileLoaded, profileType?: string): Promise<string> {
         if (profileType === ZosUssProfile.type) {
             try {
-                await SshClientCache.inst.connect(profile);
+                await SshClientManager.inst.connect(profile);
                 return "active";
             } catch (err) {
                 if (err instanceof vscode.CancellationError) {
@@ -58,7 +58,7 @@ export class SshCommonApi implements MainframeInteraction.ICommon {
                         // Attempt to prompt for password with retry logic (up to 3 attempts)
                         const updatedProfile = await this.handlePrivateKeyFailure(profile);
                         if (updatedProfile) {
-                            await SshClientCache.inst.connect(updatedProfile);
+                            await SshClientManager.inst.connect(updatedProfile);
                             return "active";
                         }
                     } catch (retryErr) {
@@ -86,7 +86,7 @@ export class SshCommonApi implements MainframeInteraction.ICommon {
 
                     if (finalErr) {
                         const authSuccessful = await AuthHandler.promptForAuthentication(profile, {
-                            authMethods: SshClientCache.inst.profilesCache as unknown as IAuthMethods,
+                            authMethods: SshClientManager.inst.profilesCache as unknown as IAuthMethods,
                             imperativeError: finalErr,
                         });
                         if (authSuccessful) {
@@ -112,7 +112,7 @@ export class SshCommonApi implements MainframeInteraction.ICommon {
         if (this.profile == null) {
             throw new Error("Failed to create SSH client: no profile found");
         }
-        return SshClientCache.inst.connect(this.profile);
+        return SshClientManager.inst.connect(this.profile);
     }
 
     public getSshSession(profile?: imperative.IProfileLoaded): SshSession {
@@ -155,7 +155,7 @@ export class SshCommonApi implements MainframeInteraction.ICommon {
 
                 // Test the password by attempting a connection
                 try {
-                    await SshClientCache.inst.connect(testProfile);
+                    await SshClientManager.inst.connect(testProfile);
                     // If we get here, the password is valid
                     return testProfile;
                 } catch (authError) {

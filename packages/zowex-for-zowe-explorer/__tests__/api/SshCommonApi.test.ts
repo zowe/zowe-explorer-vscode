@@ -15,7 +15,7 @@ import { imperative, ZoweExplorerApiType, AuthHandler, ErrorCorrelator, Gui } fr
 import { SshSession, ZosUssProfile } from "@zowe/zos-uss-for-zowe-sdk";
 import { ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
 import * as vscode from "vscode";
-import { SshClientCache } from "../../src/SshClientCache";
+import { SshClientManager } from "../../src/SshClientManager";
 import { SshErrorHandler } from "../../src/SshErrorHandler";
 
 describe("SshCommonApi", () => {
@@ -49,12 +49,12 @@ describe("SshCommonApi", () => {
             const profile: imperative.IProfileLoaded = { type: "ssh", message: "test", failNotFound: true } as any;
             const commonApi = new SshCommonApi(profile);
             const fakeClient = { ds: {}, uss: {} };
-            const connectSpy = vi.spyOn(SshClientCache, "inst", "get").mockReturnValue({ connect: vi.fn().mockResolvedValue(fakeClient) } as any);
+            const connectSpy = vi.spyOn(SshClientManager, "inst", "get").mockReturnValue({ connect: vi.fn().mockResolvedValue(fakeClient) } as any);
 
             const client = await commonApi.client;
 
             expect(connectSpy).toHaveBeenCalledTimes(1);
-            expect((SshClientCache.inst as any).connect).toHaveBeenCalledWith(profile);
+            expect((SshClientManager.inst as any).connect).toHaveBeenCalledWith(profile);
             expect(client).toEqual(fakeClient);
         });
 
@@ -106,7 +106,7 @@ describe("SshCommonApi", () => {
         const profile: imperative.IProfileLoaded = { type: "ssh", name: "sshProf", message: "", failNotFound: true, profile: {} } as any;
 
         beforeEach(() => {
-            vi.spyOn(SshClientCache, "inst", "get").mockReturnValue({ connect: vi.fn() } as any);
+            vi.spyOn(SshClientManager, "inst", "get").mockReturnValue({ connect: vi.fn() } as any);
         });
 
         it("should return 'unverified' for a non-ssh profile type", async () => {
@@ -119,12 +119,12 @@ describe("SshCommonApi", () => {
             const commonApi = new SshCommonApi(profile);
             const status = await commonApi.getStatus(profile, "ssh");
             expect(status).toEqual("active");
-            expect((SshClientCache.inst as any).connect).toHaveBeenCalledWith(profile);
+            expect((SshClientManager.inst as any).connect).toHaveBeenCalledWith(profile);
         });
 
         it("should return 'inactive' on a generic connection error", async () => {
             const commonApi = new SshCommonApi(profile);
-            vi.spyOn(SshClientCache, "inst", "get").mockReturnValue({
+            vi.spyOn(SshClientManager, "inst", "get").mockReturnValue({
                 connect: vi.fn().mockRejectedValue(new Error("boom")),
                 handleError: vi.fn(),
             } as any);
@@ -142,7 +142,7 @@ describe("SshCommonApi", () => {
                 .mockRejectedValueOnce(new Error("private key failure"))
                 // second connect (password) succeeds
                 .mockResolvedValueOnce({} as never);
-            vi.spyOn(SshClientCache, "inst", "get").mockReturnValue({ connect: connectMock } as any);
+            vi.spyOn(SshClientManager, "inst", "get").mockReturnValue({ connect: connectMock } as any);
             vi.spyOn(ZSshUtils, "isPrivateKeyAuthFailure").mockReturnValue(true);
             vi.spyOn(commonApi as any, "handlePrivateKeyFailure").mockResolvedValue(privateKeyProfile);
             const warnSpy = vi.spyOn(vscode.window, "showWarningMessage").mockReturnValue(undefined);
@@ -157,7 +157,7 @@ describe("SshCommonApi", () => {
         it("should return 'inactive' when private key fallback fails after retries", async () => {
             const privateKeyProfile: imperative.IProfileLoaded = { ...profile, profile: { privateKey: "/k", host: "h", user: "u" } } as any;
             const commonApi = new SshCommonApi(privateKeyProfile);
-            vi.spyOn(SshClientCache, "inst", "get").mockReturnValue({
+            vi.spyOn(SshClientManager, "inst", "get").mockReturnValue({
                 connect: vi.fn().mockRejectedValue(new Error("private key failure")),
             } as any);
             vi.spyOn(ZSshUtils, "isPrivateKeyAuthFailure").mockReturnValue(true);
@@ -170,7 +170,7 @@ describe("SshCommonApi", () => {
         it("should handle private key fallback throwing and return 'inactive'", async () => {
             const privateKeyProfile: imperative.IProfileLoaded = { ...profile, profile: { privateKey: "/k", host: "h", user: "u" } } as any;
             const commonApi = new SshCommonApi(privateKeyProfile);
-            vi.spyOn(SshClientCache, "inst", "get").mockReturnValue({
+            vi.spyOn(SshClientManager, "inst", "get").mockReturnValue({
                 connect: vi.fn().mockRejectedValue(new Error("private key failure")),
             } as any);
             vi.spyOn(ZSshUtils, "isPrivateKeyAuthFailure").mockReturnValue(true);
@@ -194,7 +194,7 @@ describe("SshCommonApi", () => {
                 .mockRejectedValueOnce(new Error("private key failure"))
                 // second connect (password fallback) also fails
                 .mockRejectedValueOnce(new Error("password also failed"));
-            vi.spyOn(SshClientCache, "inst", "get").mockReturnValue({ connect: connectMock } as any);
+            vi.spyOn(SshClientManager, "inst", "get").mockReturnValue({ connect: connectMock } as any);
             vi.spyOn(ZSshUtils, "isPrivateKeyAuthFailure").mockReturnValue(true);
             vi.spyOn(commonApi as any, "handlePrivateKeyFailure").mockResolvedValue(updatedProfile);
             const errorSpy = vi.spyOn(vscode.window, "showErrorMessage").mockReturnValue(undefined);
@@ -216,7 +216,7 @@ describe("SshCommonApi", () => {
                 .mockRejectedValueOnce(new Error("All configured authentication methods failed"))
                 // recursive getStatus attempt after successful auth: connect succeeds
                 .mockResolvedValueOnce({} as never);
-            vi.spyOn(SshClientCache, "inst", "get").mockReturnValue({ connect: connectMock } as any);
+            vi.spyOn(SshClientManager, "inst", "get").mockReturnValue({ connect: connectMock } as any);
             vi.spyOn(ZSshUtils, "isPrivateKeyAuthFailure").mockReturnValue(false);
             const correlateSpy = vi.spyOn(ErrorCorrelator.getInstance(), "correlateError").mockReturnValue({ message: "correlated" } as any);
             const promptSpy = vi.spyOn(AuthHandler, "promptForAuthentication").mockResolvedValue(true);
@@ -230,7 +230,7 @@ describe("SshCommonApi", () => {
         it("should return 'inactive' when auth prompt is not successful", async () => {
             const passwordProfile: imperative.IProfileLoaded = { ...profile, profile: { password: "p", host: "h" } } as any;
             const commonApi = new SshCommonApi(passwordProfile);
-            vi.spyOn(SshClientCache, "inst", "get").mockReturnValue({
+            vi.spyOn(SshClientManager, "inst", "get").mockReturnValue({
                 connect: vi.fn().mockRejectedValue(new Error("All configured authentication methods failed")),
             } as any);
             vi.spyOn(ZSshUtils, "isPrivateKeyAuthFailure").mockReturnValue(false);
@@ -250,7 +250,7 @@ describe("SshCommonApi", () => {
                 profile: undefined,
             } as any;
             const commonApi = new SshCommonApi(noInnerProfile);
-            vi.spyOn(SshClientCache, "inst", "get").mockReturnValue({
+            vi.spyOn(SshClientManager, "inst", "get").mockReturnValue({
                 connect: vi.fn().mockRejectedValue(new Error("connection refused")),
             } as any);
             vi.spyOn(ZSshUtils, "isPrivateKeyAuthFailure").mockReturnValue(false);
@@ -265,7 +265,7 @@ describe("SshCommonApi", () => {
         it("should call handleError and return 'inactive' when both password and privateKey are set and auth fails", async () => {
             const bothAuthProfile: imperative.IProfileLoaded = { ...profile, profile: { password: "p", privateKey: "/key", host: "h" } } as any;
             const commonApi = new SshCommonApi(bothAuthProfile);
-            vi.spyOn(SshClientCache, "inst", "get").mockReturnValue({
+            vi.spyOn(SshClientManager, "inst", "get").mockReturnValue({
                 connect: vi.fn().mockRejectedValue(new Error("All configured authentication methods failed")),
             } as any);
             vi.spyOn(ZSshUtils, "isPrivateKeyAuthFailure").mockReturnValue(false);
@@ -285,12 +285,12 @@ describe("SshCommonApi", () => {
             const commonApi = new SshCommonApi(profile);
 
             expect(await commonApi.getStatus(profile, ZosUssProfile.type)).toEqual("active");
-            expect(SshClientCache.inst.connect).toHaveBeenCalledWith(profile);
+            expect(SshClientManager.inst.connect).toHaveBeenCalledWith(profile);
             expect(showMessage).not.toHaveBeenCalled();
         });
 
         it("should return inactive without reporting an error when deployment is cancelled", async () => {
-            vi.mocked(SshClientCache.inst.connect).mockRejectedValue(new vscode.CancellationError());
+            vi.mocked(SshClientManager.inst.connect).mockRejectedValue(new vscode.CancellationError());
             const handleError = vi.spyOn(SshErrorHandler.getInstance(), "handleError");
             const promptAuth = vi.spyOn(AuthHandler, "promptForAuthentication");
 
@@ -301,7 +301,7 @@ describe("SshCommonApi", () => {
 
         it("should stop password retries when deployment is cancelled after private key fallback", async () => {
             const privateKeyProfile = { ...profile, profile: { privateKey: "/key", host: "host", user: "user" } };
-            vi.mocked(SshClientCache.inst.connect)
+            vi.mocked(SshClientManager.inst.connect)
                 .mockRejectedValueOnce(new Error("All configured authentication methods failed"))
                 .mockRejectedValueOnce(new vscode.CancellationError());
             vi.spyOn(ZSshUtils, "isPrivateKeyAuthFailure").mockReturnValue(true);
@@ -310,7 +310,7 @@ describe("SshCommonApi", () => {
 
             expect(await new SshCommonApi(privateKeyProfile).getStatus(privateKeyProfile, "ssh")).toEqual("inactive");
             expect(input).toHaveBeenCalledTimes(1);
-            expect(SshClientCache.inst.connect).toHaveBeenCalledTimes(2);
+            expect(SshClientManager.inst.connect).toHaveBeenCalledTimes(2);
             expect(showError).not.toHaveBeenCalled();
         });
     });
@@ -325,7 +325,7 @@ describe("SshCommonApi", () => {
         } as any;
 
         beforeEach(() => {
-            vi.spyOn(SshClientCache, "inst", "get").mockReturnValue({ connect: vi.fn() } as any);
+            vi.spyOn(SshClientManager, "inst", "get").mockReturnValue({ connect: vi.fn() } as any);
         });
 
         it("should return undefined when the user cancels the password prompt", async () => {
@@ -340,7 +340,7 @@ describe("SshCommonApi", () => {
             const commonApi = new SshCommonApi(profile);
             vi.spyOn(vscode.window, "showInputBox").mockResolvedValue("my-pass");
             const connectMock = vi.fn().mockResolvedValue({});
-            vi.spyOn(SshClientCache, "inst", "get").mockReturnValue({ connect: connectMock } as any);
+            vi.spyOn(SshClientManager, "inst", "get").mockReturnValue({ connect: connectMock } as any);
 
             const result = await (commonApi as any).handlePrivateKeyFailure(profile);
             expect(connectMock).toHaveBeenCalledWith(
@@ -353,7 +353,7 @@ describe("SshCommonApi", () => {
         it("should return undefined when password auth keeps failing", async () => {
             const commonApi = new SshCommonApi(profile);
             vi.spyOn(vscode.window, "showInputBox").mockResolvedValue("bad-pass");
-            vi.spyOn(SshClientCache, "inst", "get").mockReturnValue({
+            vi.spyOn(SshClientManager, "inst", "get").mockReturnValue({
                 connect: vi.fn().mockRejectedValue(new Error("auth failed")),
             } as any);
             const warningSpy = vi.spyOn(vscode.window, "showWarningMessage").mockReturnValue(undefined);
@@ -366,7 +366,7 @@ describe("SshCommonApi", () => {
         it("should show warning with counter (1/3), (2/3), (3/3) across all retry attempts", async () => {
             const commonApi = new SshCommonApi(profile);
             vi.spyOn(vscode.window, "showInputBox").mockResolvedValue("bad-pass");
-            vi.spyOn(SshClientCache, "inst", "get").mockReturnValue({
+            vi.spyOn(SshClientManager, "inst", "get").mockReturnValue({
                 connect: vi.fn().mockRejectedValue(new Error("auth failed")),
             } as any);
             const warningSpy = vi.spyOn(vscode.window, "showWarningMessage").mockReturnValue(undefined);
@@ -383,7 +383,7 @@ describe("SshCommonApi", () => {
             const commonApi = new SshCommonApi(profile);
             vi.spyOn(vscode.window, "showInputBox").mockResolvedValue("bad-pass");
             const errorSpy = vi.spyOn(vscode.window, "showErrorMessage").mockReturnValue(undefined);
-            vi.spyOn(SshClientCache, "inst", "get").mockReturnValue({
+            vi.spyOn(SshClientManager, "inst", "get").mockReturnValue({
                 connect: vi.fn().mockRejectedValue(new Error("FOTS1668 password expired")),
             } as any);
 

@@ -12,7 +12,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as vscode from "vscode";
 import { VscePromptApi } from "../src/VscePromptApi";
-import { SshClientCache } from "../src/SshClientCache";
+import { SshClientManager } from "../src/SshClientManager";
 import { MESSAGE_TYPE } from "@zowe/zowex-for-zowe-sdk";
 import { ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 
@@ -290,7 +290,7 @@ describe("VscePromptApi", () => {
             api = makeApi();
             const coreTypes = [{ type: "zosmf" }];
             const configTypes = [{ type: "ssh" }];
-            vi.spyOn(SshClientCache, "inst", "get").mockReturnValue({
+            vi.spyOn(SshClientManager, "inst", "get").mockReturnValue({
                 profilesCache: {
                     getCoreProfileTypes: vi.fn().mockReturnValue(coreTypes),
                     getConfigArray: vi.fn().mockReturnValue(configTypes),
