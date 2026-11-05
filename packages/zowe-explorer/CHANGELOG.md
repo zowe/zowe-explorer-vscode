@@ -7,7 +7,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 ### New features and enhancements
 
 - Added support for the `allowedLoginMethod` profile property. This property can be used to restrict allowed authentication methods to a single option. If a profile has no value for `allowedLoginMethod`, or if the value is `"prompt"`, there is no change in behavior compared to previous Zowe Explorer versions. [#4531](https://github.com/zowe/zowe-explorer-vscode/pull/4531)
-- Added the `notifyFileChanged` method to `IZoweExplorerFileApi` (the file API returned by `getFileApi()`) so extenders that save to the mainframe outside of Zowe Explorer's filesystem provider can invalidate the cached entry and trigger VS Code to re-read the file from the mainframe. [#4481](https://github.com/zowe/zowe-explorer-vscode/issues/4481)
 - Added a `getFileApi` method to `ZoweExplorerApiRegister` that returns a file API for querying mainframe file system state. The initial API includes `getEncodingForUri`, which returns the encoding ZE has determined for a given resource URI, checking auto-detected encodings (such as USS file-tag detection) before falling back to explicitly user-selected encodings. [#4474](https://github.com/zowe/zowe-explorer-vscode/pull/4474)
 - Renamed the `"Uninstall zowex server on host..."` command to `""Uninstall SSH server on host..."`. [#4489](https://github.com/zowe/zowe-explorer-vscode/pull/4489)
 - Renamed the `"Restart zowex server on host..."` command to `""Restart SSH server on host..."`. [#4489](https://github.com/zowe/zowe-explorer-vscode/pull/4489)
@@ -18,8 +17,20 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added a `Changed` event for the parent PDS or USS directory when one of its entries is created or deleted. [#4497](https://github.com/zowe/zowe-explorer-vscode/pull/4497)
 - Renamed the "Edit History" command to "Manage Saved Data". [#3804](https://github.com/zowe/zowe-explorer-vscode/issues/3804)
 - Migrated webviews from the deprecated Webview UI Toolkit to VS Code Elements. [#3443](https://github.com/zowe/zowe-explorer-vscode/issues/3443)
-- Added SSH host key verification when issuing UNIX commands so the identity of a z/OS SSH server is confirmed before credentials are sent. [#4529](https://github.com/zowe/zowe-explorer-vscode/pull/4529)
 - Replaced confusing "SSH server" terminology with "zo server" in deployment prompts, status messages, settings descriptions, and Command Palette labels. [#4583](https://github.com/zowe/zowe-explorer-vscode/issues/4583)
+
+### Bug fixes
+
+- Fixed an issue where searching data set contents with an FTP profile failed with the error `c.searchDataSets is not a function`. Zowe Explorer now shows a message when a search starts for a profile type that does not support it. [#4511](https://github.com/zowe/zowe-explorer-vscode/issues/4511)
+- Fixed an issue where the profile actions menu (including "Hide Profile") failed to open for profiles missing required properties like host. [#4557](https://github.com/zowe/zowe-explorer-vscode/pull/4557)
+- Fixed an issue where profiles with `authOrder` starting with `token` or `bearer` and no stored credentials (for example, after logging out with an unsecured config) were prompted for basic credentials instead of the SSO login. [#4574](https://github.com/zowe/zowe-explorer-vscode/issues/4574)
+
+## `3.6.1`
+
+### New features and enhancements
+
+- Added the `notifyFileChanged` method to `IZoweExplorerFileApi` (the file API returned by `getFileApi()`) so extenders that save to the mainframe outside of Zowe Explorer's filesystem provider can invalidate the cached entry and trigger VS Code to re-read the file from the mainframe. [#4481](https://github.com/zowe/zowe-explorer-vscode/issues/4481)
+- Added SSH host key verification when issuing UNIX commands so the identity of a z/OS SSH server is confirmed before credentials are sent. [#4529](https://github.com/zowe/zowe-explorer-vscode/pull/4529)
 
 ### Bug fixes
 
@@ -35,18 +46,14 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where using "Allocate Like" on a data set caused the tree nodes to disappear until the profile was collapsed and re-expanded. [#4444](https://github.com/zowe/zowe-explorer-vscode/issues/4444)
 - Fixed an issue where filtering PDS members by user ID was case-sensitive, so a lowercase user ID filter would not match any members. User ID filtering is now case-insensitive. [#3723](https://github.com/zowe/zowe-explorer-vscode/issues/3723)
 - Fixed an issue where data sets with a `PLX` qualifier, and their members, opened as PL/I files. Use the VS Code `files.associations` setting to choose a language for those data sets. [#3801](https://github.com/zowe/zowe-explorer-vscode/issues/3801)
-- Fixed an issue where searching data set contents with an FTP profile failed with the error `c.searchDataSets is not a function`. Zowe Explorer now shows a message when a search starts for a profile type that does not support it. [#4511](https://github.com/zowe/zowe-explorer-vscode/issues/4511)
-- Fixed an issue where the profile actions menu (including "Hide Profile") failed to open for profiles missing required properties like host. [#4557](https://github.com/zowe/zowe-explorer-vscode/pull/4557)
 - Fixed an issue where UNIX commands were always wrapped in an `SSH_TTY` terminal redirect, even for profiles that do not use SSH. [#4564](https://github.com/zowe/zowe-explorer-vscode/pull/4564)
 - Fixed redundant SSH server deployment confirmations when connecting to an already installed, up-to-date server. Confirmation is now requested only when automatic installation or updating is needed. [#4563](https://github.com/zowe/zowe-explorer-vscode/pull/4563)
-- Fixed an issue where profiles with `authOrder` starting with `token` or `bearer` and no stored credentials (for example, after logging out with an unsecured config) were prompted for basic credentials instead of the SSO login. [#4574](https://github.com/zowe/zowe-explorer-vscode/issues/4574)
 - Fixed seconds precision missing for SSH profiles when displaying "Modified Date" of PDS members in the data set table view. [#4582](https://github.com/zowe/zowe-explorer-vscode/pull/4582)
 
 ## `3.6.0`
 
 ### New features and enhancements
 
-- Enhanced data set member download to allow multiple members - including across unique partitioned data sets - to be selected and downloaded in the same action. [#4274](https://github.com/zowe/zowe-explorer-vscode/issues/4274)
 - Replaced the comparison of checksums of the backend SSH server `zowex` with comparing version numbers when checking if the remote server version is outdated. [#4436](https://github.com/zowe/zowe-explorer-vscode/pull/4436)
 - Added a new "Export Redacted Configuration Files" command to export team configuration files with sensitive values redacted, for sharing with others when troubleshooting. [#4432](https://github.com/zowe/zowe-explorer-vscode/pull/4432)
 - Added functionality to automatically detect the backend SSH server on the user's `$PATH` on USS, and use it by default if no serverPath exists in your configuration. Also updated the plug-in to avoid deploying the SSH server binary to directories to which the user does not have write access. [#4367](https://github.com/zowe/zowe-explorer-vscode/pull/4367)
