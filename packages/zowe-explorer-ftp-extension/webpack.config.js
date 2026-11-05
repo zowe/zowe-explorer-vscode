@@ -50,6 +50,7 @@ const config = {
         extensions: [".ts", ".js"],
         alias: {
             "@zowe/zowe-explorer-api$": path.resolve(__dirname, "..", "zowe-explorer-api/src"),
+            "entities/decode$": path.resolve(require.resolve("entities"), "..", "decode"),
         },
     },
     node: {
@@ -83,19 +84,16 @@ const config = {
                 ],
             },
             {
-                test: /\.js$/,
-                include: /agent-base|https?-proxy-agent|sanitize-html/,
+                test: /\.[cm]?js$/,
+                include: /node_modules/,
+                type: "javascript/auto",
                 use: {
                     loader: "babel-loader",
                     options: {
+                        cacheDirectory: true,
                         presets: ["@babel/preset-env"],
                     },
                 },
-            },
-            {
-                test: /\.mjs$/,
-                include: /markdown-it/,
-                type: "javascript/auto",
             },
         ],
     },
