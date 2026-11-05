@@ -22,7 +22,6 @@ Given("a user who is looking at the Add Config quick pick", async function () {
     await dsPane.elem.moveTo();
     await expect(plusIcon.elem).toBeClickable();
     await plusIcon.elem.click();
-
     await browser.waitUntil(() => quickPick.isDisplayed());
 });
 
@@ -84,6 +83,15 @@ When("a user selects the first profile in the list", async function () {
     await firstProfileEntry.click();
 });
 
+Then(/a user selects the profile named '(.*)' in the quick pick/, async function (desiredProfileName: string) {
+    const profileEntry = await quickPick.findItem("$(home) " + desiredProfileName);
+    expect(profileEntry.error).toBeUndefined();
+    await expect(profileEntry).toBeClickable();
+    const profileLabelAttr = await profileEntry.getAttribute("aria-label");
+    // strip off any extra details added to the label of the profile node
+    this.profileName = profileLabelAttr.substring(profileLabelAttr.lastIndexOf(" ")).trim();
+    await profileEntry.click();
+});
 Then("it will prompt the user to add the profile to one or all trees", async function () {
     // After the profile entry is clicked, VS Code closes the profile picker and
     // opens the Yes/No "apply to all trees" quick pick.
