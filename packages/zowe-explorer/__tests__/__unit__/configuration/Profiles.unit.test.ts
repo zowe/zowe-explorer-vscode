@@ -53,7 +53,7 @@ import { JobFSProvider } from "../../../src/trees/job/JobFSProvider";
 import { DatasetFSProvider } from "../../../src/trees/dataset/DatasetFSProvider";
 import { Constants } from "../../../src/configuration/Constants";
 import { AuthUtils } from "../../../src/utils/AuthUtils";
-import { FilterDescriptor } from "../../../src/management/FilterManagement";
+import { FilterDescriptor, FilterItem } from "../../../src/management/FilterManagement";
 import { ZoweDatasetNode } from "../../../src/trees/dataset/ZoweDatasetNode";
 import { USSTree } from "../../../src/trees/uss/USSTree";
 import { ZoweExplorerExtender } from "../../../src/extending/ZoweExplorerExtender";
@@ -366,6 +366,12 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
 
         return newMocks;
     }
+
+    beforeEach(() => {
+        // Some tests queue quick pick values they never consume, so drop them before the next test.
+        vi.restoreAllMocks();
+    });
+
     it("Tests that createZoweSession presents correct message when escaping selection of quickpick", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
@@ -447,6 +453,27 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
         expect(errorSpy).toHaveBeenCalledTimes(1);
         expect(errorSpy).toHaveBeenCalledWith(Error("test error"));
         errorSpy.mockClear();
+    });
+
+    it("Tests that createZoweSession does not add the profile when the apply-to-all-trees prompt is cancelled", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const addSessionSpy = vi.spyOn(blockMocks.testDatasetTree, "addSession");
+        vi.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(new FilterItem({ text: "sestest" }));
+        vi.spyOn(Profiles, "handleChangeForAllTrees").mockResolvedValueOnce(undefined);
+        await Profiles.getInstance().createZoweSession(blockMocks.testDatasetTree);
+        expect(addSessionSpy).not.toHaveBeenCalled();
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile selection has been cancelled.");
+    });
+
+    it("Tests that createZoweSession adds the profile with the answer from the apply-to-all-trees prompt", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const addSessionSpy = vi.spyOn(blockMocks.testDatasetTree, "addSession");
+        vi.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(new FilterItem({ text: "sestest" }));
+        vi.spyOn(Profiles, "handleChangeForAllTrees").mockResolvedValueOnce(false);
+        await Profiles.getInstance().createZoweSession(blockMocks.testDatasetTree);
+        expect(addSessionSpy).toHaveBeenCalledWith({ sessionName: "sestest", addToAllTrees: false });
     });
 });
 
@@ -615,6 +642,40 @@ describe("Profiles Unit Tests - function promptCredentials", () => {
         } as imperative.IProfileLoaded);
         vi.spyOn(Profiles.getInstance(), "updateProfilesArrays").mockImplementation((() => undefined) as any);
         await expect(Profiles.getInstance().promptCredentials("secure_config_props")).resolves.toEqual(["test", "12345"]);
+    });
+
+    it("should omit the 'leave blank' hint from the prompts when re-prompting", async () => {
+        vi.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
+            isSecured: () => false,
+        } as any);
+        const updateCredentialsSpy = vi.spyOn(ZoweVsCodeExtension, "updateCredentials").mockResolvedValue({
+            profile: {
+                user: "test",
+                password: "12345",
+            } as imperative.IProfile,
+        } as imperative.IProfileLoaded);
+        vi.spyOn(Profiles.getInstance(), "updateProfilesArrays").mockImplementation((() => undefined) as any);
+        await Profiles.getInstance().promptCredentials("secure_config_props", true);
+        const opts = updateCredentialsSpy.mock.calls[0][0];
+        expect(opts.userInputBoxOptions?.prompt).toBe("Enter the user name for the secure_config_props connection.");
+        expect(opts.passwordInputBoxOptions?.prompt).toBe("Enter the password for the secure_config_props connection.");
+    });
+
+    it("should include the 'leave blank to cancel' hint in the prompts when not re-prompting", async () => {
+        vi.spyOn(Profiles.getInstance(), "getProfileInfo").mockResolvedValue({
+            isSecured: () => false,
+        } as any);
+        const updateCredentialsSpy = vi.spyOn(ZoweVsCodeExtension, "updateCredentials").mockResolvedValue({
+            profile: {
+                user: "test",
+                password: "12345",
+            } as imperative.IProfile,
+        } as imperative.IProfileLoaded);
+        vi.spyOn(Profiles.getInstance(), "updateProfilesArrays").mockImplementation((() => undefined) as any);
+        await Profiles.getInstance().promptCredentials("secure_config_props");
+        const opts = updateCredentialsSpy.mock.calls[0][0];
+        expect(opts.userInputBoxOptions?.prompt).toBe("Enter the user name for the secure_config_props connection. Leave blank to cancel.");
+        expect(opts.passwordInputBoxOptions?.prompt).toBe("Enter the password for the secure_config_props connection. Leave blank to cancel.");
     });
 
     it("Tests that promptCredentials catches error and logs it", async () => {
@@ -1257,6 +1318,61 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "unverified" });
         expect(errorHandlingSpy).toHaveBeenCalledTimes(1);
     });
+    it.each([imperative.SessConstants.AUTH_TYPE_TOKEN, imperative.SessConstants.AUTH_TYPE_BEARER])(
+        "should use SSO login instead of prompting for credentials if no credentials are stored and authOrder starts with %s",
+        async (authType) => {
+            const globalMocks = createGlobalMocks();
+            environmentSetup(globalMocks);
+            setupProfilesCheck(globalMocks);
+            vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({
+                ISession: { type: null, authTypeOrder: [authType, "basic"] },
+                isUsingApiml: vi.fn(),
+            } as any);
+            vi.spyOn(imperative.AuthOrder, "addCredsToSession").mockImplementation((() => undefined) as any);
+            vi.spyOn(Profiles.getInstance(), "validateProfiles").mockResolvedValue({ status: "active", name: "sestest" });
+            const ssoLoginSpy = vi.spyOn(Profiles.getInstance(), "ssoLogin").mockResolvedValueOnce(true);
+            const promptCredentialsSpy = vi.spyOn(Profiles.getInstance(), "promptCredentials");
+            vi.spyOn(Profiles.getInstance(), "loadNamedProfile").mockReturnValueOnce(globalMocks.testProfile);
+
+            await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "active" });
+            expect(ssoLoginSpy).toHaveBeenCalledTimes(1);
+            expect(promptCredentialsSpy).not.toHaveBeenCalled();
+        }
+    );
+    it("should show as inactive if no credentials are stored, authOrder starts with token, and SSO login is unsuccessful", async () => {
+        const globalMocks = createGlobalMocks();
+        environmentSetup(globalMocks);
+        setupProfilesCheck(globalMocks);
+        vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({
+            ISession: { type: null, authTypeOrder: ["token", "basic"] },
+            isUsingApiml: vi.fn(),
+        } as any);
+        vi.spyOn(imperative.AuthOrder, "addCredsToSession").mockImplementation((() => undefined) as any);
+        vi.spyOn(Profiles.getInstance(), "ssoLogin").mockResolvedValueOnce(false);
+        vi.spyOn(Profiles.getInstance(), "loadNamedProfile").mockReturnValueOnce(globalMocks.testProfile);
+        const promptCredentialsSpy = vi.spyOn(Profiles.getInstance(), "promptCredentials");
+
+        await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "inactive" });
+        expect(promptCredentialsSpy).not.toHaveBeenCalled();
+    });
+    it("should prompt for credentials if no credentials are stored and authOrder does not start with token or bearer", async () => {
+        const globalMocks = createGlobalMocks();
+        environmentSetup(globalMocks);
+        setupProfilesCheck(globalMocks);
+        vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({
+            ISession: { type: null, authTypeOrder: ["basic", "token"] },
+            isUsingApiml: vi.fn(),
+        } as any);
+        vi.spyOn(imperative.AuthOrder, "addCredsToSession").mockImplementation((() => undefined) as any);
+        vi.spyOn(Profiles.getInstance(), "validateProfiles").mockResolvedValue({ status: "active", name: "sestest" });
+        const ssoLoginSpy = vi.spyOn(Profiles.getInstance(), "ssoLogin");
+        const promptCredentialsSpy = vi.spyOn(Profiles.getInstance(), "promptCredentials").mockResolvedValueOnce(["sestest", "12345"]);
+
+        await expect(Profiles.getInstance().checkCurrentProfile(globalMocks.testProfile)).resolves.toEqual({ name: "sestest", status: "active" });
+        expect(promptCredentialsSpy).toHaveBeenCalledTimes(1);
+        expect(ssoLoginSpy).not.toHaveBeenCalled();
+    });
+
     it("should throw an error if the session provided does not implement isUsingApiml", async () => {
         const globalMocks = createGlobalMocks();
         environmentSetup(globalMocks);

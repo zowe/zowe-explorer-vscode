@@ -196,6 +196,13 @@ export class Profiles extends ProfilesCache {
                 usingCertAuth = true;
                 break;
         }
+        // addCredsToSession resolves type from available credentials only, so honor the user's token/bearer intent when none are present
+        if (!usingBasicAuth && !usingTokenAuth && !usingCertAuth) {
+            const firstInOrder = iSessFromProf.authTypeOrder?.[0];
+            if (firstInOrder === imperative.SessConstants.AUTH_TYPE_TOKEN || firstInOrder === imperative.SessConstants.AUTH_TYPE_BEARER) {
+                usingTokenAuth = true;
+            }
+        }
 
         let tokenType: string;
         try {
@@ -625,6 +632,12 @@ export class Profiles extends ProfilesCache {
             const filePath = currentProfile.profLoc.osLoc[0];
             await this.openConfigFile(filePath);
         } else if (chosenProfile) {
+            const addToAllTrees = await Profiles.handleChangeForAllTrees(chosenProfile, true);
+            if (addToAllTrees === undefined) {
+                ZoweLogger.debug(debugMsg);
+                Gui.showMessage(debugMsg);
+                return;
+            }
             ZoweLogger.info(
                 vscode.l10n.t({
                     message: `The profile {0} has been added to the {1} tree.`,
@@ -632,10 +645,7 @@ export class Profiles extends ProfilesCache {
                     comment: ["chosen profile", "tree type"],
                 })
             );
-            await zoweFileProvider.addSession({
-                sessionName: chosenProfile,
-                addToAllTrees: await Profiles.handleChangeForAllTrees(chosenProfile, true),
-            });
+            await zoweFileProvider.addSession({ sessionName: chosenProfile, addToAllTrees });
         } else {
             ZoweLogger.debug(debugMsg);
         }
@@ -734,21 +744,34 @@ export class Profiles extends ProfilesCache {
 
         const isProfileString = typeof profile === "string";
         const profilename = isProfileString ? profile : profile.name;
+        // When re-prompting, a blank value is rejected, so the "leave blank" hint would be misleading.
         const userInputBoxOptions: vscode.InputBoxOptions = {
             placeHolder: vscode.l10n.t(`User Name`),
-            prompt: vscode.l10n.t({
-                message: "Enter the user name for the {0} connection. Leave blank to not store.",
-                args: [profilename],
-                comment: ["Profile name"],
-            }),
+            prompt: rePrompt
+                ? vscode.l10n.t({
+                      message: "Enter the user name for the {0} connection.",
+                      args: [profilename],
+                      comment: ["Profile name"],
+                  })
+                : vscode.l10n.t({
+                      message: "Enter the user name for the {0} connection. Leave blank to cancel.",
+                      args: [profilename],
+                      comment: ["Profile name"],
+                  }),
         };
         const passwordInputBoxOptions: vscode.InputBoxOptions = {
             placeHolder: vscode.l10n.t(`Password`),
-            prompt: vscode.l10n.t({
-                message: "Enter the password for the {0} connection. Leave blank to not store.",
-                args: [profilename],
-                comment: ["Profile name"],
-            }),
+            prompt: rePrompt
+                ? vscode.l10n.t({
+                      message: "Enter the password for the {0} connection.",
+                      args: [profilename],
+                      comment: ["Profile name"],
+                  })
+                : vscode.l10n.t({
+                      message: "Enter the password for the {0} connection. Leave blank to cancel.",
+                      args: [profilename],
+                      comment: ["Profile name"],
+                  }),
         };
 
         let mProfileInfo: imperative.ProfileInfo;

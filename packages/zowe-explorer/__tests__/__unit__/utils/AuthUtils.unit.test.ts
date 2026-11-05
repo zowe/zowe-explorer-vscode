@@ -1515,6 +1515,56 @@ describe("AuthUtils", () => {
             expect(mockSessionNode.tooltip).toContain("User: testUser");
             expect(mockSessionNode.tooltip).toContain("Path: /test/path");
         });
+
+        describe("authOrder with no resolved credential type", () => {
+            const createSessionNode = (): ZoweUSSNode => {
+                const node = new ZoweUSSNode({
+                    label: "sestest",
+                    collapsibleState: TreeItemCollapsibleState.Collapsed,
+                    contextOverride: Constants.USS_SESSION_CONTEXT,
+                    parentNode: undefined,
+                    session: createISession(),
+                    profile: mockProfile,
+                });
+                node.fullPath = "/test/path";
+                return node;
+            };
+
+            beforeEach(() => {
+                vi.spyOn(imperative.AuthOrder, "addCredsToSession").mockImplementation((() => undefined) as any);
+            });
+
+            it.each([imperative.SessConstants.AUTH_TYPE_TOKEN, imperative.SessConstants.AUTH_TYPE_BEARER])(
+                "should show token-based authentication when authOrder starts with %s",
+                (authType) => {
+                    vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({
+                        ISession: { type: undefined, authTypeOrder: [authType, "basic"] },
+                    } as any);
+                    const mockSessionNode = createSessionNode();
+
+                    AuthUtils.updateNodeToolTip(mockSessionNode, mockProfile);
+                    expect(mockSessionNode.tooltip).toContain("Auth Method: Token-based Authentication");
+                }
+            );
+
+            it("should show unknown authentication when authOrder starts with basic", () => {
+                vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({
+                    ISession: { type: undefined, authTypeOrder: ["basic", "token"] },
+                } as any);
+                const mockSessionNode = createSessionNode();
+
+                AuthUtils.updateNodeToolTip(mockSessionNode, mockProfile);
+                expect(mockSessionNode.tooltip).toContain("Auth Method: Unknown");
+            });
+
+            it("should show unknown authentication when authOrder is not defined", () => {
+                vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: undefined } } as any);
+                const mockSessionNode = createSessionNode();
+
+                AuthUtils.updateNodeToolTip(mockSessionNode, mockProfile);
+                expect(mockSessionNode.tooltip).toContain("Auth Method: Unknown");
+            });
+        });
     });
 
     describe("errorHandling", () => {
