@@ -6,11 +6,13 @@ on:
       - packages/zowe-explorer-ftp-extension/**
       - packages/zowe-explorer-api/**
       - .github/workflows/zowe-explorer-ftp-ci.yml
+      - yarn.lock
   pull_request:
     paths:
       - packages/zowe-explorer-ftp-extension/**
       - packages/zowe-explorer-api/**
       - .github/workflows/zowe-explorer-ftp-ci.yml 
+      - yarn.lock
 
 jobs:
   zftp-build:

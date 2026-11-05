@@ -6,11 +6,13 @@ on:
       - packages/zowe-explorer/**
       - packages/zowe-explorer-api/**
       - .github/workflows/zowe-explorer-ci.yml
+      - yarn.lock
   pull_request:
     paths:
       - packages/zowe-explorer/**
       - packages/zowe-explorer-api/**
       - .github/workflows/zowe-explorer-ci.yml
+      - yarn.lock
 
 jobs:
   ze-build:
