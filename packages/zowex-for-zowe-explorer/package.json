@@ -39,7 +39,7 @@
   "dependencies": {
     "@zowe/core-for-zowe-sdk": "^8.41.0",
     "@zowe/zowe-explorer-api": "workspace:*",
-    "@zowe/zowex-for-zowe-sdk": "^1.0.2",
+    "@zowe/zowex-for-zowe-sdk": "^1.1.0",
     "ssh2": "^1.17.0"
   },
   "devDependencies": {
