@@ -55,14 +55,14 @@ jobs:
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
-        if: matrix.os == 'ubuntu-22.04' && matrix.node-version == '16.x'
+        if: matrix.os == 'ubuntu-22.04' && matrix.node-version == '22.x'
         with:
           name: zowe-explorer-results
           path: packages/zowe-explorer/results/
 
       - name: Upload API test results
         uses: actions/upload-artifact@v4
-        if: matrix.os == 'ubuntu-22.04' && matrix.node-version == '16.x'
+        if: matrix.os == 'ubuntu-22.04' && matrix.node-version == '22.x'
         with:
           name: zowe-explorer-api-results
           path: packages/zowe-explorer-api/results/
@@ -74,12 +74,12 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Package VSIX
-        if: matrix.os == 'ubuntu-22.04' && matrix.node-version == '16.x'
+        if: matrix.os == 'ubuntu-22.04' && matrix.node-version == '22.x'
         run: yarn package
         working-directory: packages/zowe-explorer
 
       - name: Archive VSIX artifact
-        if: matrix.os == 'ubuntu-22.04' && matrix.node-version == '16.x'
+        if: matrix.os == 'ubuntu-22.04' && matrix.node-version == '22.x'
         uses: actions/upload-artifact@v4
         with:
           name: zowe-explorer-vsix
