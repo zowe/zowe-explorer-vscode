@@ -62,16 +62,11 @@ export class ConfigRedactManagement {
     ];
 
     /**
-     * Accessibility: the native folder dialog returns focus to the window right before the result toast is shown.
-     * Screen readers (e.g. VoiceOver) are busy announcing that focus change, so a toast shown immediately can be
-     * dropped or interrupted. Waiting briefly lets the toast be announced automatically without moving focus.
+     * Accessibility: toast notifications do not take focus, so screen readers (e.g. VoiceOver) do not announce them
+     * until the user navigates to them. Result messages are shown as modal dialogs instead, which take focus
+     * and are announced automatically.
      */
-    // eslint-disable-next-line no-magic-numbers
-    private static readonly TOAST_ANNOUNCE_DELAY_MS = 500;
-
-    private static async waitForScreenReader(): Promise<void> {
-        await new Promise<void>((resolve) => setTimeout(resolve, ConfigRedactManagement.TOAST_ANNOUNCE_DELAY_MS));
-    }
+    private static readonly modalOpts = { modal: true };
 
     public static async exportRedactedConfig(): Promise<void> {
         ZoweLogger.trace("ConfigRedactManagement.exportRedactedConfig called.");
@@ -88,12 +83,13 @@ export class ConfigRedactManagement {
         try {
             const teamConfig = (await Profiles.getInstance().getProfileInfo()).getTeamConfig();
             const exportedFiles = teamConfig.api.redact.exportToDirectory(dir.fsPath, opts);
-            await ConfigRedactManagement.waitForScreenReader();
             if (exportedFiles.length === 0) {
-                Gui.infoMessage(vscode.l10n.t("No configuration files were found to export."));
+                await Gui.infoMessage(vscode.l10n.t("No configuration files were found to export."), {
+                    vsCodeOpts: ConfigRedactManagement.modalOpts,
+                });
                 return;
             }
-            // Keep the toast to a single short line for screen readers; the export location is written to the log instead.
+            // Keep the message to a single short line for screen readers; the export location is written to the log instead.
             ZoweLogger.info(
                 vscode.l10n.t({
                     message: "Exported {0} redacted configuration file(s) to {1}",
@@ -101,25 +97,28 @@ export class ConfigRedactManagement {
                     comment: ["Number of files exported", "Export directory"],
                 })
             );
-            const openFolder = await Gui.infoMessage(
+            // An explicit close item replaces the default "Cancel" button, which is not meaningful for an informational message.
+            const openFolderItem: vscode.MessageItem = { title: vscode.l10n.t("Open Folder") };
+            const closeItem: vscode.MessageItem = { title: vscode.l10n.t("Close"), isCloseAffordance: true };
+            const selection = await Gui.infoMessage(
                 vscode.l10n.t({
                     message: "Exported {0} redacted configuration file(s). Always review the exported files before sharing them.",
                     args: [exportedFiles.length],
                     comment: ["Number of files exported"],
                 }),
-                { items: [vscode.l10n.t("Open Folder")] }
+                { items: [openFolderItem, closeItem], vsCodeOpts: ConfigRedactManagement.modalOpts }
             );
-            if (openFolder === vscode.l10n.t("Open Folder")) {
+            if (selection?.title === openFolderItem.title) {
                 await vscode.env.openExternal(dir);
             }
         } catch (err) {
-            await ConfigRedactManagement.waitForScreenReader();
             await Gui.errorMessage(
                 vscode.l10n.t({
                     message: "Failed to export redacted configuration: {0}",
                     args: [errorMessage(err)],
                     comment: ["Error message"],
-                })
+                }),
+                { vsCodeOpts: ConfigRedactManagement.modalOpts }
             );
         }
     }

@@ -40,7 +40,6 @@ describe("ConfigRedactManagement unit tests", () => {
         });
 
         return {
-            waitForScreenReaderSpy: vi.spyOn(ConfigRedactManagement as any, "waitForScreenReader").mockResolvedValue(undefined),
             exportedFiles,
             exportToDirectory,
             dirUri,
@@ -104,8 +103,10 @@ describe("ConfigRedactManagement unit tests", () => {
                     showHostPath: false,
                 })
             );
-            expect(mocks.waitForScreenReaderSpy).toHaveBeenCalledTimes(1);
-            expect(mocks.infoMessageSpy).toHaveBeenCalled();
+            expect(mocks.infoMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Exported 1 redacted configuration file(s)"), {
+                items: [{ title: "Open Folder" }, { title: "Close", isCloseAffordance: true }],
+                vsCodeOpts: { modal: true },
+            });
             expect(mocks.errorMessageSpy).not.toHaveBeenCalled();
         });
 
@@ -113,7 +114,7 @@ describe("ConfigRedactManagement unit tests", () => {
             const mocks = createGlobalMocks();
             mocks.showQuickPickSpy.mockResolvedValueOnce([]).mockResolvedValueOnce({ label: "browse" } as any);
             mocks.showOpenDialogSpy.mockResolvedValueOnce([mocks.dirUri]);
-            mocks.infoMessageSpy.mockResolvedValueOnce("Open Folder" as any);
+            mocks.infoMessageSpy.mockResolvedValueOnce({ title: "Open Folder" } as any);
 
             await ConfigRedactManagement.exportRedactedConfig();
 
@@ -128,7 +129,7 @@ describe("ConfigRedactManagement unit tests", () => {
 
             await ConfigRedactManagement.exportRedactedConfig();
 
-            expect(mocks.infoMessageSpy).toHaveBeenCalled();
+            expect(mocks.infoMessageSpy).toHaveBeenCalledWith("No configuration files were found to export.", { vsCodeOpts: { modal: true } });
             expect(mocks.openExternalSpy).not.toHaveBeenCalled();
         });
 
@@ -187,7 +188,7 @@ describe("ConfigRedactManagement unit tests", () => {
 
             await ConfigRedactManagement.exportRedactedConfig();
 
-            expect(mocks.errorMessageSpy).toHaveBeenCalled();
+            expect(mocks.errorMessageSpy).toHaveBeenCalledWith(expect.stringContaining("export failed"), { vsCodeOpts: { modal: true } });
             expect(mocks.infoMessageSpy).not.toHaveBeenCalled();
         });
     });
