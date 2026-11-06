@@ -15,6 +15,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### Bug fixes
 
+- Fixed SSO logout to use an explicitly selected base profile's API ML token without requiring a registered service API. [#4137](https://github.com/zowe/zowe-explorer-vscode/issues/4137)
+
 ## `3.6.1`
 
 ### New features and enhancements
