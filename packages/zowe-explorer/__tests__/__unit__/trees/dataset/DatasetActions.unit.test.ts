@@ -8973,5 +8973,141 @@ describe("Dataset Actions Unit Tests - read-only data sets", () => {
             expect(determineReplacementSpy).not.toHaveBeenCalled();
             expect((blockMocks.mvsApi as any).copyDataSetCrossLpar).not.toHaveBeenCalled();
         });
+
+        describe("a PDS whose members include read-only names", () => {
+            const pdsClipboard = (profileName: string, dataSetName: string, ...members: string[]): any[] =>
+                members.map((memberName) => ({ profileName, dataSetName, memberName, contextValue: Constants.DS_PDS_CONTEXT }));
+
+            it("does not paste a PDS into a writable PDS when one of its members would be read-only", async () => {
+                runProgress();
+                const profileName = blockMocks.imperativeProfile.name;
+                vi.spyOn(Gui, "showInputBox").mockResolvedValue("IBMUSER.JCL");
+                const determineReplacementSpy = vi.spyOn(DatasetActions, "determineReplacement");
+                const copyMemberSpy = mockMvsApi("copyDataSetMember");
+
+                await DatasetActions.copyPartitionedDatasets(
+                    pdsClipboard(profileName, "IBMUSER.SOURCE", "HELLO", "PRODJOB", "WORLD"),
+                    blockMocks.datasetSessionNode
+                );
+
+                expect(errorMessageSpy).toHaveBeenCalledWith("IBMUSER.JCL(PRODJOB) is read-only.");
+                expect(determineReplacementSpy).not.toHaveBeenCalled();
+                expect(copyMemberSpy).not.toHaveBeenCalled();
+            });
+
+            it("matches member rules regardless of the case of the copied member names", async () => {
+                runProgress();
+                vi.spyOn(Gui, "showInputBox").mockResolvedValue("ibmuser.jcl");
+                const copyMemberSpy = mockMvsApi("copyDataSetMember");
+
+                await DatasetActions.copyPartitionedDatasets(
+                    pdsClipboard(blockMocks.imperativeProfile.name, "IBMUSER.SOURCE", "prodjob"),
+                    blockMocks.datasetSessionNode
+                );
+
+                expect(errorMessageSpy).toHaveBeenCalledWith("IBMUSER.JCL(PRODJOB) is read-only.");
+                expect(copyMemberSpy).not.toHaveBeenCalled();
+            });
+
+            it("pastes a PDS whose members would all be writable", async () => {
+                runProgress();
+                vi.spyOn(Gui, "showInputBox").mockResolvedValue("IBMUSER.JCL");
+                vi.spyOn(DatasetActions, "determineReplacement").mockResolvedValue("replace");
+                const copyMemberSpy = mockMvsApi("copyDataSetMember");
+
+                await DatasetActions.copyPartitionedDatasets(
+                    pdsClipboard(blockMocks.imperativeProfile.name, "IBMUSER.SOURCE", "HELLO", "WORLD"),
+                    blockMocks.datasetSessionNode
+                );
+
+                expect(errorMessageSpy).not.toHaveBeenCalledWith(expect.stringContaining("is read-only."));
+                expect(copyMemberSpy).toHaveBeenCalledTimes(2);
+                expect(copyMemberSpy).toHaveBeenCalledWith(
+                    { dsn: "IBMUSER.SOURCE", member: "HELLO" },
+                    { dsn: "IBMUSER.JCL", member: "HELLO" },
+                    { replace: true }
+                );
+            });
+
+            it("pastes a PDS with read-only member names into a PDS without member rules", async () => {
+                runProgress();
+                vi.spyOn(Gui, "showInputBox").mockResolvedValue("IBMUSER.JCL.BACKUP");
+                vi.spyOn(DatasetActions, "determineReplacement").mockResolvedValue("replace");
+                const copyMemberSpy = mockMvsApi("copyDataSetMember");
+
+                await DatasetActions.copyPartitionedDatasets(
+                    pdsClipboard(blockMocks.imperativeProfile.name, "IBMUSER.JCL", "PRODJOB"),
+                    blockMocks.datasetSessionNode
+                );
+
+                expect(errorMessageSpy).not.toHaveBeenCalledWith(expect.stringContaining("is read-only."));
+                expect(copyMemberSpy).toHaveBeenCalledTimes(1);
+            });
+
+            it("skips a PDS with a read-only member and continues with the next PDS", async () => {
+                runProgress();
+                const profileName = blockMocks.imperativeProfile.name;
+                vi.spyOn(Gui, "showInputBox").mockResolvedValueOnce("IBMUSER.JCL").mockResolvedValueOnce("IBMUSER.COPY.JCL");
+                vi.spyOn(DatasetActions, "determineReplacement").mockResolvedValue("replace");
+                const copyMemberSpy = mockMvsApi("copyDataSetMember");
+
+                await DatasetActions.copyPartitionedDatasets(
+                    [...pdsClipboard(profileName, "IBMUSER.SOURCE", "PRODJOB"), ...pdsClipboard(profileName, "IBMUSER.CNTL", "HELLO")],
+                    blockMocks.datasetSessionNode
+                );
+
+                expect(errorMessageSpy).toHaveBeenCalledWith("IBMUSER.JCL(PRODJOB) is read-only.");
+                expect(copyMemberSpy).toHaveBeenCalledTimes(1);
+                expect(copyMemberSpy).toHaveBeenCalledWith(
+                    { dsn: "IBMUSER.CNTL", member: "HELLO" },
+                    { dsn: "IBMUSER.COPY.JCL", member: "HELLO" },
+                    { replace: true }
+                );
+            });
+
+            describe("from another profile", () => {
+                beforeEach(() => {
+                    const sshProfile = { ...blockMocks.imperativeProfile, name: "ssh" };
+                    vi.spyOn(Profiles, "getInstance").mockReturnValue({ allProfiles: [blockMocks.imperativeProfile, sshProfile] } as any);
+                    runProgress();
+                    vi.spyOn(Gui, "showInputBox").mockResolvedValue("IBMUSER.JCL");
+                });
+
+                it("does not copy the PDS across systems when one of its members would be read-only", async () => {
+                    const copyCrossLparSpy = mockMvsApi("copyDataSetCrossLpar");
+                    const determineReplacementSpy = vi.spyOn(DatasetActions, "determineReplacement");
+
+                    await DatasetActions.copyPartitionedDatasets(pdsClipboard("ssh", "IBMUSER.SOURCE", "HELLO", "PRODJOB"), blockMocks.datasetSessionNode);
+
+                    expect(errorMessageSpy).toHaveBeenCalledWith("IBMUSER.JCL(PRODJOB) is read-only.");
+                    expect(determineReplacementSpy).not.toHaveBeenCalled();
+                    expect(copyCrossLparSpy).not.toHaveBeenCalled();
+                });
+
+                it("does not copy any members one by one when one of them would be read-only", async () => {
+                    (blockMocks.mvsApi as any).copyDataSetCrossLpar = undefined;
+                    const createMemberSpy = mockMvsApi("createDataSetMember");
+                    const writeFileSpy = vi.spyOn(DatasetFSProvider.instance, "writeFile");
+                    const determineReplacementSpy = vi.spyOn(DatasetActions, "determineReplacement");
+
+                    await DatasetActions.copyPartitionedDatasets(pdsClipboard("ssh", "IBMUSER.SOURCE", "HELLO", "PRODJOB"), blockMocks.datasetSessionNode);
+
+                    expect(errorMessageSpy).toHaveBeenCalledWith("IBMUSER.JCL(PRODJOB) is read-only.");
+                    expect(determineReplacementSpy).not.toHaveBeenCalled();
+                    expect(createMemberSpy).not.toHaveBeenCalled();
+                    expect(writeFileSpy).not.toHaveBeenCalled();
+                });
+
+                it("copies the PDS across systems when its members would all be writable", async () => {
+                    const copyCrossLparSpy = mockMvsApi("copyDataSetCrossLpar");
+                    vi.spyOn(DatasetActions, "determineReplacement").mockResolvedValue("replace");
+
+                    await DatasetActions.copyPartitionedDatasets(pdsClipboard("ssh", "IBMUSER.SOURCE", "HELLO", "WORLD"), blockMocks.datasetSessionNode);
+
+                    expect(errorMessageSpy).not.toHaveBeenCalledWith(expect.stringContaining("is read-only."));
+                    expect(copyCrossLparSpy).toHaveBeenCalledWith("IBMUSER.JCL", undefined, expect.objectContaining({ replace: true }), expect.anything());
+                });
+            });
+        });
     });
 });

@@ -292,6 +292,22 @@ export class DatasetActions {
     }
 
     /**
+     * Shows an error if a PDS about to be pasted into, or any of the members that would be written to it, is read-only
+     * @returns true if the PDS or any of the members is read-only and the paste should stop
+     */
+    private static async isReadOnlyPdsDestination(profile: imperative.IProfileLoaded, dsName: string, members: string[] = []): Promise<boolean> {
+        if (await DatasetActions.isReadOnlyDestination(profile, dsName)) {
+            return true;
+        }
+        for (const member of members) {
+            if (await DatasetActions.isReadOnlyDestination(profile, dsName, member)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Shows an error if any of the files would be uploaded to a read-only member of the PDS
      * @returns true if a file would be uploaded to a read-only member and the upload should stop
      */
@@ -3018,7 +3034,7 @@ export class DatasetActions {
                     if (!dsname) {
                         return;
                     }
-                    if (await DatasetActions.isReadOnlyDestination(node.getProfile(), dsname)) {
+                    if (await DatasetActions.isReadOnlyPdsDestination(node.getProfile(), dsname, content.members)) {
                         continue;
                     }
                     const replace = await DatasetActions.determineReplacement(node.getProfile(), dsname, "po");
@@ -3238,7 +3254,7 @@ export class DatasetActions {
                 if (profile == null) {
                     continue;
                 }
-                if (await DatasetActions.isReadOnlyDestination(profile, dsname)) {
+                if (await DatasetActions.isReadOnlyPdsDestination(profile, dsname, type === "po" ? node.members : undefined)) {
                     continue;
                 }
                 const replace = await DatasetActions.determineReplacement(profile, dsname, type);
