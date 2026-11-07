@@ -1568,6 +1568,8 @@
     ]
   },
   "MVS data set enhancements": "MVS data set enhancements",
+  "Making {0} read-only...": "Making {0} read-only...",
+  "Making {0} writable...": "Making {0} writable...",
   "Manage Persistent Properties": "Manage Persistent Properties",
   "Manage Saved Data": "Manage Saved Data",
   "Many issues have been addressed to allow screen readers to better navigate and use Zowe Explorer features.": "Many issues have been addressed to allow screen readers to better navigate and use Zowe Explorer features.",
@@ -2705,6 +2707,8 @@
       "Like Data Set name"
     ]
   },
+  "{0} was not deleted because some of its contents could not be moved.": "{0} was not deleted because some of its contents could not be moved.",
+  "{0} was not deleted because some of its members could not be moved.": "{0} was not deleted because some of its members could not be moved.",
   "{0} {1}": "{0} {1}",
   "{0}. Or select a profile to add to the DATA SETS tree./Instruction for add profile quick pick": {
     "message": "{0}. Or select a profile to add to the DATA SETS tree.",

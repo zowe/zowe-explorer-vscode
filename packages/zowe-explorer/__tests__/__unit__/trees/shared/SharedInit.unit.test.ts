@@ -360,11 +360,11 @@ describe("Test src/shared/extension", () => {
             },
             {
                 name: "zowe.readOnly.makeReadOnly",
-                mock: [{ spy: vi.spyOn(SharedActions, "toggleNodeReadOnly"), arg: [test.value, true] }],
+                mock: [{ spy: vi.spyOn(SharedActions, "toggleReadOnly"), arg: [test.value, true] }],
             },
             {
                 name: "zowe.readOnly.makeReadWrite",
-                mock: [{ spy: vi.spyOn(SharedActions, "toggleNodeReadOnly"), arg: [test.value, false] }],
+                mock: [{ spy: vi.spyOn(SharedActions, "toggleReadOnly"), arg: [test.value, false] }],
             },
             {
                 name: "zowe.compareWithSelectedReadOnly",

@@ -506,13 +506,13 @@ export class SharedInit {
                 })
             );
             context.subscriptions.push(
-                vscode.commands.registerCommand("zowe.readOnly.makeReadOnly", async (node: IZoweTreeNode) =>
-                    SharedActions.toggleNodeReadOnly(node, true)
+                vscode.commands.registerCommand("zowe.readOnly.makeReadOnly", async (target: IZoweTreeNode | vscode.Uri) =>
+                    SharedActions.toggleReadOnly(target, true)
                 )
             );
             context.subscriptions.push(
-                vscode.commands.registerCommand("zowe.readOnly.makeReadWrite", async (node: IZoweTreeNode) =>
-                    SharedActions.toggleNodeReadOnly(node, false)
+                vscode.commands.registerCommand("zowe.readOnly.makeReadWrite", async (target: IZoweTreeNode | vscode.Uri) =>
+                    SharedActions.toggleReadOnly(target, false)
                 )
             );
 

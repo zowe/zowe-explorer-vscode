@@ -772,12 +772,14 @@
       {
         "command": "zowe.readOnly.makeReadOnly",
         "title": "%readOnly.makeReadOnly%",
-        "category": "Zowe Explorer"
+        "category": "Zowe Explorer",
+        "icon": "$(lock)"
       },
       {
         "command": "zowe.readOnly.makeReadWrite",
         "title": "%readOnly.makeReadWrite%",
-        "category": "Zowe Explorer"
+        "category": "Zowe Explorer",
+        "icon": "$(unlock)"
       },
       {
         "command": "zowe.diff.useLocalContent",
@@ -845,6 +847,16 @@
         }
       ],
       "editor/title": [
+        {
+          "command": "zowe.readOnly.makeReadOnly",
+          "group": "navigation",
+          "when": "resourceScheme =~ /^zowe-(ds|uss)$/ && !(resource =~ /readonly(=|%3D)true/) && !activeEditorIsReadonly && !isInDiffEditor"
+        },
+        {
+          "command": "zowe.readOnly.makeReadWrite",
+          "group": "navigation",
+          "when": "resourceScheme =~ /^zowe-(ds|uss)$/ && !(resource =~ /readonly(=|%3D)true/) && activeEditorIsReadonly && !isInDiffEditor"
+        },
         {
           "command": "zowe.diff.useLocalContent",
           "group": "navigation@0",
@@ -1824,11 +1836,11 @@
         },
         {
           "command": "zowe.readOnly.makeReadOnly",
-          "when": "never"
+          "when": "resourceScheme =~ /^zowe-(ds|uss)$/ && !(resource =~ /readonly(=|%3D)true/) && !activeEditorIsReadonly"
         },
         {
           "command": "zowe.readOnly.makeReadWrite",
-          "when": "never"
+          "when": "resourceScheme =~ /^zowe-(ds|uss)$/ && !(resource =~ /readonly(=|%3D)true/) && activeEditorIsReadonly"
         },
         {
           "command": "zowe.jobs.cancelJob",
