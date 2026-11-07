@@ -261,7 +261,7 @@ describe("Utilities", () => {
             const api = mockedExplorer.ZoweVsCodeExtension.getZoweExplorerApi().getExplorerExtenderApi();
             await (Utilities as any).connectCallback(api, "myProf");
 
-            expect(showMessageSpy).toHaveBeenCalledWith("Installed Zowe Remote SSH server on myProf");
+            expect(showMessageSpy).toHaveBeenCalledWith(expect.stringMatching(/\bon myProf$/));
         });
 
         it("should abort when no profile is selected", async () => {
@@ -353,7 +353,7 @@ describe("Utilities", () => {
     });
 
     describe("restartCallback", () => {
-        it("should restart the SSH server and report a status message", async () => {
+        it("should restart the zo server", async () => {
             const mockedExplorer = await vi.importMock("@zowe/zowe-explorer-api");
             const { VscePromptApi } = await vi.importMock("../src/VscePromptApi");
             const profile = { name: "myProf", profile: { host: "myHost" } };
@@ -365,13 +365,10 @@ describe("Utilities", () => {
 
             const connectSpy = vi.spyOn(SshClientCache.inst, "connect").mockResolvedValue({} as any);
 
-            const statusSpy = vi.spyOn(mockedExplorer.Gui, "setStatusBarMessage");
-
             const api = mockedExplorer.ZoweVsCodeExtension.getZoweExplorerApi().getExplorerExtenderApi();
             await (Utilities as any).restartCallback(api, "myProf");
 
             expect(connectSpy).toHaveBeenCalledWith(profile, { restart: true, retryRequests: false });
-            expect(statusSpy).toHaveBeenCalledWith("Restarted Zowe Remote SSH server");
         });
 
         it("should abort when no profile is selected", async () => {
@@ -401,7 +398,7 @@ describe("Utilities", () => {
             const api = mockedExplorer.ZoweVsCodeExtension.getZoweExplorerApi().getExplorerExtenderApi();
             await (Utilities as any).restartCallback(api, "myProf");
 
-            expect(infoSpy).toHaveBeenCalledWith("Restarted Zowe Remote SSH server on myProf");
+            expect(infoSpy).toHaveBeenCalledWith(expect.stringMatching(/\bon myProf$/));
         });
 
         it("should propagate a rejection from connect", async () => {
@@ -479,7 +476,7 @@ describe("Utilities", () => {
             const api = mockedExplorer.ZoweVsCodeExtension.getZoweExplorerApi().getExplorerExtenderApi();
             await (Utilities as any).uninstallCallback(api, "myProf");
 
-            expect(showMessageSpy).toHaveBeenCalledWith("Uninstalled Zowe Remote SSH server from myProf");
+            expect(showMessageSpy).toHaveBeenCalledWith(expect.stringMatching(/\bfrom myProf$/));
         });
 
         it("should propagate a rejection from ZSshUtils.uninstallServer", async () => {

@@ -196,6 +196,13 @@ export class Profiles extends ProfilesCache {
                 usingCertAuth = true;
                 break;
         }
+        // addCredsToSession resolves type from available credentials only, so honor the user's token/bearer intent when none are present
+        if (!usingBasicAuth && !usingTokenAuth && !usingCertAuth) {
+            const firstInOrder = iSessFromProf.authTypeOrder?.[0];
+            if (firstInOrder === imperative.SessConstants.AUTH_TYPE_TOKEN || firstInOrder === imperative.SessConstants.AUTH_TYPE_BEARER) {
+                usingTokenAuth = true;
+            }
+        }
 
         let tokenType: string;
         try {
@@ -625,6 +632,12 @@ export class Profiles extends ProfilesCache {
             const filePath = currentProfile.profLoc.osLoc[0];
             await this.openConfigFile(filePath);
         } else if (chosenProfile) {
+            const addToAllTrees = await Profiles.handleChangeForAllTrees(chosenProfile, true);
+            if (addToAllTrees === undefined) {
+                ZoweLogger.debug(debugMsg);
+                Gui.showMessage(debugMsg);
+                return;
+            }
             ZoweLogger.info(
                 vscode.l10n.t({
                     message: `The profile {0} has been added to the {1} tree.`,
@@ -632,10 +645,7 @@ export class Profiles extends ProfilesCache {
                     comment: ["chosen profile", "tree type"],
                 })
             );
-            await zoweFileProvider.addSession({
-                sessionName: chosenProfile,
-                addToAllTrees: await Profiles.handleChangeForAllTrees(chosenProfile, true),
-            });
+            await zoweFileProvider.addSession({ sessionName: chosenProfile, addToAllTrees });
         } else {
             ZoweLogger.debug(debugMsg);
         }
