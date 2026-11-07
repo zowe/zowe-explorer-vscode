@@ -590,14 +590,12 @@ export class ProfilesUtils {
             password: true,
             ignoreFocusOut: true,
             placeHolder: vscode.l10n.t("New Password"),
-            validateInput: validatePassword,
+            validateInput: (value) =>
+                validatePassword(value) ??
+                (value === currentPassword ? vscode.l10n.t("New password cannot be the same as the current password") : null),
         });
         if (!newPassword) {
             Gui.infoMessage(vscode.l10n.t("Operation cancelled"));
-            return;
-        }
-        if (currentPassword === newPassword) {
-            Gui.errorMessage(vscode.l10n.t("New password cannot be the same as old password. Password was not changed."));
             return;
         }
 
@@ -606,14 +604,10 @@ export class ProfilesUtils {
             password: true,
             ignoreFocusOut: true,
             placeHolder: vscode.l10n.t("Confirm New Password"),
-            validateInput: validatePassword,
+            validateInput: (value) => validatePassword(value) ?? (value !== newPassword ? vscode.l10n.t("Passwords do not match") : null),
         });
         if (!confirmPassword) {
             Gui.infoMessage(vscode.l10n.t("Operation cancelled"));
-            return;
-        }
-        if (newPassword !== confirmPassword) {
-            Gui.errorMessage(vscode.l10n.t("Passwords do not match. Password was not changed."));
             return;
         }
 

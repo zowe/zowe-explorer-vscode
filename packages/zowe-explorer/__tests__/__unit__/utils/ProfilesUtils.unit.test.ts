@@ -1840,9 +1840,35 @@ describe("ProfilesUtils unit tests", () => {
             await ProfilesUtils.changePassword(mocks.mockNode);
             for (const [options] of mocks.showInputBoxSpy.mock.calls.slice(1)) {
                 expect(options.validateInput("")).toBe("Password cannot be empty");
-                expect(options.validateInput("p4ssw0rd")).toBeNull();
             }
             expect(mocks.showInputBoxSpy).toHaveBeenCalledTimes(4);
+        });
+
+        it("should reject a new password that matches the current password in the input box", async () => {
+            const mocks = createChangePasswordMocks();
+            mocks.showInputBoxSpy
+                .mockResolvedValueOnce("IBMUSER") // user name
+                .mockResolvedValueOnce("oldPass1") // current password
+                .mockResolvedValueOnce(undefined); // new password cancelled
+            await ProfilesUtils.changePassword(mocks.mockNode);
+            const { validateInput } = mocks.showInputBoxSpy.mock.calls[2][0];
+            expect(validateInput("oldPass1")).toBe("New password cannot be the same as the current password");
+            expect(validateInput("OLDPASS1")).toBeNull();
+            expect(validateInput("newPass456")).toBeNull();
+        });
+
+        it("should reject a confirm password that does not match the new password in the input box", async () => {
+            const mocks = createChangePasswordMocks();
+            mocks.showInputBoxSpy
+                .mockResolvedValueOnce("IBMUSER") // user name
+                .mockResolvedValueOnce("oldPass1") // current password
+                .mockResolvedValueOnce("newPass456") // new password
+                .mockResolvedValueOnce(undefined); // confirm cancelled
+            await ProfilesUtils.changePassword(mocks.mockNode);
+            const { validateInput } = mocks.showInputBoxSpy.mock.calls[3][0];
+            expect(validateInput("differentPass")).toBe("Passwords do not match");
+            expect(validateInput("NEWPASS456")).toBe("Passwords do not match");
+            expect(validateInput("newPass456")).toBeNull();
         });
 
         it("should build a separate session from the entered credentials for the request", async () => {
@@ -1900,16 +1926,6 @@ describe("ProfilesUtils unit tests", () => {
             expect(mocks.changePasswordFn).not.toHaveBeenCalled();
         });
 
-        it("should show error if old password and new password are the same", async () => {
-            const mocks = createChangePasswordMocks();
-            mocks.showInputBoxSpy
-                .mockResolvedValueOnce("IBMUSER") // user name
-                .mockResolvedValueOnce("oldPass1") // old password
-                .mockResolvedValueOnce("oldPass1"); // new password
-            await ProfilesUtils.changePassword(mocks.mockNode);
-            expect(mocks.errorMessageSpy).toHaveBeenCalledWith(expect.stringContaining("New password cannot be the same as old password"));
-        });
-
         it("should cancel if confirm password input is dismissed", async () => {
             const mocks = createChangePasswordMocks();
             mocks.showInputBoxSpy
@@ -1919,18 +1935,6 @@ describe("ProfilesUtils unit tests", () => {
                 .mockResolvedValueOnce(undefined); // confirm cancelled
             await ProfilesUtils.changePassword(mocks.mockNode);
             expect(mocks.infoMessageSpy).toHaveBeenCalledWith("Operation cancelled");
-            expect(mocks.changePasswordFn).not.toHaveBeenCalled();
-        });
-
-        it("should show error if new password and confirm password do not match", async () => {
-            const mocks = createChangePasswordMocks();
-            mocks.showInputBoxSpy
-                .mockResolvedValueOnce("IBMUSER") // user name
-                .mockResolvedValueOnce("oldPass1") // old password
-                .mockResolvedValueOnce("newPass456") // new password
-                .mockResolvedValueOnce("differentPass"); // confirm mismatch
-            await ProfilesUtils.changePassword(mocks.mockNode);
-            expect(mocks.errorMessageSpy).toHaveBeenCalledWith("Passwords do not match. Password was not changed.");
             expect(mocks.changePasswordFn).not.toHaveBeenCalled();
         });
 
