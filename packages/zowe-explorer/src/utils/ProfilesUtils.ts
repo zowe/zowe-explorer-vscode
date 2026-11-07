@@ -617,7 +617,24 @@ export class ProfilesUtils {
             return;
         }
 
+        let profInfo: imperative.ProfileInfo;
+        let shouldSave = true;
         try {
+            profInfo = await Constants.PROFILES_CACHE.getProfileInfo();
+            if (!profInfo.isSecured() && profInfo.getTeamConfig().properties.autoStore) {
+                const saveButton = vscode.l10n.t("Save Credentials");
+                const selection = await Gui.showMessage(
+                    vscode.l10n.t({
+                        message:
+                            "Save entered credentials in plain text for future use with profile {0}?\nSaving credentials will update the local configuration file.",
+                        args: [profile.name],
+                        comment: ["Profile name"],
+                    }),
+                    { items: [saveButton], vsCodeOpts: { modal: true } }
+                );
+                shouldSave = selection === saveButton;
+            }
+
             // Build a new session from the entered credentials
             const changeSession = commonApi.getSession({ ...profile, profile: { ...profile.profile, user, password: currentPassword } });
             if (!changeSession) {
@@ -640,12 +657,13 @@ export class ProfilesUtils {
 
         // Update the locally stored credentials with the new password
         try {
-            const profInfo = await Constants.PROFILES_CACHE.getProfileInfo();
-            const upd = { profileName: profile.name, profileType: profile.type, setSecure: profInfo.isSecured() };
-            if (user !== profile.profile.user) {
-                await profInfo.updateProperty({ ...upd, property: "user", value: user });
+            if (shouldSave) {
+                const upd = { profileName: profile.name, profileType: profile.type, setSecure: profInfo.isSecured() };
+                if (user !== profile.profile.user) {
+                    await profInfo.updateProperty({ ...upd, property: "user", value: user });
+                }
+                await profInfo.updateProperty({ ...upd, property: "password", value: newPassword });
             }
-            await profInfo.updateProperty({ ...upd, property: "password", value: newPassword });
             profile.profile.user = user;
             profile.profile.password = newPassword;
 

@@ -1962,12 +1962,33 @@ describe("ProfilesUtils unit tests", () => {
                 .mockResolvedValueOnce("newPass456") // new password
                 .mockResolvedValueOnce("newPass456"); // confirm
             new MockedProperty(Constants, "PROFILES_CACHE", {
-                value: { getProfileInfo: vi.fn().mockRejectedValue(new Error("Disk write error")) },
+                value: {
+                    getProfileInfo: vi.fn().mockResolvedValue({
+                        isSecured: vi.fn().mockReturnValue(true),
+                        updateProperty: vi.fn().mockRejectedValue(new Error("Disk write error")),
+                    }),
+                },
                 configurable: true,
             });
             await ProfilesUtils.changePassword(mocks.mockNode);
             expect(mocks.changePasswordFn).toHaveBeenCalledWith(mocks.fakeSession, "newPass456");
             expect(mocks.warningMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Password changed on the server but failed"));
+        });
+
+        it("should not change the password if the profile configuration cannot be loaded", async () => {
+            const mocks = createChangePasswordMocks();
+            mocks.showInputBoxSpy
+                .mockResolvedValueOnce("IBMUSER") // user name
+                .mockResolvedValueOnce("oldPass1") // old password
+                .mockResolvedValueOnce("newPass456") // new password
+                .mockResolvedValueOnce("newPass456"); // confirm
+            new MockedProperty(Constants, "PROFILES_CACHE", {
+                value: { getProfileInfo: vi.fn().mockRejectedValue(new Error("Config read error")) },
+                configurable: true,
+            });
+            await ProfilesUtils.changePassword(mocks.mockNode);
+            expect(mocks.changePasswordFn).not.toHaveBeenCalled();
+            expect(mocks.errorMessageSpy).toHaveBeenCalledWith(expect.stringContaining("Failed to change password: Config read error"));
         });
 
         function mockSuccessfulLocalUpdate() {
@@ -2026,6 +2047,49 @@ describe("ProfilesUtils unit tests", () => {
             await ProfilesUtils.changePassword(mocks.mockNode);
             expect(mockProfInfo.updateProperty).toHaveBeenCalledWith(expect.objectContaining({ property: "user", value: "NEWUSER" }));
             expect(mocks.fakeProfile.profile.user).toBe("NEWUSER");
+        });
+
+        describe("when secure credentials are disabled", () => {
+            function setUpUnsecured(autoStore: boolean) {
+                const mocks = createChangePasswordMocks();
+                mocks.showInputBoxSpy
+                    .mockResolvedValueOnce("IBMUSER") // user name
+                    .mockResolvedValueOnce("oldPass1") // current password
+                    .mockResolvedValueOnce("newPass456") // new password
+                    .mockResolvedValueOnce("newPass456"); // confirm
+                const { mockProfInfo } = mockSuccessfulLocalUpdate();
+                mockProfInfo.isSecured.mockReturnValue(false);
+                Object.assign(mockProfInfo, { getTeamConfig: vi.fn().mockReturnValue({ properties: { autoStore } }) });
+                return { mocks, mockProfInfo };
+            }
+
+            it("should save the credentials in plain text once the user agrees", async () => {
+                const { mocks, mockProfInfo } = setUpUnsecured(true);
+                mocks.showMessageSpy.mockResolvedValueOnce("Save Credentials");
+                await ProfilesUtils.changePassword(mocks.mockNode);
+                expect(mocks.showMessageSpy.mock.calls[0][0]).toContain("Save entered credentials in plain text");
+                expect(mocks.showMessageSpy.mock.invocationCallOrder[0]).toBeLessThan(mocks.changePasswordFn.mock.invocationCallOrder[0]);
+                expect(mockProfInfo.updateProperty).toHaveBeenCalledWith(
+                    expect.objectContaining({ property: "password", value: "newPass456", setSecure: false })
+                );
+            });
+
+            it("should not save the credentials if the user dismisses the prompt, but still use them for this session", async () => {
+                const { mocks, mockProfInfo } = setUpUnsecured(true);
+                mocks.showMessageSpy.mockResolvedValueOnce(undefined);
+                await ProfilesUtils.changePassword(mocks.mockNode);
+                expect(mockProfInfo.updateProperty).not.toHaveBeenCalled();
+                expect(mocks.fakeProfile.profile.password).toBe("newPass456");
+                expect(mocks.unlockProfileSpy).toHaveBeenCalledWith(mocks.fakeProfile, true);
+                expect(mocks.showMessageSpy).toHaveBeenLastCalledWith("Password for testProfile was successfully changed");
+            });
+
+            it("should not prompt when autoStore is disabled", async () => {
+                const { mocks } = setUpUnsecured(false);
+                await ProfilesUtils.changePassword(mocks.mockNode);
+                expect(mocks.showMessageSpy).toHaveBeenCalledTimes(1);
+                expect(mocks.showMessageSpy).toHaveBeenCalledWith("Password for testProfile was successfully changed");
+            });
         });
     });
 });
