@@ -2819,6 +2819,76 @@ describe("USSTree.handleDrop - blocking behavior", () => {
             writeFileMock.mockRestore();
             ussApiMock.mockRestore();
         });
+
+        describe("when a file in a directory fails to move", () => {
+            let globalMocks: Awaited<ReturnType<typeof createGlobalMocks>>;
+            let ussDirNode: IZoweUSSTreeNode;
+            let deleteMock: MockInstance;
+            const destUri = (): vscode.Uri => ussDirNode.resourceUri.with({ path: "/sestest/u/myuser/subfolder/usstest" });
+
+            beforeEach(async () => {
+                globalMocks = await createGlobalMocks();
+                ussDirNode = createUSSNode(globalMocks.testSession, globalMocks.testProfile);
+                ussDirNode.children = ["hello.txt", "config.txt", "world.txt"].map(
+                    (label) => new ZoweUSSNode({ label, collapsibleState: vscode.TreeItemCollapsibleState.None, profile: ussDirNode.getProfile() })
+                );
+                ussDirNode.dirty = false;
+                deleteMock = vi.spyOn(vscode.workspace.fs, "delete").mockResolvedValue(undefined);
+                vi.spyOn(UssFSProvider.instance, "readFile").mockResolvedValue(new Uint8Array([1, 2, 3]));
+                vi.spyOn(UssFSProvider.instance, "exists").mockReturnValue(true);
+                vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue({ create: vi.fn() } as any);
+                vi.spyOn(Gui, "errorMessage").mockResolvedValue(undefined);
+            });
+
+            afterEach(() => {
+                vi.restoreAllMocks();
+            });
+
+            it("keeps the source directory", async () => {
+                const writeFileMock = vi.spyOn(UssFSProvider.instance, "writeFile").mockImplementation(async (uri: vscode.Uri) => {
+                    if (uri.path.endsWith("/config.txt")) {
+                        throw new Error("/u/myuser/subfolder/usstest/config.txt is read-only.");
+                    }
+                });
+
+                await expect(globalMocks.testTree.crossLparMove(ussDirNode, ussDirNode.resourceUri, destUri())).resolves.toBe(false);
+
+                // The other files are still moved, but the directory holding the file that failed is not deleted
+                expect(writeFileMock).toHaveBeenCalledTimes(3);
+                expect(deleteMock).not.toHaveBeenCalled();
+                expect(Gui.errorMessage).toHaveBeenCalledWith(expect.stringContaining("was not deleted because some of its contents could not be moved."));
+            });
+
+            it("keeps every directory above a nested file that failed to move", async () => {
+                const subDir = new ZoweUSSNode({
+                    label: "cobol",
+                    collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                    profile: ussDirNode.getProfile(),
+                    contextOverride: Constants.USS_DIR_CONTEXT,
+                });
+                const nestedFile = new ZoweUSSNode({
+                    label: "hello.cbl",
+                    collapsibleState: vscode.TreeItemCollapsibleState.None,
+                    profile: ussDirNode.getProfile(),
+                });
+                vi.spyOn(subDir, "getChildren").mockResolvedValue([nestedFile]);
+                ussDirNode.children = [subDir];
+                vi.spyOn(UssFSProvider.instance, "writeFile").mockRejectedValue(new Error("is read-only."));
+
+                await expect(globalMocks.testTree.crossLparMove(ussDirNode, ussDirNode.resourceUri, destUri())).resolves.toBe(false);
+
+                expect(deleteMock).not.toHaveBeenCalled();
+            });
+
+            it("deletes the source directory once everything has moved", async () => {
+                vi.spyOn(UssFSProvider.instance, "writeFile").mockResolvedValue(undefined);
+
+                await expect(globalMocks.testTree.crossLparMove(ussDirNode, ussDirNode.resourceUri, destUri())).resolves.toBe(true);
+
+                expect(deleteMock).toHaveBeenCalledTimes(1);
+                expect(deleteMock).toHaveBeenCalledWith(ussDirNode.resourceUri, { recursive: true });
+            });
+        });
     });
 });
 

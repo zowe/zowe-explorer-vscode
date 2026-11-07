@@ -98,7 +98,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         dataTransfer.set("application/vnd.code.tree.zowe.uss.explorer", new vscode.DataTransferItem(items));
     }
 
-    private async crossLparMove(sourceNode: IZoweUSSTreeNode, sourceUri: vscode.Uri, destUri: vscode.Uri, recursiveCall?: boolean): Promise<void> {
+    private async crossLparMove(sourceNode: IZoweUSSTreeNode, sourceUri: vscode.Uri, destUri: vscode.Uri, recursiveCall?: boolean): Promise<boolean> {
         const destinationInfo = FsAbstractUtils.getInfoForUri(destUri, Profiles.getInstance());
 
         if (SharedContext.isUssDirectory(sourceNode)) {
@@ -116,9 +116,10 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 UssFSProvider.instance.createDirectory(destUri);
             }
             const children = await sourceNode.getChildren();
+            let allMoved = true;
             for (const childNode of children) {
                 // move any files within the folder to the destination
-                await this.crossLparMove(
+                const moved = await this.crossLparMove(
                     childNode,
                     sourceUri.with({
                         path: path.posix.join(sourceUri.path, childNode.label as string),
@@ -128,8 +129,20 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                     }),
                     true
                 );
+                allMoved &&= moved;
+            }
+            // Deleting the source directory would lose anything that failed to move, so keep it
+            if (!allMoved) {
+                Gui.errorMessage(
+                    vscode.l10n.t(
+                        "{0} was not deleted because some of its contents could not be moved.",
+                        sourceUri.path.substring(sourceUri.path.indexOf("/", 1))
+                    )
+                );
+                return false;
             }
             await vscode.workspace.fs.delete(sourceUri, { recursive: true });
+            return true;
         } else {
             // create a file on the remote system for writing
             try {
@@ -158,13 +171,14 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                         vscode.l10n.t("Failed to move file {0}: {1}", destUri.path.substring(destinationInfo.slashAfterProfilePos), error.message)
                     );
                 });
-                return;
+                return false;
             }
 
             if (!recursiveCall) {
                 // Delete any files from the selection on the source LPAR
                 await vscode.workspace.fs.delete(sourceNode.resourceUri, { recursive: false });
             }
+            return true;
         }
     }
 

@@ -8204,6 +8204,57 @@ describe("DatasetTree.crossLparMove", () => {
         expect(DatasetFSProvider.instance.writeFile).not.toHaveBeenCalled();
         expect(vscode.workspace.fs.delete).toHaveBeenCalledWith(srcUri, { recursive: true });
     });
+
+    describe("when a member fails to move", () => {
+        const member = (name: string): Partial<IZoweDatasetTreeNode> => ({
+            getLabel: () => name,
+            resourceUri: srcUri.with({ path: `${srcUri.path}/${name}` }),
+            contextValue: Constants.DS_MEMBER_CONTEXT,
+            getEncoding: vi.fn().mockResolvedValue({ kind: "text" }),
+            getChildren: vi.fn().mockResolvedValue([]),
+        });
+
+        beforeEach(() => {
+            vi.spyOn(SharedContext, "isPds").mockImplementation((node) => node === fakeNode);
+            fakeNode.contextValue = Constants.DS_PDS_CONTEXT;
+            fakeNode.getChildren = vi.fn().mockResolvedValue([member("HELLO"), member("PRODJOB"), member("WORLD")]);
+            vi.spyOn(DatasetFSProvider.instance, "fetchDatasetAtUri").mockResolvedValue(null);
+            vi.spyOn(Gui, "errorMessage").mockResolvedValue(undefined);
+        });
+
+        it("keeps the source PDS when writing a member fails", async () => {
+            vi.spyOn(DatasetFSProvider.instance, "writeFile").mockImplementation(async (uri: vscode.Uri) => {
+                if (uri.path.endsWith("/PRODJOB")) {
+                    throw new Error("BAR(PRODJOB) is read-only.");
+                }
+            });
+
+            await expect(tree["crossLparMove"](fakeNode, srcUri, dstUri, false)).resolves.toBe(false);
+
+            // The other members are still moved, but the PDS holding the member that failed is not deleted
+            expect(DatasetFSProvider.instance.writeFile).toHaveBeenCalledTimes(3);
+            expect(vscode.workspace.fs.delete).not.toHaveBeenCalled();
+            expect(Gui.errorMessage).toHaveBeenCalledWith("{0} was not deleted because some of its members could not be moved.");
+        });
+
+        it("keeps the source PDS when creating a member fails", async () => {
+            apiMock.createDataSetMember.mockImplementation(async (name: string) => {
+                if (name.endsWith("(PRODJOB)")) {
+                    throw new imperative.ImperativeError({ msg: "Not authorized", errorCode: "500" });
+                }
+            });
+
+            await expect(tree["crossLparMove"](fakeNode, srcUri, dstUri, false)).resolves.toBe(false);
+
+            expect(vscode.workspace.fs.delete).not.toHaveBeenCalled();
+        });
+
+        it("deletes the source PDS once every member has moved", async () => {
+            await expect(tree["crossLparMove"](fakeNode, srcUri, dstUri, false)).resolves.toBe(true);
+            expect(vscode.workspace.fs.delete).toHaveBeenCalledWith(srcUri, { recursive: true });
+            expect(vscode.workspace.fs.delete).toHaveBeenCalledTimes(1);
+        });
+    });
 });
 
 describe("syncFavoriteMigrationStatus", () => {
@@ -8468,6 +8519,78 @@ describe("Dataset Tree Unit Tests - read-only data sets", () => {
             await dropMember();
             expect(errorMessageSpy).not.toHaveBeenCalled();
             expect(overwriteSpy).toHaveBeenCalled();
+        });
+
+        describe("moving a PDS", () => {
+            let otherSession: ZoweDatasetNode;
+            let prodJob: ZoweDatasetNode;
+            const destPath = (member?: string): string => `/other/ZXP.PUBLIC.JCL${member ? `/${member}` : ""}`;
+
+            const dropPds = (): Promise<void> => {
+                draggedNodesMock[Symbol.dispose]();
+                draggedNodesMock = new MockedProperty(testTree, "draggedNodes", undefined, {
+                    [blockMocks.sourcePds.resourceUri.path]: blockMocks.sourcePds,
+                });
+                return testTree.handleDrop(
+                    otherSession,
+                    {
+                        get: vi.fn().mockReturnValueOnce({ value: [{ label: blockMocks.sourcePds.label, uri: blockMocks.sourcePds.resourceUri }] }),
+                    } as unknown as vscode.DataTransfer,
+                    undefined
+                );
+            };
+
+            beforeEach(() => {
+                otherSession = createDatasetSessionNode(blockMocks.session, { ...blockMocks.imperativeProfile, name: "other" });
+                otherSession.resourceUri = vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/other" });
+                prodJob = new ZoweDatasetNode({
+                    label: "PRODJOB",
+                    collapsibleState: vscode.TreeItemCollapsibleState.None,
+                    profile: blockMocks.datasetSessionNode.getProfile(),
+                    parentNode: blockMocks.sourcePds,
+                    contextOverride: Constants.DS_MEMBER_CONTEXT,
+                });
+                vi.spyOn(blockMocks.sourcePds, "getChildren").mockResolvedValue([blockMocks.member, prodJob]);
+            });
+
+            it("does not move a PDS when one of its members would be read-only at the destination", async () => {
+                const readOnlySpy = makeReadOnly(destPath("PRODJOB"));
+                await dropPds();
+                expect(errorMessageSpy).toHaveBeenCalledTimes(1);
+                expect(errorMessageSpy).toHaveBeenCalledWith("ZXP.PUBLIC.JCL(PRODJOB) is read-only.");
+                expect(readOnlySpy).toHaveBeenCalledWith(expect.objectContaining({ path: destPath("PRODJOB") }));
+                expect(overwriteSpy).not.toHaveBeenCalled();
+                expect(crossLparMoveSpy).not.toHaveBeenCalled();
+            });
+
+            it("does not move a writable PDS that contains a read-only member, as the move would delete it", async () => {
+                makeReadOnly(prodJob.resourceUri.path);
+                await dropPds();
+                expect(errorMessageSpy).toHaveBeenCalledWith("ZXP.PUBLIC.JCL(PRODJOB) is read-only.");
+                expect(overwriteSpy).not.toHaveBeenCalled();
+                expect(crossLparMoveSpy).not.toHaveBeenCalled();
+            });
+
+            it("ignores the placeholder shown for an empty PDS", async () => {
+                const placeholder = new ZoweDatasetNode({
+                    label: "No data sets found",
+                    collapsibleState: vscode.TreeItemCollapsibleState.None,
+                    parentNode: blockMocks.sourcePds,
+                    contextOverride: Constants.INFORMATION_CONTEXT,
+                });
+                vi.spyOn(blockMocks.sourcePds, "getChildren").mockResolvedValue([placeholder]);
+                const readOnlySpy = makeReadOnly();
+                await dropPds();
+                expect(readOnlySpy).not.toHaveBeenCalledWith(expect.objectContaining({ path: destPath("No data sets found") }));
+                expect(overwriteSpy).toHaveBeenCalled();
+            });
+
+            it("moves a PDS whose members are all writable in both places", async () => {
+                makeReadOnly();
+                await dropPds();
+                expect(errorMessageSpy).not.toHaveBeenCalled();
+                expect(overwriteSpy).toHaveBeenCalled();
+            });
         });
     });
 });
