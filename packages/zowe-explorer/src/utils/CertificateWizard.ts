@@ -15,8 +15,10 @@ import { ZoweLogger } from "../tools/ZoweLogger";
 import * as fs from "fs";
 
 export type CertWizardOpts = {
+    title?: string;
     cert?: string;
     certKey?: string;
+    profileName: string;
     dialogOpts?: vscode.OpenDialogOptions;
 };
 
@@ -28,6 +30,7 @@ export class CertificateWizard extends WebView {
     public userSubmission: DeferredPromise<{
         cert: string;
         certKey: string;
+        action: "save" | "login";
     }> = new DeferredPromise();
 
     public constructor(context: vscode.ExtensionContext, opts: CertWizardOpts) {
@@ -86,10 +89,12 @@ export class CertificateWizard extends WebView {
                     }
                 }
                 break;
-            case "submitted":
+            case "login":
+            case "save":
                 this.userSubmission.resolve({
                     cert: this.opts.cert,
                     certKey: this.opts.certKey,
+                    action: message.command, // save or login
                 });
                 return;
             case "ready":

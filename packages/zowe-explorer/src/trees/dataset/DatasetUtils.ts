@@ -127,11 +127,11 @@ export class DatasetUtils {
             const { m4date, mtime, msec }: { m4date: string; mtime?: string; msec?: string } = item;
             dsStats.createdDate = dayjs(item.c4date).toDate();
             if (mtime) {
-                const [hours, minutes] = mtime.split(":");
+                const [hours, minutes, seconds] = mtime.split(":");
                 dsStats.modifiedDate = dayjs(`${m4date} ${hours}:${minutes}`).toDate();
 
-                if (msec) {
-                    dsStats.modifiedDate.setSeconds(parseInt(msec, 10));
+                if (seconds || msec) {
+                    dsStats.modifiedDate.setSeconds(parseInt(seconds || msec, 10));
                 }
             } else {
                 dsStats.modifiedDate = dayjs(`${m4date}`).toDate();
