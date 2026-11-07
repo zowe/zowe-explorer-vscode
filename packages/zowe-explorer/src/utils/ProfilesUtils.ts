@@ -622,17 +622,7 @@ export class ProfilesUtils {
         try {
             profInfo = await Constants.PROFILES_CACHE.getProfileInfo();
             if (!profInfo.isSecured() && profInfo.getTeamConfig().properties.autoStore) {
-                const saveButton = vscode.l10n.t("Save Credentials");
-                const selection = await Gui.showMessage(
-                    vscode.l10n.t({
-                        message:
-                            "Save entered credentials in plain text for future use with profile {0}?\nSaving credentials will update the local configuration file.",
-                        args: [profile.name],
-                        comment: ["Profile name"],
-                    }),
-                    { items: [saveButton], vsCodeOpts: { modal: true } }
-                );
-                shouldSave = selection === saveButton;
+                shouldSave = await ZoweVsCodeExtension.shouldSaveInPlainTextPrompt(profile);
             }
 
             // Build a new session from the entered credentials
