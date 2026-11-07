@@ -64,6 +64,7 @@ rules:
       },
     ]
   "@typescript-eslint/explicit-member-accessibility": error
+  "@typescript-eslint/semi": [error, "always"]
 
   # There are several errors falling under these rules; resolve
   "@typescript-eslint/no-floating-promises": off
@@ -80,6 +81,7 @@ rules:
   "@typescript-eslint/no-shadow": error
   "@typescript-eslint/no-unused-expressions": error
   "@typescript-eslint/no-var-requires": warn
+
   array-callback-return: error
   # complexity:
   #   - warn

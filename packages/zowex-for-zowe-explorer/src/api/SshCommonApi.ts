@@ -11,15 +11,7 @@
 
 import { ImperativeError } from "@zowe/imperative";
 import { type SshSession, ZosUssProfile } from "@zowe/zos-uss-for-zowe-sdk";
-import {
-    AuthHandler,
-    ErrorCorrelator,
-    Gui,
-    type IAuthMethods,
-    imperative,
-    type MainframeInteraction,
-    ZoweExplorerApiType,
-} from "@zowe/zowe-explorer-api";
+import { AuthHandler, ErrorCorrelator, type IAuthMethods, imperative, type MainframeInteraction, ZoweExplorerApiType } from "@zowe/zowe-explorer-api";
 import * as vscode from "vscode";
 import { ZSshClient, ZSshUtils } from "@zowe/zowex-for-zowe-sdk";
 import { SshClientCache } from "../SshClientCache";
@@ -39,9 +31,7 @@ export class SshCommonApi implements MainframeInteraction.ICommon {
     /**
      * For a given profile, attempt get a new or existing connection status.
      *
-     * In order to keep the user informed of the fact that connecting to an SSH profile may trigger a
-     * file upload, this method will trigger a confirmation dialog to be shown for new connections,
-     * unless the user has set "zowe.confirmSshServerDeploy" to false in their VSC configuration.
+     * Deployment confirmation is handled by the client cache only when installation or updating is needed.
      *
      * @param profile - The profile to check
      * @param profileType - This API only handles ZosUssProfile.type
@@ -50,32 +40,12 @@ export class SshCommonApi implements MainframeInteraction.ICommon {
     public async getStatus(profile: imperative.IProfileLoaded, profileType?: string): Promise<string> {
         if (profileType === ZosUssProfile.type) {
             try {
-                const vsceConfig = vscode.workspace.getConfiguration("zowe");
-                const confirmSshServerDeploy = vsceConfig.get<boolean>("confirmSshServerDeploy", true);
-                if (confirmSshServerDeploy) {
-                    const connectButton = vscode.l10n.t("Connect");
-                    const connectDontAskButton = vscode.l10n.t("Connect, don't ask me again");
-
-                    const cancelButton = vscode.l10n.t("Cancel");
-                    const message = vscode.l10n.t(
-                        "Connecting with an SSH profile may deploy the SSH server to z/OS UNIX to " +
-                            "enable you to perform actions on the mainframe. Would you like to proceed with connecting?"
-                    );
-                    const selection = await Gui.showMessage(message, { items: [cancelButton, connectButton, connectDontAskButton] });
-                    if (selection === connectButton) {
-                        imperative.Logger.getAppLogger().info("User accepted the initial deployment warning");
-                    } else if (selection === connectDontAskButton) {
-                        imperative.Logger.getAppLogger().info("User accepted the initial deployment warning, and requested not to be asked again");
-                        await vsceConfig.update("confirmSshServerDeploy", false, vscode.ConfigurationTarget.Global);
-                    } else {
-                        imperative.Logger.getAppLogger().info("User declined the initial deployment warning");
-                        return "inactive";
-                    }
-                }
-
                 await SshClientCache.inst.connect(profile);
                 return "active";
             } catch (err) {
+                if (err instanceof vscode.CancellationError) {
+                    return "inactive";
+                }
                 const errorMessage = (err as Error).toString();
 
                 // Check if this is a private key authentication failure
@@ -92,6 +62,9 @@ export class SshCommonApi implements MainframeInteraction.ICommon {
                             return "active";
                         }
                     } catch (retryErr) {
+                        if (retryErr instanceof vscode.CancellationError) {
+                            return "inactive";
+                        }
                         imperative.Logger.getAppLogger().warn(
                             `Password authentication failed after 3 attempts for profile ${profile.name as string}: ${(retryErr as Error).message}`
                         );
@@ -186,6 +159,9 @@ export class SshCommonApi implements MainframeInteraction.ICommon {
                     // If we get here, the password is valid
                     return testProfile;
                 } catch (authError) {
+                    if (authError instanceof vscode.CancellationError) {
+                        throw authError;
+                    }
                     const authErrorMessage = `${(authError as Error).message}`;
                     if (authErrorMessage.includes("FOTS1668")) {
                         vscode.window.showErrorMessage("Password expired on target system");
@@ -195,6 +171,9 @@ export class SshCommonApi implements MainframeInteraction.ICommon {
                     vscode.window.showWarningMessage(`Password authentication failed (${attempts + 1}/3)`);
                 }
             } catch (error) {
+                if (error instanceof vscode.CancellationError) {
+                    throw error;
+                }
                 imperative.Logger.getAppLogger().error(`Failed to handle private key failure: ${(error as Error).message}`);
                 return undefined;
             }

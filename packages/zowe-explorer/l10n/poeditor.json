@@ -450,13 +450,13 @@
     "Allow commands to be executed using integrated terminals": ""
   },
   "zowe.commands.zowex.connect": {
-    "Deploy SSH server to host...": ""
+    "Deploy zo server to host...": ""
   },
   "zowe.commands.zowex.restart": {
-    "Restart SSH server on host...": ""
+    "Restart zo server on host...": ""
   },
   "zowe.commands.zowex.uninstall": {
-    "Uninstall SSH server from host...": ""
+    "Uninstall zo server from host...": ""
   },
   "zowe.automaticProfileValidation": {
     "Allow automatic validation of profiles.": ""
@@ -621,19 +621,19 @@
     "Mapping of SSH hostname to server install path for that host. Defaults to '~/.zowe-server'.": ""
   },
   "zowe.zowex.workerCount": {
-    "Number of workers for the Zowe Remote SSH server. Each worker runs as a separate thread within a single address space.": ""
+    "Number of workers for the zo server. Each worker runs as a separate thread within a single address space.": ""
   },
   "zowe.zowex.responseTimeout": {
     "Response timeout in seconds before the originating request is forcibly timed out. Set to a higher value if responses are expected to take longer to complete.": ""
   },
   "zowe.zowex.experimentalNativeSsh": {
-    "Use an experimental native SSH client for improved performance. Not yet fully tested.": ""
+    "Use an experimental native SSH client rather than the default ssh2 package for improved performance when using SSH profiles with Zowe Explorer's zo backend. This setting is not a requirement for using SSH profiles with zo. Not yet fully tested.": ""
   },
   "zowe.zowex.defaultHandshakeTimeout": {
     "Time in milliseconds to wait for the SSH handshake to complete.": ""
   },
   "zowe.confirmSshServerDeploy": {
-    "Require user confirmation before connecting with an SSH profile": ""
+    "Require user confirmation before automatically installing or updating the zo server": ""
   },
   "#### Connecting to a host": "",
   "#### Copy across LPAR updates": "",
@@ -691,8 +691,8 @@
   "**Search options:**": "",
   "**USS:** list directories, read and write files, create, copy, move, rename, delete, and change file attributes.": "",
   "**Write access check.** If you do not have write access to the deploy directory, Zowe Explorer warns you instead of deploying.": "",
-  "**Zowe Explorer: Restart SSH server on host...** restarts a server that is not responding.": "",
-  "**Zowe Explorer: Uninstall SSH server from host...** removes the server from the host.": "",
+  "**Zowe Explorer: Restart zo server on host...** restarts a server that is not responding.": "",
+  "**Zowe Explorer: Uninstall zo server from host...** removes the server from the host.": "",
   "---": "",
   "/u/username/directory": "",
   "1 member": "",
@@ -740,6 +740,7 @@
   "Added Job search query label to the session in the Jobs tree. <a>#2062</a>": "",
   "Added Open with Encoding to the context menu of Job Spool files. <a>#1941</a>": "",
   "Added PEM certificate support as an authentication method for logging into the API ML. <a>#2621</a>": "",
+  "Added SSH host key verification when issuing UNIX commands so the identity of a z/OS SSH server is confirmed before credentials are sent. <a>#4529</a>": "",
   "Added Spool file attribute information to a hover over the Spool file's name. <a>#1832</a>": "",
   "Added Status bar to indicate that data is being pulled from mainframe. <a>#2484</a>": "",
   "Added Time Started, Time Ended, and Time Submitted job properties to the Jobs table view. <a>#3055</a>": "",
@@ -846,6 +847,7 @@
   "Added support for pasting at top-level of USS tree (if filtered), and optimized copy/paste operations to avoid using local paths when possible. <a>#2041</a>": "",
   "Added support for resolving aliases in the Zowe data set tree and when using the Zowe data set filesystem provider. <a>#4438</a> & <a>#4489</a>": "",
   "Added support for resolving data set aliases when using SSH profiles. <a>#4489</a>": "",
+  "Added support for the allowedLoginMethod profile property. This property can be used to restrict allowed authentication methods to a single option. If a profile has no value for allowedLoginMethod, or if the value is \"prompt\", there is no change in behavior compared to previous Zowe Explorer versions. <a>#4531</a>": "",
   "Added support to delete VSAM data sets via right-click action.": "",
   "Added support to delete VSAM data sets. <a>#3824</a>": "",
   "Added support to view the Encoding history for MVS and Dataset in the History View. <a>#2776</a>": "",
@@ -1088,7 +1090,6 @@
   "Encoding: {0}": "",
   "Enhanced \"Show Attributes\" feature with improved visual presentation: aligned all attribute table columns consistently across core and extender sections, added thousands separators for numeric values, and automatically appends the % symbol to \"Used Space\" values for better readability. <a>#3927</a>": "",
   "Enhanced ID generation for parent tree nodes to ensure uniqueness.": "",
-  "Enhanced data set member download to allow multiple members - including across unique partitioned data sets - to be selected and downloaded in the same action. <a>#4274</a>": "",
   "Enter Data Set Pattern": "",
   "Enter a block size": "",
   "Enter a codepage (e.g., 1047, IBM-1047)": "",
@@ -1127,20 +1128,23 @@
   "Enter the logical record length": "",
   "Enter the name of the data set to copy attributes from": "",
   "Enter the number of directory blocks": "",
-  "Enter the password for the {0} connection. Leave blank to not store.": "",
+  "Enter the password for the {0} connection. Leave blank to cancel.": "",
+  "Enter the password for the {0} connection.": "",
   "Enter the path of the directory in order to execute the command": "",
   "Enter the path to the certificate for authenticating the connection.": "",
   "Enter the primary space allocation": "",
   "Enter the secondary space allocation": "",
   "Enter the size of the data set": "",
   "Enter the text to search for.": "",
-  "Enter the user name for the {0} connection. Leave blank to not store.": "",
+  "Enter the user name for the {0} connection. Leave blank to cancel.": "",
+  "Enter the user name for the {0} connection.": "",
   "Enter the volume serial on which the data set should be placed": "",
   "Enter valid dataset name": "",
   "Enter valid member name": "",
   "Enter value for {0} (leave empty to clear)": "",
   "Error Details": "",
   "Error checking if SSH profile type required for issuing UNIX commands, setting requirement to false for profile {0}.": "",
+  "Error checking supportsCertAuth for profile {0}": "",
   "Error creating data set favorite node: {0} for profile {1}.": "",
   "Error encountered when creating data set.": "",
   "Error encountered when deleting data set. {0}": "",
@@ -1263,6 +1267,7 @@
   "Fixed an issue that would allow multiple member-filter on a single dataset search. <a>#2037</a>": "",
   "Fixed an issue to review inconsistent capitalization across translation strings. <a>#2935</a>": "",
   "Fixed an issue when renaming a data set or member where new extension suffix was not detected. <a>#4142</a>": "",
+  "Fixed an issue where UNIX commands were always wrapped in an SSH_TTY terminal redirect, even for profiles that do not use SSH. <a>#4564</a>": "",
   "Fixed an issue where VS Code did not provide all context menu options for a profile node after a multi-select operation. <a>#2108</a>": "",
   "Fixed an issue where Zowe Explorer displayed a \"No Zowe client configurations\" prompt when a project user configuration existed but no global configuration was present. <a>#3168</a>": "",
   "Fixed an issue where Zowe Explorer failed to activate if a VS Code workspace is opened and contains an invalid directory path. Now, invalid directory paths are ignored by Zowe Explorer and only valid paths are treated as project-level directories. <a>#4271</a>": "",
@@ -1316,6 +1321,7 @@
   "Fixed an issue where file system URIs with trailing slashes failed to resolve. <a>#3904</a>": "",
   "Fixed an issue where file system calls incorrectly threw a FileNotFound error for existing files, ensuring they are now fetched correctly. <a>#3554</a>": "",
   "Fixed an issue where files opened via extender profiles failed to refresh or reload correctly. <a>#4049</a>": "",
+  "Fixed an issue where filtering PDS members by user ID was case-sensitive, so a lowercase user ID filter would not match any members. User ID filtering is now case-insensitive. <a>#3723</a>": "",
   "Fixed an issue where filtering a data set by Date Modified showed members without date attributes. <a>#4075</a>": "",
   "Fixed an issue where focus was lost on a previously selected tree item after opening a Zowe resource (Data set, USS file, or Job) in the editor and closing it using Ctrl+W. Screen readers will now announce when focus is restored. <a>#4025</a>": "",
   "Fixed an issue where listing data sets resulted in an error after opening a data set with an encoding. <a>#3347</a>": "",
@@ -1336,8 +1342,10 @@
   "Fixed an issue where opening a highlighted PDS name present within the job spool files using the **Open selected data set** option showed an unnecessary warning message even when the PDS was successfully filtered and displayed in the tree. <a>#4230</a>": "",
   "Fixed an issue where opening sequential data sets within favorited searches resulted in an error. <a>#3163</a>": "",
   "Fixed an issue where pasting data sets failed with \"e.getChildren is not a function\" when using extenders that don't support allocateLikeDataSet, a function that allocates a copy of a data set with specified options. <a>#4107</a>": "",
+  "Fixed an issue where pressing Esc on the \"Do you wish to apply this for all trees?\" prompt, after choosing a profile to add to a tree, still added the profile. Cancelling the prompt now adds nothing. <a>#4514</a>": "",
   "Fixed an issue where profile encoding is not respected when opening job spool files. <a>#3504</a>": "",
   "Fixed an issue where profiles that were not utilizing tokens were improperly running checkJwtForProfile() function within the ZoweTreeProvider. <a>#3575</a>": "",
+  "Fixed an issue where profiles with authOrder starting with token or bearer and no stored credentials (for example, after logging out with an unsecured config) were prompted for basic credentials instead of the SSO login. <a>#4574</a>": "",
   "Fixed an issue where recalling a sequential data set caused its contents to be overwritten, resulting in data loss. Now, when a data set is recalled, its contents are no longer modified. <a>#4412</a>": "",
   "Fixed an issue where registering new profile types from a Zowe Explorer extender could cause an internal API error on startup. <a>#3412</a>": "",
   "Fixed an issue where remote changes to a data set member are not detected by Zowe Explorer if the member's resource path ends in an extension. <a>#3555</a>": "",
@@ -1351,6 +1359,7 @@
   "Fixed an issue where saving contents to a data set or USS file could trigger built-in conflict detection, specifically when the API does not include a timestamp for that resource. Now, the modification time of a data set or USS file in Zowe Explorer's filesystem is kept as-is if the API does not provide a timestamp. Users can continue to use the \"Pull from Mainframe\" context-menu option to fetch the latest contents of a data set or USS file in an opened editor. <a>#4206</a>": "",
   "Fixed an issue where screen readers could not read data set attributes from the data set attribute webview.<a>#4023</a>": "",
   "Fixed an issue where screen readers could not read dataset attributes from the dataset attribute webview.<a>#4023</a>": "",
+  "Fixed an issue where searching data set contents with an FTP profile failed with the error c.searchDataSets is not a function. Zowe Explorer now shows a message when a search starts for a profile type that does not support it. <a>#4511</a>": "",
   "Fixed an issue where searching for the root directory (/) under a profile caused the profile to show a placeholder rather than a list of the files and folders at that path. <a>#3603</a>": "",
   "Fixed an issue where selecting items in table views would reset the column sort order. <a>#3473</a>": "",
   "Fixed an issue where sequential data sets open in the text editor were not refreshing after a remote save, because the cache bypass that forces a network check when a file is open in the editor was only applied to PDS members and not sequential data sets in stat(), the filesystem provider method VS Code calls to detect file changes. <a>#4481</a>": "",
@@ -1411,6 +1420,7 @@
   "Fixed bug where a JSON error occurs for job nodes when collapsing or expanding with a single click. <a>#2121</a>": "",
   "Fixed bug where the list of datasets from a filter search was not re-sorted after a new data set was created in Zowe Explorer. <a>#2473</a>": "",
   "Fixed conflict resolution being skipped if local and remote file have different contents but are the same size. <a>#2496</a>": "",
+  "Fixed confusing wording in the \"Update Credentials\" prompts. The hint \"Leave blank to not store\" was shown even when updating existing credentials, where a blank user name is rejected outright. It is now omitted when updating, and reworded to \"Leave blank to cancel\" elsewhere, to clarify that a blank value cancels the operation rather than clearing any stored credentials. <a>#3744</a>": "",
   "Fixed copy/paste functionality of data sets for extender-type profiles by using SharedContext helper functions. <a>#3815</a>": "",
   "Fixed cross-LPAR PDS transfers to preserve original DCB attributes and prevent binary data corruption. Data is now transferred as binary, and the encoding is respected if previously set by the user. <a>#3731</a>": "",
   "Fixed custom credential manager in ~/.zowe/settings/imperative.json file being overwritten with invalid JSON. <a>#2187</a>": "",
@@ -1518,12 +1528,14 @@
   "Fixed possible data loss when file is saved but fails to upload and VS Code does not detect unsaved changes. <a>#2099</a>": "",
   "Fixed profile watcher for browser based environments. <a>#2211</a>": "",
   "Fixed race conditions in parallel file system calls made with invalid credentials. <a>#3830</a>": "",
+  "Fixed redundant SSH server deployment confirmations when connecting to an already installed, up-to-date server. Confirmation is now requested only when automatic installation or updating is needed. <a>#4563</a>": "",
   "Fixed redundant text in error messages that included the same error details twice.": "",
   "Fixed regression where PDS member attributes were no longer listed when using the \"Show Attributes\" feature from the data set context menu. <a>#3856</a>": "",
   "Fixed regression where a profile was incorrectly detected as using basic authentication, specifically when tokenValue was set in the secure array of a parent profile or a default base profile instead of a service profile. <a>#3855</a>": "",
   "Fixed regression where getProviderForNode returned the wrong tree provider after performing an action on a Zowe tree node, causing some commands to fail silently. <a>#2967</a>": "",
   "Fixed release notes displaying when Zowe Explorer is installed for the first time. <a>#3966</a>": "",
   "Fixed release notes displaying when the Zowe Explorer version is downgraded. <a>#3966</a>": "",
+  "Fixed seconds precision missing for SSH profiles when displaying \"Modified Date\" of PDS members in the data set table view. <a>#4582</a>": "",
   "Fixed secure credential storage not possible to enable in Theia.": "",
   "Fixed settings not persisting in Theia versions >=1.29.0. <a>#2065</a>": "",
   "Fixed several linter errors throughout the codebase and consolidated linter rules. <a>#2184</a>": "",
@@ -1664,6 +1676,7 @@
   "Localization is tied to the VS Code localization setting. If there are no localizations available for a string, it will fallback to English.": "",
   "Localization of strings within Zowe Explorer webviews. <a>#2983</a>": "",
   "Locate in Tree": "",
+  "Log in": "",
   "Log in to Authentication Service": "",
   "Log in to obtain a new token value": "",
   "Log out of Authentication Service": "",
@@ -1843,9 +1856,11 @@
   "Profile {0} is inactive. Please check if your Zowe server is active or if the URL and port in your profile is correct.": "",
   "Profile {0} is no longer available. Skipping item.": "",
   "Profile {0} is using basic authentication. Choose a profile action.": "",
+  "Profile {0} is using cert-pem authentication. Choose a profile action.": "",
   "Profile {0} is using token authentication. Choose a profile action.": "",
   "Profile {0} not found.": "",
   "Profile: ": "",
+  "Profile: {0}": "",
   "Progress is shown in the status bar.": "",
   "Project": "",
   "Project: in the current working directory": "",
@@ -1919,6 +1934,7 @@
   "Replace profile names and their references in the defaults section": "",
   "Replace string properties (e.g. user, host) with placeholder values": "",
   "Replaced an import of ILocalStorageAccess from \"@zowe/zowe-explorer-api/src/extend/ILocalStorageAccess\" to \"@zowe/zowe-explorer-api\". <a>#3606</a>": "",
+  "Replaced confusing \"SSH server\" terminology with \"zo server\" in deployment prompts, status messages, settings descriptions, and Command Palette labels. <a>#4583</a>": "",
   "Replaced keytar dependency with keyring module from <a>@zowe/secrets-for-zowe-sdk</a>. <a>#2358</a> <a>#2348</a>": "",
   "Replaced lodash dependency with es-toolkit to reduce webview bundle size and add technical currency. <a>#3060</a>": "",
   "Replaced the comparison of checksums of the backend SSH server zowex with comparing version numbers when checking if the remote server version is outdated. <a>#4436</a>": "",
@@ -1942,10 +1958,11 @@
   "Right-click a filtered data sets profile, a data set, or a favorite, and select **Show as Table**.": "",
   "Right-click a profile: **Search filtered data sets**": "",
   "Right-click on a directory or partitioned data set in the **USS** or **DATA SETS** tree and select **Upload with Encoding...** to choose a character encoding for the uploaded files.": "",
-  "Run **Zowe Explorer: Deploy SSH server on host and connect...** from the command palette and pick an ssh profile. Zowe Explorer checks the host for a server, deploys one if it is missing, and adds the profile to the **DATA SETS**, **USS**, and **JOBS** trees.": "",
+  "Run **Zowe Explorer: Deploy zo server to host...** from the command palette and pick an ssh profile. Zowe Explorer checks the host for a server, deploys one if it is missing, and adds the profile to the **DATA SETS**, **USS**, and **JOBS** trees.": "",
   "SCLM": "",
   "SSH Key": "",
   "SSH profile missing connection details. Please update.": "",
+  "Save": "",
   "Save as User setting": "",
   "Save as Workspace setting": "",
   "Saving USS file...": "",
@@ -1960,6 +1977,7 @@
   "Search data sets": "",
   "Search data sets: use a comma to separate multiple patterns": "",
   "Search: ": "",
+  "Searching data set contents is not supported for this profile type, {0}.": "",
   "Searching for \"{0}\"": "",
   "Secure Credentials Enabled: ": "",
   "See the <a>FileSystemProvider wiki page</a> for more information on the FileSystemProvider.": "",
@@ -2017,6 +2035,7 @@
   "Sessions": "",
   "Set a filter for {0}": "",
   "Set a filter...": "",
+  "Set the path to your authentication certificate": "",
   "Set up <a>POEditor project</a> for contributing translations and cleaned up redundant localization strings. <a>#546</a>": "",
   "Setting to hide hidden USS files": "",
   "Settings have been successfully migrated for Zowe Explorer version 2 and above. To apply these settings, please reload your VS Code window.": "",
@@ -2040,7 +2059,6 @@
   "Starting to poll job {0} for completion.": "",
   "Status": "",
   "Streamlined attribute viewing options into one feature - \"Show Attributes\".": "",
-  "Submit": "",
   "Submit this query": "",
   "Submitting as JCL in document {0}": "",
   "Subsystem": "",
@@ -2154,6 +2172,7 @@
   "Unpin": "",
   "Unpin selected rows": "",
   "Update": "",
+  "Update Certificate": "",
   "Update Credentials": "",
   "Update Global and Project level schemas": "",
   "Update Global schema only": "",

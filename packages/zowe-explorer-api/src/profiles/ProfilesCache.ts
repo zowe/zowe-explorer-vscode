@@ -10,7 +10,10 @@
  */
 
 import * as imperative from "@zowe/imperative";
+
+import * as vscode from "vscode";
 import type { IRegisterClient } from "../extend/IRegisterClient";
+import { ProfileLike, AuthHandler } from "./AuthHandler";
 import { FileManagement } from "../utils/FileManagement";
 import { errorMessage } from "../utils/ErrorUtils";
 import { Validation } from "./Validation";
@@ -23,6 +26,24 @@ import * as fs from "fs";
 import * as path from "path";
 import * as crypto from "crypto";
 
+export interface CertPromptResponse {
+    cert: string;
+    certKey: string;
+    action: "save" | "login";
+}
+export interface CertificatePromptOptions {
+    /**
+     * Shown at the top of the wizard. Defaults to "Log in to authentication service."
+     */
+    title?: string;
+    openDialogOptions?: vscode.OpenDialogOptions;
+    profile?: imperative.IProfileLoaded;
+    rePrompt?: boolean;
+    userInputBoxOptions?: vscode.InputBoxOptions;
+    passwordInputBoxOptions?: vscode.InputBoxOptions;
+    saveButtonText?: string;
+    showLoginButton?: boolean;
+}
 export class ProfilesCache {
     private profileInfo: imperative.ProfileInfo;
 
@@ -605,5 +626,120 @@ export class ProfilesCache {
                 profile.profile.password = process.env[passwordEnvVar];
             }
         }
+    }
+    /**
+     * Detect if sessions created from the specified profile will connect to APIML.
+     * see {@link AbstractSession.isUsingApiml}
+     * @param profile
+     * @returns
+     */
+    public isUsingApiml(profile: ProfileLike): boolean {
+        const profileLoaded: imperative.IProfileLoaded = typeof profile === "string" ? this.loadNamedProfile(profile) : profile;
+        return this.getApimlDecision(profileLoaded).usingApiml;
+    }
+    /**
+     * Detect if sessions created from the specified profile connect to APIML, and report the reason for that decision.
+     * see {@link AbstractSession.getApimlDecision}
+     * @param profile
+     * @returns
+     */
+    public getApimlDecision(profile: ProfileLike): imperative.IApimlDecision {
+        const profileLoaded: imperative.IProfileLoaded = typeof profile === "string" ? this.loadNamedProfile(profile) : profile;
+        return this.sessionForApimlDecision(profileLoaded).getApimlDecision();
+    }
+
+    /**
+     * Get the session object for the APIML decision in imperative. If the session can't be created from an extender's
+     * registered getSession API, use the profile properties to create a session instead.
+     *
+     * @param profile
+     * @returns
+     */
+    private sessionForApimlDecision(profile: imperative.IProfileLoaded): imperative.Session {
+        try {
+            return AuthHandler.getSessFromProfile(profile);
+        } catch (err) {
+            this.log.debug(`No session from the common API for profile ${profile.name}; using profile properties for the APIML decision. ${err}`);
+            const p = profile.profile ?? {};
+            return new imperative.Session({
+                hostname: p.host,
+                port: p.port,
+                protocol: p.protocol,
+                basePath: p.basePath,
+                tokenType: p.tokenType,
+                allowedLoginMethod: p.allowedLoginMethod,
+            });
+        }
+    }
+
+    /**
+     * Get the allowedLoginMethod field from the profile, defaulting to "prompt" if there is no value,
+     * or if the value is invalid.
+     * @param profile - the loaded profile to check
+     * @returns the specified allowedLoginMethod field on the profile, or "prompt"
+     */
+    public getAllowedLoginMethod(profile: ProfileLike): string {
+        const profileLoaded: imperative.IProfileLoaded = typeof profile === "string" ? this.loadNamedProfile(profile) : profile;
+        let method: string = profileLoaded.profile?.allowedLoginMethod || imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT;
+        if (imperative.SessConstants.ALL_ALLOWED_LOGIN_METHODS.indexOf(method) < 0) {
+            this.log.debug(
+                `Unknown allowed login method value '${method}'.` + ` Falling back to '${imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT}'`
+            );
+            method = imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT;
+        }
+        return method;
+    }
+
+    /**
+     * Prompt the user for a certificate to use for cert-pem auth.
+     * If the save button is clicked, the cert and certKey paths will be saved to the base profile if any,
+     * unless allowedLoginMethod is direct-cert-pem, in which case the paths will be saved to the service profile.
+     *
+     * You can optionally show a "login" button for SSO use cases, which will not store the cert nor certKey paths
+     * in any profile but just use the provided paths to log in.
+     *
+     * @returns The {@link CertPromptResponse} describing the user's entries, or undefined if the prompt was dismissed.
+     */
+    public async promptCertificate(options: CertificatePromptOptions): Promise<CertPromptResponse | undefined> {
+        if (!options.profile) {
+            imperative.Logger.getAppLogger().error(`Attempted to prompt for an authentication certificate without specifying a profile`);
+            return undefined;
+        }
+        let response: CertPromptResponse | undefined = undefined;
+
+        try {
+            response = await vscode.commands.executeCommand("zowe.certificateWizard", {
+                cert: options.profile.profile?.certFile,
+                certKey: options.profile.profile?.certKeyFile,
+                title: options.title,
+                profileName: options.profile.name,
+                saveButtonText: options.saveButtonText,
+                showLoginButton: options.showLoginButton,
+                dialogOpts: { ...(options.openDialogOptions ?? {}), canSelectFiles: true, canSelectFolders: false, canSelectMany: false },
+            });
+        } catch (error) {
+            this.log.error(error as string);
+            return response;
+        }
+
+        if (response?.action === "save") {
+            imperative.Logger.getAppLogger().debug("User requested to save certificate to config.");
+            let profileToSave = options.profile;
+            const allowedLoginMethod = this.getAllowedLoginMethod(options.profile);
+            if (allowedLoginMethod !== imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_CERT_PEM) {
+                // if this is not direct cert-pem authentication, save to the base profile.
+                profileToSave = (await this.fetchBaseProfile(options.profile?.name)) || options.profile;
+                profileToSave = options.profile.name?.startsWith(profileToSave.name + ".") ? { ...profileToSave, type: null } : profileToSave;
+            }
+
+            const profileInfo = await this.getProfileInfo();
+            const updateSettings = { profileName: profileToSave.name, profileType: profileToSave.type };
+            await profileInfo.updateProperty({ ...updateSettings, property: "certFile", value: response.cert });
+            await profileInfo.updateProperty({ ...updateSettings, property: "certKeyFile", value: response.certKey });
+            imperative.Logger.getAppLogger().debug(
+                `Updated profile ${profileToSave.name} (type: ${profileToSave.type}) with certificate auth details`
+            );
+        }
+        return response;
     }
 }

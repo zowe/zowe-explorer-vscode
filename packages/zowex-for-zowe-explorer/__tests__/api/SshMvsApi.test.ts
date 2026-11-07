@@ -604,11 +604,11 @@ describe("SshMvsApi", () => {
             vi.spyOn(mvsApi as any, "buildZosFilesResponse");
             vi.spyOn(mvsApi, "client", "get").mockResolvedValue({ ds: { createDataset: createDatasetSpy } });
 
-            await mvsApi.createDataSet(0, "USER.NEW", { lrecl: 133, recfm: "FB" });
+            await mvsApi.createDataSet(0, "USER.NEW", { lrecl: 133, recfm: "FB", volser: "VOL001" });
 
             expect(createDatasetSpy).toHaveBeenCalledWith({
                 dsname: "USER.NEW",
-                attributes: { dsname: "USER.NEW", primary: 1, lrecl: 133, recfm: "FB" },
+                attributes: { dsname: "USER.NEW", primary: 1, lrecl: 133, recfm: "FB", volser: "VOL001", vol: "VOL001" },
             });
         });
 
