@@ -8249,6 +8249,15 @@ describe("DatasetTree.crossLparMove", () => {
             expect(vscode.workspace.fs.delete).not.toHaveBeenCalled();
         });
 
+        it("keeps the move's result and reports the error when deleting the source PDS fails", async () => {
+            vi.spyOn(vscode.workspace.fs, "delete").mockRejectedValue(new Error("FOO(PRODJOB) is read-only."));
+
+            await expect(tree["crossLparMove"](fakeNode, srcUri, dstUri, false)).resolves.toBe(false);
+
+            expect(DatasetFSProvider.instance.writeFile).toHaveBeenCalledTimes(3);
+            expect(Gui.errorMessage).toHaveBeenCalledWith("Failed to move {0}: {1}");
+        });
+
         it("deletes the source PDS once every member has moved", async () => {
             await expect(tree["crossLparMove"](fakeNode, srcUri, dstUri, false)).resolves.toBe(true);
             expect(vscode.workspace.fs.delete).toHaveBeenCalledWith(srcUri, { recursive: true });

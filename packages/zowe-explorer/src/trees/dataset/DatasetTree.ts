@@ -173,7 +173,12 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 Gui.errorMessage(vscode.l10n.t("{0} was not deleted because some of its members could not be moved.", dsname));
                 return false;
             }
-            await vscode.workspace.fs.delete(sourceUri, { recursive: true });
+            try {
+                await vscode.workspace.fs.delete(sourceUri, { recursive: true });
+            } catch (err) {
+                Gui.errorMessage(vscode.l10n.t("Failed to move {0}: {1}", dsname, err.message));
+                return false;
+            }
             return true;
         } else {
             try {

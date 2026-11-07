@@ -2880,6 +2880,15 @@ describe("USSTree.handleDrop - blocking behavior", () => {
                 expect(deleteMock).not.toHaveBeenCalled();
             });
 
+            it("reports the error when deleting the source directory fails", async () => {
+                vi.spyOn(UssFSProvider.instance, "writeFile").mockResolvedValue(undefined);
+                deleteMock.mockRejectedValue(new Error("/u/myuser/usstest/config.txt is read-only."));
+
+                await expect(globalMocks.testTree.crossLparMove(ussDirNode, ussDirNode.resourceUri, destUri())).resolves.toBe(false);
+
+                expect(Gui.errorMessage).toHaveBeenCalledWith("Failed to move file {0}: {1}");
+            });
+
             it("deletes the source directory once everything has moved", async () => {
                 vi.spyOn(UssFSProvider.instance, "writeFile").mockResolvedValue(undefined);
 

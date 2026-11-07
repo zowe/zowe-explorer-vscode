@@ -141,7 +141,14 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 );
                 return false;
             }
-            await vscode.workspace.fs.delete(sourceUri, { recursive: true });
+            try {
+                await vscode.workspace.fs.delete(sourceUri, { recursive: true });
+            } catch (err) {
+                Gui.errorMessage(
+                    vscode.l10n.t("Failed to move file {0}: {1}", sourceUri.path.substring(sourceUri.path.indexOf("/", 1)), err.message)
+                );
+                return false;
+            }
             return true;
         } else {
             // create a file on the remote system for writing
