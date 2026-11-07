@@ -604,6 +604,65 @@ describe("ReadOnlyManagement - isReadOnly with zowe.readOnly.rules", () => {
         });
     });
 
+    describe("read-only by default", () => {
+        it.each([
+            ["*.** and **", [{ ds: "*.**" }, { uss: "**" }]],
+            ["** and /**", [{ ds: "**" }, { uss: "/**" }]],
+            ["a single rule", [{ ds: "**", uss: "/**" }]],
+        ])("makes every data set, member, file and directory read-only with %s", (_desc, rules) => {
+            useRules(rules);
+            expect(ReadOnlyManagement.isReadOnly(ds("/zosmf/IBMUSER.JCL"))).toBe(true);
+            expect(ReadOnlyManagement.isReadOnly(ds("/zosmf/IBMUSER.JCL/HELLO.jcl"))).toBe(true);
+            expect(ReadOnlyManagement.isReadOnly(ds("/zosmf/ZXP.PUBLIC.SOURCE.COBOL/HELLO"))).toBe(true);
+            expect(ReadOnlyManagement.isReadOnly(ds("/zosmf/ZXP"))).toBe(true);
+            expect(ReadOnlyManagement.isReadOnly(ds("/ssh/SYS1.PARMLIB/IEASYS00"))).toBe(true);
+            expect(ReadOnlyManagement.isReadOnly(uss("/zosmf/z/ibmuser"))).toBe(true);
+            expect(ReadOnlyManagement.isReadOnly(uss("/zosmf/z/ibmuser/hello.txt"))).toBe(true);
+            expect(ReadOnlyManagement.isReadOnly(uss("/zosmf/z/ibmuser/.profile"))).toBe(true);
+            expect(ReadOnlyManagement.isReadOnly(uss("/zosmf/z/ibmuser/cobol/src/hello.cbl"))).toBe(true);
+            expect(ReadOnlyManagement.isReadOnly(uss("/ssh/etc/profile"))).toBe(true);
+        });
+
+        describe("with Make Writable", () => {
+            beforeEach(() => {
+                useRules([{ ds: "*.**" }, { uss: "**" }]);
+            });
+
+            it("makes only that member or file writable", () => {
+                ReadOnlyManagement.setReadOnly(ds("/zosmf/IBMUSER.JCL/HELLO"), false);
+                ReadOnlyManagement.setReadOnly(uss("/zosmf/z/ibmuser/hello.txt"), false);
+
+                expect(ReadOnlyManagement.isReadOnly(ds("/zosmf/IBMUSER.JCL/HELLO.jcl"))).toBe(false);
+                expect(ReadOnlyManagement.isReadOnly(ds("/zosmf/IBMUSER.JCL/COMPILE"))).toBe(true);
+                expect(ReadOnlyManagement.isReadOnly(ds("/zosmf/IBMUSER.JCL"))).toBe(true);
+                expect(ReadOnlyManagement.isReadOnly(uss("/zosmf/z/ibmuser/hello.txt"))).toBe(false);
+                expect(ReadOnlyManagement.isReadOnly(uss("/zosmf/z/ibmuser/other.txt"))).toBe(true);
+                expect(ReadOnlyManagement.isReadOnly(uss("/zosmf/z/ibmuser"))).toBe(true);
+            });
+
+            it("makes everything in a writable PDS or directory writable", () => {
+                ReadOnlyManagement.setReadOnly(ds("/zosmf/IBMUSER.JCL"), false);
+                ReadOnlyManagement.setReadOnly(uss("/zosmf/z/ibmuser"), false);
+
+                expect(ReadOnlyManagement.isReadOnly(ds("/zosmf/IBMUSER.JCL/HELLO"))).toBe(false);
+                expect(ReadOnlyManagement.isReadOnly(ds("/zosmf/IBMUSER.SOURCE/HELLO"))).toBe(true);
+                expect(ReadOnlyManagement.isReadOnly(uss("/zosmf/z/ibmuser/cobol/hello.cbl"))).toBe(false);
+                expect(ReadOnlyManagement.isReadOnly(uss("/zosmf/z/public/hello.txt"))).toBe(true);
+            });
+
+            it("is read-only again after Make Read-Only", () => {
+                ReadOnlyManagement.setReadOnly(uss("/zosmf/z/ibmuser/hello.txt"), false);
+                ReadOnlyManagement.setReadOnly(uss("/zosmf/z/ibmuser/hello.txt"), true);
+                expect(ReadOnlyManagement.isReadOnly(uss("/zosmf/z/ibmuser/hello.txt"))).toBe(true);
+            });
+
+            it("only applies to that profile", () => {
+                ReadOnlyManagement.setReadOnly(ds("/zosmf/IBMUSER.JCL/HELLO"), false);
+                expect(ReadOnlyManagement.isReadOnly(ds("/ssh/IBMUSER.JCL/HELLO"))).toBe(true);
+            });
+        });
+    });
+
     describe("other URIs", () => {
         it("is read-only for a readonly=true URI even if no rule matches", () => {
             expect(ReadOnlyManagement.isReadOnly(ds("/zosmf/IBMUSER.JCL/HELLO", "readonly=true"))).toBe(true);
