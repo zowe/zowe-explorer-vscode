@@ -1250,38 +1250,6 @@ describe("USS Action Unit Tests - copy file / directory", () => {
         }
     });
 
-    it("tests refreshChildNodesDirectory executed successfully with empty directory", async () => {
-        vi.clearAllMocks();
-        const globalMocks = createGlobalMocks();
-        const blockMocks = createBlockMocks(globalMocks);
-        await USSActions.refreshChildNodesDirectory(blockMocks.ussNodes[1]);
-        expect(blockMocks.ussNodes[1].getChildren).toHaveBeenCalledTimes(1);
-        expect(blockMocks.ussNodes[1].refreshUSS).toHaveBeenCalledTimes(0);
-    });
-
-    it("tests refreshChildNodesDirectory executed successfully with file", async () => {
-        vi.clearAllMocks();
-        const globalMocks = createGlobalMocks();
-        const blockMocks = createBlockMocks(globalMocks);
-        await USSActions.refreshChildNodesDirectory(blockMocks.ussNodes[0]);
-        expect(blockMocks.ussNodes[0].refreshUSS).toHaveBeenCalledTimes(1);
-    });
-    it("tests refreshChildNodesDirectory executed successfully on a node with a child", async () => {
-        const globalMocks = createGlobalMocks();
-        const blockMocks = createBlockMocks(globalMocks);
-        const node = new ZoweUSSNode({
-            label: "parent",
-            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-            parentPath: "/",
-            contextOverride: Constants.USS_DIR_CONTEXT,
-            profile: globalMocks.testProfile,
-        });
-        node.getChildren = vi.fn().mockResolvedValueOnce([blockMocks.ussNodes[0]]);
-        await USSActions.refreshChildNodesDirectory(node);
-
-        expect(blockMocks.ussNodes[0].refreshUSS).toHaveBeenCalledTimes(1);
-    });
-
     it("tests copyUssFiles executed successfully via context menu with selected nodes", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);

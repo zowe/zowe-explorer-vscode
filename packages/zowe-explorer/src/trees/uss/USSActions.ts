@@ -1065,20 +1065,6 @@ export class USSActions {
         );
     }
 
-    public static async refreshChildNodesDirectory(node: IZoweUSSTreeNode): Promise<void> {
-        ZoweLogger.trace("uss.actions.refreshChildNodesDirectory called.");
-        const childNodes = await node.getChildren();
-        if (childNodes != null && childNodes.length > 0) {
-            for (const child of childNodes) {
-                await USSActions.refreshChildNodesDirectory(child);
-            }
-        } else {
-            if (node.contextValue !== Constants.USS_DIR_CONTEXT) {
-                await node.refreshUSS();
-            }
-        }
-    }
-
     /**
      * Paste copied USS nodes into the selected node.
      * @param ussFileProvider File provider for USS tree
