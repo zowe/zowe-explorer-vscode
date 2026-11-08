@@ -2690,6 +2690,106 @@ describe("UssFSProvider", () => {
                 });
             });
         });
+        describe("symlinks inside a pasted folder", () => {
+            const linkTree = (sourceUri: Uri) => ({
+                localUri: sourceUri,
+                ussPath: "/folderA/innerFolder",
+                baseName: "innerFolder",
+                sessionName: "sestest",
+                type: USSFileStructure.UssFileType.Directory,
+                children: [
+                    {
+                        localUri: sourceUri.with({ path: "/sestest/folderA/innerFolder/a.txt" }),
+                        ussPath: "/folderA/innerFolder/a.txt",
+                        baseName: "a.txt",
+                        sessionName: "sestest",
+                        type: USSFileStructure.UssFileType.File,
+                    },
+                    {
+                        localUri: sourceUri.with({ path: "/sestest/folderA/innerFolder/dirlink" }),
+                        ussPath: "/folderA/innerFolder/dirlink",
+                        baseName: "dirlink",
+                        sessionName: "sestest",
+                        type: USSFileStructure.UssFileType.Directory,
+                        isUnfollowedSymlink: true,
+                    },
+                    {
+                        localUri: sourceUri.with({ path: "/sestest/folderA/innerFolder/filelink.txt" }),
+                        ussPath: "/folderA/innerFolder/filelink.txt",
+                        baseName: "filelink.txt",
+                        sessionName: "sestest",
+                        type: USSFileStructure.UssFileType.File,
+                        isUnfollowedSymlink: true,
+                    },
+                ],
+            });
+            const sourceUri = Uri.from({ scheme: ZoweScheme.USS, path: "/sestest/folderA/innerFolder" });
+            let copyTreeSpy: MockInstance | undefined;
+
+            afterEach(() => {
+                copyTreeSpy?.mockRestore();
+                copyTreeSpy = undefined;
+            });
+
+            it("leaves links to the server when it copies the folder in one request", async () => {
+                const blockMocks = getBlockMocks(true);
+                const destUri = Uri.from({ scheme: ZoweScheme.USS, path: "/sestest/folderB" });
+                blockMocks.getInfoFromUri
+                    .mockReturnValueOnce({ profile: blockMocks.profile, path: "/folderB" })
+                    .mockReturnValueOnce({ profile: blockMocks.profile, path: "/folderA/innerFolder" });
+                blockMocks.apiFuncs.fileList.mockResolvedValueOnce({ success: true, apiResponse: { items: [] } });
+                const skippedLinks: string[] = [];
+
+                await (UssFSProvider.instance as any).copyTree(sourceUri, destUri, { overwrite: true, tree: linkTree(sourceUri), skippedLinks });
+
+                expect(blockMocks.apiFuncs.copy).toHaveBeenCalledTimes(1);
+                expect(blockMocks.apiFuncs.copy).toHaveBeenCalledWith("/folderB/innerFolder", {
+                    from: "/folderA/innerFolder",
+                    recursive: true,
+                    overwrite: true,
+                });
+                expect(skippedLinks).toEqual([]);
+            });
+
+            it("skips links and reports them when it copies the folder one item at a time", async () => {
+                const blockMocks = getBlockMocks();
+                const destUri = Uri.from({ scheme: ZoweScheme.USS, path: "/sestest2/folderB" });
+                blockMocks.getInfoFromUri
+                    .mockReturnValueOnce({ profile: blockMocks.profile2, path: "/folderB" })
+                    .mockReturnValueOnce({ profile: blockMocks.profile, path: "/folderA/innerFolder" });
+                blockMocks.apiFuncs.fileList.mockResolvedValueOnce({ success: true, apiResponse: { items: [] } });
+                const provider = UssFSProvider.instance as any;
+                const originalCopyTree = provider.copyTree.bind(provider);
+                // Run the folder itself for real, and stub out the copies of its children
+                copyTreeSpy = vi.spyOn(provider, "copyTree").mockImplementationOnce(originalCopyTree).mockResolvedValue(undefined);
+                const skippedLinks: string[] = [];
+
+                await provider.copyTree(sourceUri, destUri, { overwrite: true, tree: linkTree(sourceUri), skippedLinks });
+
+                expect(blockMocks.apiFuncs.create).toHaveBeenCalledWith("/folderB/innerFolder", "directory");
+                const childCopies = copyTreeSpy.mock.calls.slice(1).map((call) => call[2].tree.baseName);
+                expect(childCopies).toEqual(["a.txt"]);
+                expect(skippedLinks).toEqual(["/folderA/innerFolder/dirlink", "/folderA/innerFolder/filelink.txt"]);
+            });
+
+            it("passes the list of skipped links on to the copies of its children", async () => {
+                const blockMocks = getBlockMocks();
+                const destUri = Uri.from({ scheme: ZoweScheme.USS, path: "/sestest2/folderB" });
+                blockMocks.getInfoFromUri
+                    .mockReturnValueOnce({ profile: blockMocks.profile2, path: "/folderB" })
+                    .mockReturnValueOnce({ profile: blockMocks.profile, path: "/folderA/innerFolder" });
+                blockMocks.apiFuncs.fileList.mockResolvedValueOnce({ success: true, apiResponse: { items: [] } });
+                const provider = UssFSProvider.instance as any;
+                const originalCopyTree = provider.copyTree.bind(provider);
+                copyTreeSpy = vi.spyOn(provider, "copyTree").mockImplementationOnce(originalCopyTree).mockResolvedValue(undefined);
+                const skippedLinks: string[] = [];
+
+                await provider.copyTree(sourceUri, destUri, { overwrite: true, tree: linkTree(sourceUri), skippedLinks });
+
+                expect(copyTreeSpy.mock.calls[1][2].skippedLinks).toBe(skippedLinks);
+            });
+        });
+
         describe("different profiles", () => {
             it("copies a file into a destination folder - collision", async () => {
                 const blockMocks = getBlockMocks();

@@ -51,8 +51,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      */
     private readonly listedDirectories = new WeakSet<UssDirectory>();
     /**
-     * Whether each symbolic link that was resolved while listing a directory points to a directory,
-     * keyed by profile name and link path, along with the link's mtime when it was resolved
+     * Whether each symlink that was resolved while listing a directory points to a directory.
+     * Keyed by profile name and link path, along with the link's mtime when it was resolved
      * (i.e. caching to reduce number of requests to resolve shared symlinks)
      */
     private readonly symlinkTargetCache = new Map<string, { mtime: unknown; isDirectory: boolean }>();
@@ -1031,7 +1031,15 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         this.fireSoon({ type: vscode.FileChangeType.Changed, uri: parentUri }, { uri, type: vscode.FileChangeType.Deleted });
     }
 
-    public async copy(source: vscode.Uri, destination: vscode.Uri, options: { readonly overwrite: boolean }): Promise<void> {
+    /**
+     * Copies the file tree in the source URI's query to the destination.
+     * @param options.skippedLinks Collects the USS paths of the symlinks that could not be copied
+     */
+    public async copy(
+        source: vscode.Uri,
+        destination: vscode.Uri,
+        options: { readonly overwrite: boolean; readonly skippedLinks?: string[] }
+    ): Promise<void> {
         const uriQuery = new URLSearchParams(source.query);
         if (!uriQuery.has("tree")) {
             return;
@@ -1077,7 +1085,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
     private async copyTree(
         source: vscode.Uri,
         destination: vscode.Uri,
-        options: { readonly overwrite: boolean; readonly tree: USSFileStructure.UssFileTree }
+        options: { readonly overwrite: boolean; readonly tree: USSFileStructure.UssFileTree; readonly skippedLinks?: string[] }
     ): Promise<void> {
         const destInfo = this._getInfoFromUri(destination);
         const sourceInfo = this._getInfoFromUri(source);
@@ -1121,6 +1129,11 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
                     await api.create(outputPath, "directory");
                     if (options.tree.children) {
                         for (const child of options.tree.children) {
+                            // Skip links when copying a directory one item at a time as links cannot be created through the ZE API
+                            if (child.isUnfollowedSymlink) {
+                                options.skippedLinks?.push(child.ussPath);
+                                continue;
+                            }
                             await this.copyTree(
                                 child.localUri,
                                 vscode.Uri.from({

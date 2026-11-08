@@ -960,6 +960,9 @@ export class USSActions {
     /**
      * Builds a file/directory structure that can be traversed from root to the innermost children.
      *
+     * Symlinks inside a directory are added as entries flagged with `isUnfollowedSymlink`, and are not followed (to make it cycle-safe).
+     * A node that is itself a link is still followed, since it was chosen directly.
+     *
      * @param node Build a tree structure starting at this node
      * @returns A tree structure containing all files/directories within this node
      */
@@ -978,6 +981,17 @@ export class USSActions {
             const children = await node.getChildren();
             if (children != null && children.length > 0) {
                 for (const child of children) {
+                    if (SharedContext.isSymlink(child)) {
+                        directory.children.push({
+                            localUri: child.resourceUri,
+                            ussPath: child.fullPath,
+                            baseName: child.getLabel() as string,
+                            sessionName: child.getSessionNode().getLabel() as string,
+                            type: SharedContext.isUssDirectory(child) ? USSFileStructure.UssFileType.Directory : USSFileStructure.UssFileType.File,
+                            isUnfollowedSymlink: true,
+                        });
+                        continue;
+                    }
                     // This node is either another directory or a file
                     const subnode = await USSActions.buildFileStructure(child);
                     directory.children.push(subnode);

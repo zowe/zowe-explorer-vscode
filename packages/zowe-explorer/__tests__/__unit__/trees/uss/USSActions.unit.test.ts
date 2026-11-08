@@ -1061,6 +1061,128 @@ describe("USS Action Unit Tests - copy file / directory", () => {
         getEncodingForFileMock.mockRestore();
     });
 
+    describe("handling symlinks", () => {
+        let sessionNode: ZoweUSSNode;
+        let getEncodingSpy: MockInstance;
+
+        function makeNode(label: string, parentPath: string, context: string, children: IZoweUSSTreeNode[] = []): ZoweUSSNode {
+            const node = new ZoweUSSNode({
+                label,
+                collapsibleState: context.startsWith(Constants.USS_DIR_CONTEXT)
+                    ? vscode.TreeItemCollapsibleState.Collapsed
+                    : vscode.TreeItemCollapsibleState.None,
+                parentNode: sessionNode,
+                parentPath,
+                contextOverride: context,
+            });
+            node.getChildren = vi.fn().mockResolvedValue(children);
+            return node;
+        }
+
+        const symlinkDir = Constants.USS_DIR_CONTEXT + Constants.SYMLINK_SUFFIX;
+        const symlinkFile = Constants.USS_TEXT_FILE_CONTEXT + Constants.SYMLINK_SUFFIX;
+
+        beforeEach(() => {
+            createGlobalMocks();
+            sessionNode = new ZoweUSSNode({
+                label: "profile",
+                collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+                session: createISession(),
+                profile: createIProfile(),
+            });
+            getEncodingSpy = vi.spyOn(ZoweUSSNode.prototype, "getEncoding").mockReturnValue(undefined as any);
+        });
+
+        afterEach(() => {
+            getEncodingSpy.mockRestore();
+        });
+
+        it("keeps a link inside a copied folder as a flagged entry without following it", async () => {
+            const file = makeNode("a.txt", "/u/myuser/projects", Constants.USS_TEXT_FILE_CONTEXT);
+            const loop = makeNode("loop", "/u/myuser/projects", symlinkDir);
+            const projects = makeNode("projects", "/u/myuser", Constants.USS_DIR_CONTEXT, [file, loop]);
+            // Only the first listing returns the cycle, so the test fails rather than running out of memory if links are followed
+            loop.getChildren = vi.fn().mockResolvedValueOnce([file, loop]).mockResolvedValue([]);
+
+            const structure = await USSActions.ussFileStructure([projects]);
+
+            expect(loop.getChildren).not.toHaveBeenCalled();
+            const [fileEntry, linkEntry] = structure.children[0].children;
+            expect(fileEntry.isUnfollowedSymlink).toBeUndefined();
+            expect(linkEntry).toEqual(
+                expect.objectContaining({
+                    baseName: "loop",
+                    ussPath: "/u/myuser/projects/loop",
+                    type: USSFileStructure.UssFileType.Directory,
+                    isUnfollowedSymlink: true,
+                })
+            );
+            expect(linkEntry.children).toBeUndefined();
+        });
+
+        it("keeps a link to a file inside a copied folder as a flagged entry", async () => {
+            const fileLink = makeNode("link.txt", "/u/myuser/projects", symlinkFile);
+            const projects = makeNode("projects", "/u/myuser", Constants.USS_DIR_CONTEXT, [fileLink]);
+
+            const structure = await USSActions.ussFileStructure([projects]);
+
+            expect(structure.children[0].children[0]).toEqual(
+                expect.objectContaining({
+                    ussPath: "/u/myuser/projects/link.txt",
+                    type: USSFileStructure.UssFileType.File,
+                    isUnfollowedSymlink: true,
+                })
+            );
+        });
+
+        it("still copies through real sub-folders", async () => {
+            const inner = makeNode("b.txt", "/u/myuser/projects/sub", Constants.USS_TEXT_FILE_CONTEXT);
+            const sub = makeNode("sub", "/u/myuser/projects", Constants.USS_DIR_CONTEXT, [inner]);
+            const projects = makeNode("projects", "/u/myuser", Constants.USS_DIR_CONTEXT, [sub]);
+
+            const structure = await USSActions.ussFileStructure([projects]);
+
+            expect(structure.children[0].children[0].baseName).toBe("sub");
+            expect(structure.children[0].children[0].children.map((child) => child.baseName)).toEqual(["b.txt"]);
+        });
+
+        it("follows a selected link to a folder, but flags the links inside it", async () => {
+            const file = makeNode("a.txt", "/u/myuser/linked", Constants.USS_TEXT_FILE_CONTEXT);
+            const parentLink = makeNode("up", "/u/myuser/linked", symlinkDir);
+            const linked = makeNode("linked", "/u/myuser", symlinkDir, [file, parentLink]);
+
+            const structure = await USSActions.ussFileStructure([linked]);
+
+            expect(structure.children[0].type).toBe(USSFileStructure.UssFileType.Directory);
+            expect(structure.children[0].isUnfollowedSymlink).toBeUndefined();
+            expect(structure.children[0].children.map((child) => [child.baseName, child.isUnfollowedSymlink])).toEqual([
+                ["a.txt", undefined],
+                ["up", true],
+            ]);
+            expect(parentLink.getChildren).not.toHaveBeenCalled();
+        });
+
+        it("copies a selected link to a file as a file", async () => {
+            const fileLink = makeNode("link.txt", "/u/myuser", symlinkFile);
+
+            const structure = await USSActions.ussFileStructure([fileLink]);
+
+            expect(structure.children[0].type).toBe(USSFileStructure.UssFileType.File);
+            expect(structure.children[0].isUnfollowedSymlink).toBeUndefined();
+        });
+
+        it("does not warn about links when copying, since most pastes copy them as links", async () => {
+            const loop = makeNode("loop", "/u/myuser/projects", symlinkDir);
+            const projects = makeNode("projects", "/u/myuser", Constants.USS_DIR_CONTEXT, [loop]);
+            const warningSpy = vi.spyOn(Gui, "warningMessage").mockResolvedValue(undefined);
+
+            await USSActions.copyUssFilesToClipboard([projects]);
+
+            expect(warningSpy).not.toHaveBeenCalled();
+            warningSpy.mockRestore();
+        });
+    });
+
     it("Has the proper responses for toSameSession in UssFileUtils", () => {
         // Test toSameSession where one of the files has a diff LPAR
         let isSameSession = USSFileStructure.UssFileUtils.toSameSession(

@@ -421,6 +421,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         if (!(this.contextValue.startsWith(Constants.USS_BINARY_FILE_CONTEXT) || this.contextValue.startsWith(Constants.USS_TEXT_FILE_CONTEXT))) {
             throw new Error(`Cannot set encoding for node with context ${this.contextValue}`);
         }
+        const isSymlink = SharedContext.isSymlink(this);
         if (encoding?.kind === "binary") {
             this.contextValue = Constants.USS_BINARY_FILE_CONTEXT;
         } else {
@@ -437,6 +438,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 encoding?.kind === "binary"
                     ? Constants.USS_BINARY_FILE_CONTEXT + Constants.FAV_SUFFIX
                     : Constants.USS_TEXT_FILE_CONTEXT + Constants.FAV_SUFFIX;
+        }
+        if (isSymlink) {
+            this.contextValue += Constants.SYMLINK_SUFFIX;
         }
 
         const icon = IconGenerator.getIconByNode(this);
@@ -751,7 +755,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      */
     public async paste(
         destUri: vscode.Uri,
-        uss: { tree: USSFileStructure.UssFileTree; api?: MainframeInteraction.IUss; options?: zosfiles.IUploadOptions }
+        uss: { tree: USSFileStructure.UssFileTree; api?: MainframeInteraction.IUss; options?: zosfiles.IUploadOptions; skippedLinks?: string[] }
     ): Promise<void> {
         ZoweLogger.trace("ZoweUSSNode.paste called.");
         if (!uss.api) {
@@ -771,6 +775,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
         await UssFSProvider.instance.copy(localUri, destUri, {
             overwrite: true,
+            skippedLinks: uss.skippedLinks,
         });
     }
 
@@ -800,13 +805,25 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 responseTimeout: prof.profile?.responseTimeout,
             };
 
+            const skippedLinks: string[] = [];
             for (const subnode of fileTreeToPaste.children) {
                 await this.paste(
                     vscode.Uri.from({
                         scheme: ZoweScheme.USS,
                         path: `/${this.profile.name}${this.fullPath}`,
                     }),
-                    { api, tree: subnode, options }
+                    { api, tree: subnode, options, skippedLinks }
+                );
+            }
+            if (skippedLinks.length > 0) {
+                const skipped = skippedLinks.join(", ");
+                ZoweLogger.warn(`Skipped ${skippedLinks.length} symbolic link(s) while pasting: ${skipped}`);
+                Gui.warningMessage(
+                    vscode.l10n.t({
+                        message: "Symbolic links inside pasted folders could not be copied and were skipped: {0}",
+                        args: [skipped],
+                        comment: ["List of skipped USS paths"],
+                    })
                 );
             }
         } catch (error) {

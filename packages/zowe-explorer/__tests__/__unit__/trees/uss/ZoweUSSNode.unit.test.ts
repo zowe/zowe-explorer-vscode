@@ -724,6 +724,48 @@ describe("ZoweUSSNode Unit Tests - node.setEncoding() and encoding behaviors", (
         expect(node.contextValue).toEqual(Constants.USS_TEXT_FILE_CONTEXT + Constants.FAV_SUFFIX);
     });
 
+    it.each([
+        ["binary", { kind: "binary" }, Constants.USS_BINARY_FILE_CONTEXT],
+        ["text", { kind: "text" }, Constants.USS_TEXT_FILE_CONTEXT],
+        ["another codepage", { kind: "other", codepage: "IBM-1047" }, Constants.USS_TEXT_FILE_CONTEXT],
+        ["no", undefined, Constants.USS_TEXT_FILE_CONTEXT],
+    ])("keeps a symlink marked as a symlink when setting %s encoding", (_name, encoding, baseContext) => {
+        const globalMocks = createGlobalMocks();
+        getEncodingMock.mockReturnValue(encoding);
+        const node = new ZoweUSSNode({
+            label: "encodingTest",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: globalMocks.profileOne,
+            isSymlink: true,
+        });
+        node.setEncoding(encoding);
+        expect(node.contextValue).toEqual(baseContext + Constants.SYMLINK_SUFFIX);
+        expect(SharedContext.isSymlink(node)).toBe(true);
+        expect(JSON.stringify(node.iconPath)).toContain("file-symlink-file.svg");
+    });
+
+    it("keeps a symlink in favorites marked as both a favorite and a symlink when setting encoding", () => {
+        const globalMocks = createGlobalMocks();
+        const parentNode = new ZoweUSSNode({
+            label: "favoriteTest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            profile: globalMocks.profileOne,
+        });
+        parentNode.contextValue = Constants.FAV_PROFILE_CONTEXT;
+        const binaryEncoding = { kind: "binary" };
+        getEncodingMock.mockReturnValue(binaryEncoding);
+        const node = new ZoweUSSNode({
+            label: "encodingTest",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode,
+            isSymlink: true,
+        });
+        node.setEncoding(binaryEncoding);
+        expect(SharedContext.isSymlink(node)).toBe(true);
+        expect(SharedContext.isFavorite(node)).toBe(true);
+        expect(SharedContext.isBinary(node)).toBe(true);
+    });
+
     it("resets encoding to undefined", () => {
         const globalMocks = createGlobalMocks();
         const node = new ZoweUSSNode({
@@ -2056,6 +2098,72 @@ describe("ZoweUSSNode Unit Tests - Function node.pasteUssTree()", () => {
         vi.spyOn(blockMocks.mockUssApi, "uploadDirectory").mockRejectedValueOnce(blockMocks.fileResponse);
 
         await blockMocks.testNode.pasteUssTree();
+    });
+
+    it("warns once after pasting about the links that could not be copied", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        blockMocks.pasteSpy.mockClear();
+        const warningSpy = vi.spyOn(Gui, "warningMessage").mockResolvedValue(undefined);
+        // Each pasted item reports the links it skipped into the shared list
+        blockMocks.pasteSpy.mockImplementation(async (_destUri, uss) => {
+            uss.skippedLinks.push(`${uss.tree.ussPath}/link`);
+        });
+
+        try {
+            await blockMocks.testNode.pasteUssTree();
+
+            expect(blockMocks.pasteSpy).toHaveBeenCalledTimes(3);
+            expect(warningSpy).toHaveBeenCalledTimes(1);
+            for (const ussPath of ["/path/testFile/link", "/path/testFile2/link", "/path/testFile3/link"]) {
+                expect(warningSpy.mock.calls[0][0]).toContain(ussPath);
+            }
+        } finally {
+            warningSpy.mockRestore();
+            blockMocks.pasteSpy.mockRestore();
+        }
+    });
+
+    it("does not warn after pasting when no links were skipped", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        blockMocks.pasteSpy.mockClear();
+        const warningSpy = vi.spyOn(Gui, "warningMessage").mockResolvedValue(undefined);
+        blockMocks.pasteSpy.mockResolvedValue(undefined);
+
+        try {
+            await blockMocks.testNode.pasteUssTree();
+
+            expect(blockMocks.pasteSpy).toHaveBeenCalledTimes(3);
+            expect(warningSpy).not.toHaveBeenCalled();
+        } finally {
+            warningSpy.mockRestore();
+            blockMocks.pasteSpy.mockRestore();
+        }
+    });
+
+    it("passes the list for skipped links on to the provider when pasting", async () => {
+        createGlobalMocks();
+        const node = new ZoweUSSNode({
+            label: "root",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            profile: createIProfile(),
+        });
+        const copySpy = vi.spyOn(UssFSProvider.instance, "copy").mockResolvedValue(undefined);
+        const skippedLinks: string[] = [];
+        const tree = { localUri: vscode.Uri.from({ scheme: ZoweScheme.USS, path: "/sestest/a" }), ussPath: "/a", type: 1 };
+
+        try {
+            await node.paste(vscode.Uri.from({ scheme: ZoweScheme.USS, path: "/sestest/dest" }), {
+                api: { fileList: vi.fn(), copy: vi.fn() } as any,
+                tree,
+                skippedLinks,
+            });
+
+            expect(copySpy).toHaveBeenCalledWith(expect.anything(), expect.anything(), { overwrite: true, skippedLinks });
+        } finally {
+            copySpy.mockRestore();
+        }
     });
 });
 
