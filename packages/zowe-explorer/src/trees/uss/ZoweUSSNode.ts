@@ -657,7 +657,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * Getter for folder type
      */
     public get isFolder(): boolean {
-        return [Constants.USS_DIR_CONTEXT, Constants.USS_DIR_CONTEXT + Constants.FAV_SUFFIX].indexOf(this.contextValue) > -1;
+        // Match the start of the context value, so that suffixes such as favorites and symlinks are still folders
+        return this.contextValue?.startsWith(Constants.USS_DIR_CONTEXT) ?? false;
     }
 
     /**

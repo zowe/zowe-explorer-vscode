@@ -2167,6 +2167,28 @@ describe("ZoweUSSNode Unit Tests - Function node.pasteUssTree()", () => {
     });
 });
 
+describe("ZoweUSSNode Unit Tests - isFolder", () => {
+    it.each([
+        ["a folder", Constants.USS_DIR_CONTEXT, true],
+        ["a favorite folder", Constants.USS_DIR_CONTEXT + Constants.FAV_SUFFIX, true],
+        ["a symlink to a folder", Constants.USS_DIR_CONTEXT + Constants.SYMLINK_SUFFIX, true],
+        ["a favorite symlink to a folder", Constants.USS_DIR_CONTEXT + Constants.SYMLINK_SUFFIX + Constants.FAV_SUFFIX, true],
+        ["a text file", Constants.USS_TEXT_FILE_CONTEXT, false],
+        ["a symlink to a file", Constants.USS_TEXT_FILE_CONTEXT + Constants.SYMLINK_SUFFIX, false],
+        ["a binary file", Constants.USS_BINARY_FILE_CONTEXT, false],
+        ["a filtered session", Constants.USS_SESSION_CONTEXT + "_" + Constants.FILTER_SEARCH, false],
+    ])("is correct for %s (%s)", (_name, context, expected) => {
+        createGlobalMocks();
+        const node = new ZoweUSSNode({
+            label: "node",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: createIProfile(),
+            contextOverride: context,
+        });
+        expect(node.isFolder).toBe(expected);
+    });
+});
+
 describe("ZoweUSSNode Unit Tests - Function node.setEtag", () => {
     it("sets the e-tag for a file", () => {
         const globalMocks = createGlobalMocks();
