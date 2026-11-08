@@ -175,14 +175,26 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
     public async fetchAttributes(): Promise<Types.FileAttributes> {
         const ussEntry = UssFSProvider.instance.lookup(this.resourceUri, true) as UssFile | UssDirectory;
-        if (ussEntry == null || FsAbstractUtils.isDirectoryEntry(ussEntry)) {
+        if (ussEntry == null) {
             return undefined;
         }
-        const response = await this.getUssFiles(this.profile);
-        if (response.success === false || response.apiResponse?.items?.length !== 1) {
-            return undefined;
+        let item;
+        if (FsAbstractUtils.isDirectoryEntry(ussEntry)) {
+            if (!SharedContext.isSymlink(this)) {
+                return undefined;
+            }
+            const response = await this.getUssFiles(this.profile, true);
+            if (response.success === false) {
+                return undefined;
+            }
+            item = response.apiResponse?.items?.find((listItem) => listItem.name === ".");
+        } else {
+            const response = await this.getUssFiles(this.profile);
+            if (response.success === false || response.apiResponse?.items?.length !== 1) {
+                return undefined;
+            }
+            item = response.apiResponse.items[0];
         }
-        const item = response.apiResponse.items[0];
         if (item == null) {
             return undefined;
         }
@@ -836,7 +848,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
     }
 
-    private async getUssFiles(profile: imperative.IProfileLoaded): Promise<zosfiles.IZosFilesResponse> {
+    private async getUssFiles(profile: imperative.IProfileLoaded, keepRelative = false): Promise<zosfiles.IZosFilesResponse> {
         let response_list: zosfiles.IZosFilesResponse;
         const showHidden = SettingsConfig.getDirectValue<boolean>("zowe.files.showHiddenFiles");
         try {
@@ -854,9 +866,11 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                           })
                 );
             } else {
-                response_list = await UssFSProvider.instance.listFiles(profile, this.resourceUri);
+                response_list = keepRelative
+                    ? await UssFSProvider.instance.listFiles(profile, this.resourceUri, true)
+                    : await UssFSProvider.instance.listFiles(profile, this.resourceUri);
             }
-            return showHidden ? response_list : await USSUtils.filterHiddenFiles(response_list);
+            return showHidden || keepRelative ? response_list : await USSUtils.filterHiddenFiles(response_list);
         } catch (error) {
             const updated = await AuthUtils.errorHandling(error, {
                 apiType: ZoweExplorerApiType.Uss,

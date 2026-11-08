@@ -162,3 +162,57 @@ describe("AttributeView unit tests", () => {
         expect(spyReadFile).toHaveBeenCalledTimes(1);
     });
 });
+
+describe("AttributeView unit tests - symbolic links", () => {
+    const context = { extensionPath: "some/fake/ext/path" } as unknown as vscode.ExtensionContext;
+    const treeProvider = { refreshElement: vi.fn(), refresh: vi.fn() } as unknown as IZoweTree<IZoweUSSTreeNode>;
+    const profile = { type: "sampleType", message: "", failNotFound: false };
+    let onUpdateMocked: MockedProperty<any, any>;
+
+    beforeEach(() => {
+        vi.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation((() => undefined) as any);
+        vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue({
+            updateAttributes: vi.fn(),
+            getTag: () => Promise.resolve("UTF-8"),
+        } as unknown as MainframeInteraction.IUss);
+        onUpdateMocked = new MockedProperty(ZoweUSSNode.prototype, "onUpdate", undefined, vi.fn());
+    });
+
+    afterEach(() => {
+        onUpdateMocked[Symbol.dispose]();
+        vi.restoreAllMocks();
+    });
+
+    function openView(isSymlink: boolean): { node: ZoweUSSNode; view: USSAttributeView } {
+        const node = new ZoweUSSNode({
+            label: "linkOrFile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentPath: "/z/some",
+            profile,
+            isSymlink,
+        });
+        return { node, view: new USSAttributeView(context, treeProvider, node) };
+    }
+
+    it("shows the target's attributes when opened for a symlink, as changes apply to the target", async () => {
+        const { node, view } = openView(true);
+        const targetAttrs = { owner: "bUser", group: "USERS", perms: "-rw-r-----" };
+        const fetchMock = vi.spyOn(node, "fetchAttributes").mockResolvedValue(targetAttrs as any);
+        vi.spyOn(node, "getAttributes").mockReturnValue(targetAttrs as any);
+
+        await (view as any).onDidReceiveMessage({ command: "ready" });
+
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+        expect(view.panel.webview.postMessage).toHaveBeenCalledWith(expect.objectContaining({ attributes: targetAttrs }));
+    });
+
+    it("does not fetch the attributes again when opened for a file that is not a symlink", async () => {
+        const { node, view } = openView(false);
+        const fetchMock = vi.spyOn(node, "fetchAttributes");
+        vi.spyOn(node, "getAttributes").mockReturnValue({ perms: "-rw-r--r--" } as any);
+
+        await (view as any).onDidReceiveMessage({ command: "ready" });
+
+        expect(fetchMock).not.toHaveBeenCalled();
+    });
+});
