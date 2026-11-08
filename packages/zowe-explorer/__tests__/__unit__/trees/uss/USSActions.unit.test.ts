@@ -3327,5 +3327,69 @@ describe("USS Action Unit Tests - downloading functions", () => {
 
             expect(capturedOptions.abortDownload()).toBe(false);
         });
+
+        describe("for a selected symlink to a directory", () => {
+            const createLinkNode = (): IZoweUSSTreeNode => {
+                const mockNode = createMockNode();
+                mockNode.fullPath = "/u/test/dirlink";
+                mockNode.contextValue = Constants.USS_DIR_CONTEXT + Constants.SYMLINK_SUFFIX;
+                return mockNode;
+            };
+            const mockDownloadOptions = (followSymlinks: boolean, generateDirectory = false): any => ({
+                selectedPath: vscode.Uri.file("/test/download/path"),
+                generateDirectory,
+                overwrite: true,
+                dirOptions: { followSymlinks, chooseFilterOptions: false },
+                dirFilterOptions: { includeHidden: false, filesys: false },
+            });
+
+            beforeEach(() => {
+                globalMocks.ussApi.fileList.mockResolvedValue({ success: true, commandResponse: "", apiResponse: { items: [{}, {}] } });
+                globalMocks.withProgress.mockImplementation(async (options: any, callback: any) => {
+                    return await callback({ report: vi.fn() }, { isCancellationRequested: false });
+                });
+            });
+
+            it.each([
+                ["off", false],
+                ["on", true],
+            ])("lists and downloads the target directory with Follow Symlinks %s", async (_name, followSymlinks) => {
+                vi.spyOn(USSActions as any, "getUssDownloadOptions").mockResolvedValue(mockDownloadOptions(followSymlinks));
+
+                await USSActions.downloadUssDirectory(createLinkNode());
+
+                // Listing the link itself only reports the link when links are not followed, so list through it instead
+                expect(globalMocks.ussApi.fileList).toHaveBeenCalledWith("/u/test/dirlink/.", expect.objectContaining({ type: "f" }));
+                expect(globalMocks.ussApi.downloadDirectory).toHaveBeenCalledWith(
+                    "/u/test/dirlink/.",
+                    expect.objectContaining({ directory: path.join("/test/download/path", "dirlink") }),
+                    expect.objectContaining({ symlinks: !followSymlinks })
+                );
+            });
+
+            it("names the generated directory structure after the link", async () => {
+                vi.spyOn(USSActions as any, "getUssDownloadOptions").mockResolvedValue(mockDownloadOptions(false, true));
+
+                await USSActions.downloadUssDirectory(createLinkNode());
+
+                expect(globalMocks.ussApi.downloadDirectory).toHaveBeenCalledWith(
+                    "/u/test/dirlink/.",
+                    expect.objectContaining({ directory: path.normalize("/test/download/path/u/test/dirlink") }),
+                    expect.anything()
+                );
+            });
+
+            it("still lists a plain directory by its own path", async () => {
+                vi.spyOn(USSActions as any, "getUssDownloadOptions").mockResolvedValue(mockDownloadOptions(false));
+                const plainNode = createMockNode();
+                plainNode.fullPath = "/u/test/directory";
+                plainNode.contextValue = Constants.USS_DIR_CONTEXT;
+
+                await USSActions.downloadUssDirectory(plainNode);
+
+                expect(globalMocks.ussApi.fileList).toHaveBeenCalledWith("/u/test/directory", expect.anything());
+                expect(globalMocks.ussApi.downloadDirectory).toHaveBeenCalledWith("/u/test/directory", expect.anything(), expect.anything());
+            });
+        });
     });
 });

@@ -793,6 +793,8 @@ export class USSActions {
             return;
         }
 
+        const listPath = SharedContext.isSymlink(node) ? `${node.fullPath}/.` : node.fullPath;
+
         let totalFileCount = 0;
         try {
             // need to destructure includeHidden because its in IDOwnloadOptions not in IUSSListOptions
@@ -806,7 +808,7 @@ export class USSActions {
                 type: "f",
                 symlinks: !downloadOptions.dirOptions.followSymlinks,
             };
-            const listResponse = await ZoweExplorerApiRegister.getUssApi(profile).fileList(node.fullPath, countListOptions);
+            const listResponse = await ZoweExplorerApiRegister.getUssApi(profile).fileList(listPath, countListOptions);
             if (listResponse?.apiResponse?.items) {
                 totalFileCount = listResponse.apiResponse.items.length;
             }
@@ -892,7 +894,7 @@ export class USSActions {
                 };
 
                 try {
-                    const response = await ussApi.downloadDirectory(node.fullPath, options, listOptions);
+                    const response = await ussApi.downloadDirectory(listPath, options, listOptions);
                     void SharedUtils.handleDownloadResponse(response, vscode.l10n.t("USS directory"), directoryPath, token?.isCancellationRequested);
                 } catch (e) {
                     await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Uss, profile });
