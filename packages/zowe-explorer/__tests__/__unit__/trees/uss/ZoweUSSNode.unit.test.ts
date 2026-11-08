@@ -1343,6 +1343,123 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
         createEntrySpy.mockRestore();
     });
 
+    describe("when a child's type changes on the mainframe", () => {
+        const useFakeEntries = () => {
+            const entries = new Map<string, "file" | "directory">();
+            const calls: string[] = [];
+            const spies = [
+                vi.spyOn(UssFSProvider.instance, "exists").mockImplementation((uri) => entries.has(uri.path)),
+                vi.spyOn(UssFSProvider.instance, "createParentDirectories").mockImplementation((() => undefined) as any),
+                vi.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(((uri: vscode.Uri) => {
+                    calls.push(`createDirectory ${uri.path}`);
+                    entries.set(uri.path, "directory");
+                }) as any),
+                vi.spyOn(UssFSProvider.instance, "createEntry").mockImplementation(((uri: vscode.Uri) => {
+                    calls.push(`createEntry ${uri.path}`);
+                    entries.set(uri.path, "file");
+                }) as any),
+                vi.spyOn(UssFSProvider.instance, "removeEntry").mockImplementation((uri) => {
+                    calls.push(`removeEntry ${uri.path}`);
+                    return entries.delete(uri.path);
+                }),
+            ];
+            return { entries, calls, restore: () => spies.forEach((spy) => spy.mockRestore()) };
+        };
+
+        const listTwice = async (before: Record<string, unknown>, after: Record<string, unknown>) => {
+            const globalMocks = createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+            const fake = useFakeEntries();
+            const parentNode = new ZoweUSSNode({
+                label: "testDir",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: blockMocks.rootNode,
+                session: globalMocks.session,
+                profile: globalMocks.profileOne,
+                parentPath: "/u",
+            });
+            const getUssFilesMock = vi
+                .spyOn(parentNode as any, "getUssFiles")
+                .mockResolvedValueOnce({ success: true, apiResponse: { items: [before] } })
+                .mockResolvedValueOnce({ success: true, apiResponse: { items: [after] } });
+
+            parentNode.dirty = true;
+            const [first] = await parentNode.getChildren();
+            fake.calls.length = 0;
+            parentNode.dirty = true;
+            const [second] = await parentNode.getChildren();
+
+            expect(getUssFilesMock).toHaveBeenCalledTimes(2);
+            fake.restore();
+            return { first, second, ...fake };
+        };
+
+        const brokenLink = { name: "target", mode: "lrwxrwxrwx", isSymlink: true, isSymlinkToDirectory: false };
+        const dirLink = { name: "target", mode: "lrwxrwxrwx", isSymlink: true, isSymlinkToDirectory: true };
+        const plainFile = { name: "target", mode: "-rwxrwxrwx" };
+        const plainDir = { name: "target", mode: "drwxrwxrwx" };
+
+        it("replaces a broken symlink with a folder when it becomes a symlink to a directory", async () => {
+            const { first, second, entries, calls } = await listTwice(brokenLink, dirLink);
+            const childPath = second.resourceUri.path;
+
+            expect(second).not.toBe(first);
+            expect(second.collapsibleState).toBe(vscode.TreeItemCollapsibleState.Collapsed);
+            expect(second.contextValue).toBe(Constants.USS_DIR_CONTEXT + Constants.SYMLINK_SUFFIX);
+            expect(second.command).toBeUndefined();
+            expect(second.iconPath).toBe(IconGenerator.getIconById(IconUtils.IconId.symlinkFolder).path);
+            // The old file entry is removed before the folder entry is created, and the folder entry is kept
+            expect(calls).toEqual([`removeEntry ${childPath}`, `createDirectory ${childPath}`]);
+            expect(entries.get(childPath)).toBe("directory");
+        });
+
+        it("replaces a plain file with a folder when it becomes a symlink to a directory", async () => {
+            const { second, entries } = await listTwice(plainFile, dirLink);
+            const childPath = second.resourceUri.path;
+
+            expect(second.collapsibleState).toBe(vscode.TreeItemCollapsibleState.Collapsed);
+            expect(SharedContext.isSymlink(second)).toBe(true);
+            expect(entries.get(childPath)).toBe("directory");
+        });
+
+        it("replaces a folder with a file when it becomes a broken symlink", async () => {
+            const { second, entries, calls } = await listTwice(plainDir, brokenLink);
+            const childPath = second.resourceUri.path;
+
+            expect(second.collapsibleState).toBe(vscode.TreeItemCollapsibleState.None);
+            expect(second.contextValue).toBe(Constants.USS_TEXT_FILE_CONTEXT + Constants.SYMLINK_SUFFIX);
+            expect(second.command).toEqual({ command: "vscode.open", title: "", arguments: [second.resourceUri] });
+            expect(calls).toEqual([`removeEntry ${childPath}`, `createEntry ${childPath}`]);
+            expect(entries.get(childPath)).toBe("file");
+        });
+
+        it("updates a folder that becomes a symlink to a directory without replacing its entry", async () => {
+            const { first, second, entries, calls } = await listTwice(plainDir, dirLink);
+            const childPath = second.resourceUri.path;
+
+            expect(second).not.toBe(first);
+            expect(second.contextValue).toBe(Constants.USS_DIR_CONTEXT + Constants.SYMLINK_SUFFIX);
+            expect(second.iconPath).toBe(IconGenerator.getIconById(IconUtils.IconId.symlinkFolder).path);
+            // Both are folders, so the folder entry and anything cached under it are kept
+            expect(calls).toEqual([]);
+            expect(entries.get(childPath)).toBe("directory");
+        });
+
+        it("updates a symlink to a directory that becomes a plain folder", async () => {
+            const { second } = await listTwice(dirLink, plainDir);
+
+            expect(second.contextValue).toBe(Constants.USS_DIR_CONTEXT);
+            expect(SharedContext.isSymlink(second)).toBe(false);
+        });
+
+        it("keeps the same node when the child's type has not changed", async () => {
+            const { first, second, calls } = await listTwice(dirLink, { ...dirLink, mtime: "2026-11-08T10:00:00" });
+
+            expect(second).toBe(first);
+            expect(calls).toEqual([]);
+        });
+    });
+
     it("Tests that error is thrown when node label is blank", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);

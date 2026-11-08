@@ -303,6 +303,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         const canReportCreations = !isFirstListing;
         const createdUris: vscode.Uri[] = [];
         const responseNodes: IZoweUSSTreeNode[] = [];
+        // Nodes replaced by a new node for the same path, whose provider entries now belong to the new node (for symlink change jank)
+        const replacedNodes: IZoweUSSTreeNode[] = [];
         for (const item of response.apiResponse?.items ?? []) {
             // ".", "..", and "..." have already been filtered out
             let itemName = item.name as string;
@@ -316,6 +318,20 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             }
 
             let ussNode = existingItems[`${itemParentPath}/${itemName}`];
+            // A symbolic link to a directory is listed like a directory, so it can be expanded
+            const isDir = USSUtils.isDirectoryItem(item);
+            const isSymlink = item.isSymlink === true;
+
+            // Check if the object was replaced on the mainframe by a different type, e.g. a broken symlink that now points to a directory
+            // Can't update a node in place so create a new node instead
+            const typeChanged = ussNode != null && (ussNode.collapsibleState !== vscode.TreeItemCollapsibleState.None) !== isDir;
+            if (ussNode != null && (typeChanged || SharedContext.isSymlink(ussNode) !== isSymlink)) {
+                if (typeChanged) {
+                    UssFSProvider.instance.removeEntry(ussNode.resourceUri);
+                }
+                replacedNodes.push(ussNode);
+                ussNode = undefined;
+            }
 
             // The child node already exists. Use that node for the list instead, and update the file attributes in case they've changed
             if (ussNode != null) {
@@ -333,8 +349,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 continue;
             }
 
-            // A symbolic link to a directory is listed like a directory, so it can be expanded
-            const isDir = USSUtils.isDirectoryItem(item);
             const collapseState = isDir ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None;
             ussNode = new ZoweUSSNode({
                 label: itemName,
@@ -343,7 +357,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 parentPath: itemParentPath,
                 profile: cachedProfile,
                 encoding: isDir ? undefined : this.getEncodingInMap(`${itemParentPath}/${itemName}`),
-                isSymlink: item.isSymlink === true,
+                isSymlink,
             });
 
             if (isDir) {
@@ -376,7 +390,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
         // remove any entries from FS provider that were deleted from mainframe when tree view is refreshed
         for (const node of nodesToRemove) {
-            if (node.resourceUri) {
+            if (node.resourceUri && !replacedNodes.includes(node)) {
                 UssFSProvider.instance.removeEntry(node.resourceUri);
             }
         }
