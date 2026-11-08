@@ -303,6 +303,29 @@ describe("USSTree Unit Tests - Function initializeFavorites", () => {
         expect(blockMocks.testTree.mFavorites.length).toBe(1);
         expect(blockMocks.testTree.mFavorites[0].children?.map((item) => item.fullPath)).toEqual(["/u/aDir"]);
     });
+
+    it("restores saved favorites of symlinks as symlinks", async () => {
+        createGlobalMocks();
+        const testTree = new USSTree();
+        testTree.mSessionNodes.push(createUSSSessionNode(createISession(), createIProfile()));
+        vi.spyOn(testTree as any, "mPersistence" as any, "get").mockReturnValue({
+            readFavorites: () => [
+                "[test]: /u/aDir{directory}",
+                "[test]: /u/dirLink{directory}{symlink}",
+                "[test]: /u/fileLink.txt{textFile}{symlink}",
+            ],
+        } as any);
+
+        await testTree.initializeFavorites(imperative.Logger.getAppLogger());
+
+        const [dir, dirLink, fileLink] = testTree.mFavorites[0].children;
+        expect(SharedContext.isSymlink(dir)).toBe(false);
+        expect(dirLink.contextValue).toBe(Constants.USS_DIR_CONTEXT + Constants.SYMLINK_SUFFIX + Constants.FAV_SUFFIX);
+        expect(dirLink.collapsibleState).toBe(vscode.TreeItemCollapsibleState.Collapsed);
+        expect(JSON.stringify(dirLink.iconPath)).toContain("file-symlink-directory.svg");
+        expect(fileLink.contextValue).toBe(Constants.USS_TEXT_FILE_CONTEXT + Constants.SYMLINK_SUFFIX + Constants.FAV_SUFFIX);
+        expect(JSON.stringify(fileLink.iconPath)).toContain("file-symlink-file.svg");
+    });
 });
 
 describe("USSTree Unit Tests - Function initializeFavChildNodeForProfile", () => {
@@ -1654,6 +1677,54 @@ describe("USSTree Unit Tests - Function addFavorite", () => {
         const favProfileNode = globalMocks.testTree.mFavorites[0];
 
         expect(favProfileNode.children[0].fullPath).toEqual(blockMocks.childFile.fullPath);
+    });
+
+    it.each([
+        ["folder", vscode.TreeItemCollapsibleState.Collapsed, Constants.USS_DIR_CONTEXT, "file-symlink-directory.svg"],
+        ["file", vscode.TreeItemCollapsibleState.None, Constants.USS_TEXT_FILE_CONTEXT, "file-symlink-file.svg"],
+    ])("Tests that addFavorite() keeps a symlink to a %s marked as a symlink", async (_kind, collapsibleState, baseContext, icon) => {
+        // An earlier test replaces the icon lookup without restoring it, so use the real one
+        vi.spyOn(IconGenerator, "getIconByNode").mockRestore();
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const link = new ZoweUSSNode({
+            label: "link",
+            collapsibleState,
+            parentNode: blockMocks.parentDir,
+            parentPath: "/parent",
+            isSymlink: true,
+        });
+
+        await globalMocks.testTree.addFavorite(link);
+        const favorite = globalMocks.testTree.mFavorites[0].children[0];
+
+        expect(favorite.contextValue).toBe(baseContext + Constants.SYMLINK_SUFFIX + Constants.FAV_SUFFIX);
+        expect(JSON.stringify(favorite.iconPath)).toContain(icon);
+    });
+
+    it("Tests that addFavorite() saves a symlink with a marker that older versions ignore", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const link = new ZoweUSSNode({
+            label: "link",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.parentDir,
+            parentPath: "/parent",
+            isSymlink: true,
+        });
+        const updateFavoritesSpy = vi.spyOn(ZowePersistentFilters.prototype, "updateFavorites").mockResolvedValue(undefined);
+
+        try {
+            await globalMocks.testTree.addFavorite(blockMocks.parentDir);
+            await globalMocks.testTree.addFavorite(link);
+
+            const saved: string[] = updateFavoritesSpy.mock.calls.at(-1)[0].favorites;
+            expect(saved).toEqual(expect.arrayContaining(["[sestest]: /parent{directory}", "[sestest]: /parent/link{directory}{symlink}"]));
+            // The context value that an older version reads is unchanged
+            expect(SharedUtils.parseFavorites(saved).map((fav) => fav.contextValue)).toEqual(["directory", "directory"]);
+        } finally {
+            updateFavoritesSpy.mockRestore();
+        }
     });
 
     it("Tests that addFavorite() doesn't add duplicates", async () => {

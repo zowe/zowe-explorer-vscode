@@ -723,6 +723,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 session: node.getSession(),
                 profile: node.getProfile(),
                 parentPath: node.getParent().fullPath,
+                isSymlink: SharedContext.isSymlink(node),
             });
             temp.resourceUri = node.resourceUri;
             temp.contextValue = SharedContext.asFavorite(temp);
@@ -785,7 +786,9 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         const favoritesArray = [];
         this.mFavorites.forEach((profileNode) => {
             profileNode.children.forEach((fav) => {
-                const favoriteEntry = "[" + profileNode.label.toString() + "]: " + fav.fullPath + "{" + SharedContext.getBaseContext(fav) + "}";
+                const symlinkMarker = SharedContext.isSymlink(fav) ? Constants.FAV_SYMLINK_MARKER : "";
+                const favoriteEntry =
+                    "[" + profileNode.label.toString() + "]: " + fav.fullPath + "{" + SharedContext.getBaseContext(fav) + "}" + symlinkMarker;
                 favoritesArray.push(favoriteEntry);
             });
         });
@@ -1125,7 +1128,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             }
 
             // Initialize and attach favorited item nodes under their respective profile node in Favorites
-            const favChildNode = this.initializeFavChildNodeForProfile(fav.label, fav.contextValue, favProfileNode);
+            const favChildNode = this.initializeFavChildNodeForProfile(fav.label, fav.contextValue, favProfileNode, fav.isSymlink);
             favProfileNode.children.push(favChildNode);
         }
     }
@@ -1136,9 +1139,10 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
      * @param label The favorited file/folder's label
      * @param contextValue The favorited file/folder's context value
      * @param parentNode The profile node in this.mFavorites that the favorite belongs to
+     * @param isSymlink Whether the favorited file/folder is a symbolic link
      * @returns IZoweUssTreeNode
      */
-    public initializeFavChildNodeForProfile(label: string, context: string, parentNode: IZoweUSSTreeNode): ZoweUSSNode {
+    public initializeFavChildNodeForProfile(label: string, context: string, parentNode: IZoweUSSTreeNode, isSymlink = false): ZoweUSSNode {
         ZoweLogger.trace("USSTree.initializeFavChildNodeForProfile called.");
         const profile = parentNode.getProfile();
         let node: ZoweUSSNode;
@@ -1149,6 +1153,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                     collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                     parentNode,
                     profile,
+                    isSymlink,
                 });
                 node.description = path.dirname(label);
                 break;
@@ -1170,6 +1175,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                     collapsibleState: vscode.TreeItemCollapsibleState.None,
                     parentNode,
                     profile,
+                    isSymlink,
                 });
                 node.description = path.dirname(label);
                 break;

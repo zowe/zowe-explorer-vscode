@@ -211,10 +211,14 @@ export class SharedUtils {
                 }
 
                 const openingCurlyBrace = remainderOfLine.indexOf("{");
+                const closingCurlyBrace = remainderOfLine.indexOf("}");
+                // A symlink is marked after the context, so that versions that do not support symlinks still read the context
+                const isSymlink = closingCurlyBrace > -1 && remainderOfLine.substring(closingCurlyBrace + 1).trim() === Constants.FAV_SYMLINK_MARKER;
                 return {
                     profileName,
                     label: remainderOfLine.substring(0, openingCurlyBrace).trim(),
-                    contextValue: openingCurlyBrace > 0 ? remainderOfLine.substring(openingCurlyBrace + 1, remainderOfLine.indexOf("}")) : undefined,
+                    contextValue: openingCurlyBrace > 0 ? remainderOfLine.substring(openingCurlyBrace + 1, closingCurlyBrace) : undefined,
+                    ...(isSymlink ? { isSymlink } : {}),
                 };
             })
             .filter(Boolean);
