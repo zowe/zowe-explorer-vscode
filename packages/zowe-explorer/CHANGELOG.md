@@ -24,6 +24,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where the profile actions menu (including "Hide Profile") failed to open for profiles missing required properties like host. [#4557](https://github.com/zowe/zowe-explorer-vscode/pull/4557)
 - Fixed an issue where profiles with `authOrder` starting with `token` or `bearer` and no stored credentials (for example, after logging out with an unsecured config) were prompted for basic credentials instead of the SSO login. [#4574](https://github.com/zowe/zowe-explorer-vscode/issues/4574)
 - Fixed an issue where pressing `Esc` on the "Do you wish to apply this for all trees?" prompt, after choosing a profile to add to a tree, still added the profile. Cancelling the prompt now adds nothing. [#4514](https://github.com/zowe/zowe-explorer-vscode/issues/4514)
+- Fixed an accessibility issue where screen readers did not automatically announce the success or failure message after running the command palette option to "Export Redacted Configuration Files". The result is now shown in a modal dialog that receives focus so that it is announced automatically, and the message is condensed to a single line, with the export location written to the Zowe Explorer log. [#4602](https://github.com/zowe/zowe-explorer-vscode/issues/4602)
 
 ## `3.6.1`
 
