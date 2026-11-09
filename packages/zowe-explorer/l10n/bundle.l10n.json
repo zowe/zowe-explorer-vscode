@@ -406,6 +406,7 @@
   "Click \"Troubleshoot\", then \"Full error summary\" for more detailed information.": "Click \"Troubleshoot\", then \"Full error summary\" for more detailed information.",
   "Click on Edit in settings.json to enter in desired values in the file. Specify the method and direction from the options provided by IntelliSense. For example:": "Click on Edit in settings.json to enter in desired values in the file. Specify the method and direction from the options provided by IntelliSense. For example:",
   "Click on a filter to change its value": "Click on a filter to change its value",
+  "Close": "Close",
   "Column settings": "Column settings",
   "Command response: {0}/Command response": {
     "message": "Command response: {0}",
@@ -776,6 +777,19 @@
   "Expanding a profile in the **Favorites** section no longer uploads empty content to each favorited z/OS Unix file. Previously this failed for users without write access and truncated the file for everyone else.": "Expanding a profile in the **Favorites** section no longer uploads empty content to each favorited z/OS Unix file. Previously this failed for users without write access and truncated the file for everyone else.",
   "Export Redacted Configuration": "Export Redacted Configuration",
   "Export configuration files for troubleshooting": "Export configuration files for troubleshooting",
+  "Exported {0} redacted configuration file(s) to {1}/Number of files exportedExport directory": {
+    "message": "Exported {0} redacted configuration file(s) to {1}",
+    "comment": [
+      "Number of files exported",
+      "Export directory"
+    ]
+  },
+  "Exported {0} redacted configuration file(s). Always review the exported files before sharing them./Number of files exported": {
+    "message": "Exported {0} redacted configuration file(s). Always review the exported files before sharing them.",
+    "comment": [
+      "Number of files exported"
+    ]
+  },
   "Exposed commands to drive filtering in the Data Sets views <a>#3992</a>": "Exposed commands to drive filtering in the Data Sets views <a>#3992</a>",
   "Exposed commands to drive search in the USS views. <a>#3933</a>": "Exposed commands to drive search in the USS views. <a>#3933</a>",
   "Exposed read and write access to local storage keys for Zowe Explorer extenders. <a>#3180</a>": "Exposed read and write access to local storage keys for Zowe Explorer extenders. <a>#3180</a>",
@@ -1030,6 +1044,7 @@
   "Fixed an accessibility issue in the \"Create New Data Set\" flow by replacing click-oriented instructions with clearer keyboard- and screen reader-friendly prompts and step titles. <a>#4026</a>": "Fixed an accessibility issue in the \"Create New Data Set\" flow by replacing click-oriented instructions with clearer keyboard- and screen reader-friendly prompts and step titles. <a>#4026</a>",
   "Fixed an accessibility issue where focus was lost after renaming a dataset, dataset member, USS file, or USS directory. Focus now remains on the renamed item, and screen readers receive a confirmation message indicating the successful rename. <a>#4032</a>": "Fixed an accessibility issue where focus was lost after renaming a dataset, dataset member, USS file, or USS directory. Focus now remains on the renamed item, and screen readers receive a confirmation message indicating the successful rename. <a>#4032</a>",
   "Fixed an accessibility issue where screen readers could not access the job ID link after job submission. Added a keyboard-accessible \"Open Job\" button that can be navigated using Tab and activated with Enter or Space keys. <a>#4030</a>": "Fixed an accessibility issue where screen readers could not access the job ID link after job submission. Added a keyboard-accessible \"Open Job\" button that can be navigated using Tab and activated with Enter or Space keys. <a>#4030</a>",
+  "Fixed an accessibility issue where screen readers did not automatically announce the success or failure message after running the command palette option to \"Export Redacted Configuration Files\". The result is now shown in a modal dialog that receives focus so that it is announced automatically, and the message is condensed to a single line, with the export location written to the Zowe Explorer log. <a>#4602</a>": "Fixed an accessibility issue where screen readers did not automatically announce the success or failure message after running the command palette option to \"Export Redacted Configuration Files\". The result is now shown in a modal dialog that receives focus so that it is announced automatically, and the message is condensed to a single line, with the export location written to the Zowe Explorer log. <a>#4602</a>",
   "Fixed an accessibility issue where screen readers did not provide instructions for configuring job polling. Added descriptive prompts and placeholder text explaining how polling works, the expected input format, and what happens when polling is active. <a>#4029</a>": "Fixed an accessibility issue where screen readers did not provide instructions for configuring job polling. Added descriptive prompts and placeholder text explaining how polling works, the expected input format, and what happens when polling is active. <a>#4029</a>",
   "Fixed an accessibility issue where the \"Create File\" and \"Create Directory\" actions used the same generic instruction \"Name of file or directory\". The instructions are now specific to the selected action and clearly indicate what is required. <a>#4027</a>": "Fixed an accessibility issue where the \"Create File\" and \"Create Directory\" actions used the same generic instruction \"Name of file or directory\". The instructions are now specific to the selected action and clearly indicate what is required. <a>#4027</a>",
   "Fixed an error encountered when deleting members in a PDS. <a>#3874</a>": "Fixed an error encountered when deleting members in a PDS. <a>#3874</a>",
