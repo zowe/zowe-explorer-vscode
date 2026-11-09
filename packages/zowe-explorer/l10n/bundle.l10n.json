@@ -226,7 +226,6 @@
   "Added support for logging in to multiple API ML instances per team configuration file. <a>#2264</a>": "Added support for logging in to multiple API ML instances per team configuration file. <a>#2264</a>",
   "Added support for pasting at top-level of USS tree (if filtered), and optimized copy/paste operations to avoid using local paths when possible. <a>#2041</a>": "Added support for pasting at top-level of USS tree (if filtered), and optimized copy/paste operations to avoid using local paths when possible. <a>#2041</a>",
   "Added support for resolving aliases in the Zowe data set tree and when using the Zowe data set filesystem provider. <a>#4438</a> & <a>#4489</a>": "Added support for resolving aliases in the Zowe data set tree and when using the Zowe data set filesystem provider. <a>#4438</a> & <a>#4489</a>",
-  "Added support for resolving data set aliases when using SSH profiles. <a>#4489</a>": "Added support for resolving data set aliases when using SSH profiles. <a>#4489</a>",
   "Added support for the allowedLoginMethod profile property. This property can be used to restrict allowed authentication methods to a single option. If a profile has no value for allowedLoginMethod, or if the value is \"prompt\", there is no change in behavior compared to previous Zowe Explorer versions. <a>#4531</a>": "Added support for the allowedLoginMethod profile property. This property can be used to restrict allowed authentication methods to a single option. If a profile has no value for allowedLoginMethod, or if the value is \"prompt\", there is no change in behavior compared to previous Zowe Explorer versions. <a>#4531</a>",
   "Added support to delete VSAM data sets via right-click action.": "Added support to delete VSAM data sets via right-click action.",
   "Added support to delete VSAM data sets. <a>#3824</a>": "Added support to delete VSAM data sets. <a>#3824</a>",
@@ -399,6 +398,7 @@
   "Click \"Troubleshoot\", then \"Full error summary\" for more detailed information.": "Click \"Troubleshoot\", then \"Full error summary\" for more detailed information.",
   "Click on Edit in settings.json to enter in desired values in the file. Specify the method and direction from the options provided by IntelliSense. For example:": "Click on Edit in settings.json to enter in desired values in the file. Specify the method and direction from the options provided by IntelliSense. For example:",
   "Click on a filter to change its value": "Click on a filter to change its value",
+  "Close": "Close",
   "Column settings": "Column settings",
   "Command response: {0}/Command response": {
     "message": "Command response: {0}",
@@ -763,6 +763,19 @@
   "Expanding a profile in the **Favorites** section no longer uploads empty content to each favorited z/OS Unix file. Previously this failed for users without write access and truncated the file for everyone else.": "Expanding a profile in the **Favorites** section no longer uploads empty content to each favorited z/OS Unix file. Previously this failed for users without write access and truncated the file for everyone else.",
   "Export Redacted Configuration": "Export Redacted Configuration",
   "Export configuration files for troubleshooting": "Export configuration files for troubleshooting",
+  "Exported {0} redacted configuration file(s) to {1}/Number of files exportedExport directory": {
+    "message": "Exported {0} redacted configuration file(s) to {1}",
+    "comment": [
+      "Number of files exported",
+      "Export directory"
+    ]
+  },
+  "Exported {0} redacted configuration file(s). Always review the exported files before sharing them./Number of files exported": {
+    "message": "Exported {0} redacted configuration file(s). Always review the exported files before sharing them.",
+    "comment": [
+      "Number of files exported"
+    ]
+  },
   "Exposed commands to drive filtering in the Data Sets views <a>#3992</a>": "Exposed commands to drive filtering in the Data Sets views <a>#3992</a>",
   "Exposed commands to drive search in the USS views. <a>#3933</a>": "Exposed commands to drive search in the USS views. <a>#3933</a>",
   "Exposed read and write access to local storage keys for Zowe Explorer extenders. <a>#3180</a>": "Exposed read and write access to local storage keys for Zowe Explorer extenders. <a>#3180</a>",
@@ -1011,6 +1024,7 @@
   "Fixed an accessibility issue in the \"Create New Data Set\" flow by replacing click-oriented instructions with clearer keyboard- and screen reader-friendly prompts and step titles. <a>#4026</a>": "Fixed an accessibility issue in the \"Create New Data Set\" flow by replacing click-oriented instructions with clearer keyboard- and screen reader-friendly prompts and step titles. <a>#4026</a>",
   "Fixed an accessibility issue where focus was lost after renaming a dataset, dataset member, USS file, or USS directory. Focus now remains on the renamed item, and screen readers receive a confirmation message indicating the successful rename. <a>#4032</a>": "Fixed an accessibility issue where focus was lost after renaming a dataset, dataset member, USS file, or USS directory. Focus now remains on the renamed item, and screen readers receive a confirmation message indicating the successful rename. <a>#4032</a>",
   "Fixed an accessibility issue where screen readers could not access the job ID link after job submission. Added a keyboard-accessible \"Open Job\" button that can be navigated using Tab and activated with Enter or Space keys. <a>#4030</a>": "Fixed an accessibility issue where screen readers could not access the job ID link after job submission. Added a keyboard-accessible \"Open Job\" button that can be navigated using Tab and activated with Enter or Space keys. <a>#4030</a>",
+  "Fixed an accessibility issue where screen readers did not automatically announce the success or failure message after running the command palette option to \"Export Redacted Configuration Files\". The result is now shown in a modal dialog that receives focus so that it is announced automatically, and the message is condensed to a single line, with the export location written to the Zowe Explorer log. <a>#4602</a>": "Fixed an accessibility issue where screen readers did not automatically announce the success or failure message after running the command palette option to \"Export Redacted Configuration Files\". The result is now shown in a modal dialog that receives focus so that it is announced automatically, and the message is condensed to a single line, with the export location written to the Zowe Explorer log. <a>#4602</a>",
   "Fixed an accessibility issue where screen readers did not provide instructions for configuring job polling. Added descriptive prompts and placeholder text explaining how polling works, the expected input format, and what happens when polling is active. <a>#4029</a>": "Fixed an accessibility issue where screen readers did not provide instructions for configuring job polling. Added descriptive prompts and placeholder text explaining how polling works, the expected input format, and what happens when polling is active. <a>#4029</a>",
   "Fixed an accessibility issue where the \"Create File\" and \"Create Directory\" actions used the same generic instruction \"Name of file or directory\". The instructions are now specific to the selected action and clearly indicate what is required. <a>#4027</a>": "Fixed an accessibility issue where the \"Create File\" and \"Create Directory\" actions used the same generic instruction \"Name of file or directory\". The instructions are now specific to the selected action and clearly indicate what is required. <a>#4027</a>",
   "Fixed an error encountered when deleting members in a PDS. <a>#3874</a>": "Fixed an error encountered when deleting members in a PDS. <a>#3874</a>",
@@ -1103,6 +1117,7 @@
   "Fixed an issue where opening a highlighted PDS name present within the job spool files using the **Open selected data set** option showed an unnecessary warning message even when the PDS was successfully filtered and displayed in the tree. <a>#4230</a>": "Fixed an issue where opening a highlighted PDS name present within the job spool files using the **Open selected data set** option showed an unnecessary warning message even when the PDS was successfully filtered and displayed in the tree. <a>#4230</a>",
   "Fixed an issue where opening sequential data sets within favorited searches resulted in an error. <a>#3163</a>": "Fixed an issue where opening sequential data sets within favorited searches resulted in an error. <a>#3163</a>",
   "Fixed an issue where pasting data sets failed with \"e.getChildren is not a function\" when using extenders that don't support allocateLikeDataSet, a function that allocates a copy of a data set with specified options. <a>#4107</a>": "Fixed an issue where pasting data sets failed with \"e.getChildren is not a function\" when using extenders that don't support allocateLikeDataSet, a function that allocates a copy of a data set with specified options. <a>#4107</a>",
+  "Fixed an issue where pressing Esc on the \"Do you wish to apply this for all trees?\" prompt, after choosing a profile to add to a tree, still added the profile. Cancelling the prompt now adds nothing. <a>#4514</a>": "Fixed an issue where pressing Esc on the \"Do you wish to apply this for all trees?\" prompt, after choosing a profile to add to a tree, still added the profile. Cancelling the prompt now adds nothing. <a>#4514</a>",
   "Fixed an issue where profile encoding is not respected when opening job spool files. <a>#3504</a>": "Fixed an issue where profile encoding is not respected when opening job spool files. <a>#3504</a>",
   "Fixed an issue where profiles that were not utilizing tokens were improperly running checkJwtForProfile() function within the ZoweTreeProvider. <a>#3575</a>": "Fixed an issue where profiles that were not utilizing tokens were improperly running checkJwtForProfile() function within the ZoweTreeProvider. <a>#3575</a>",
   "Fixed an issue where profiles with authOrder starting with token or bearer and no stored credentials (for example, after logging out with an unsecured config) were prompted for basic credentials instead of the SSO login. <a>#4574</a>": "Fixed an issue where profiles with authOrder starting with token or bearer and no stored credentials (for example, after logging out with an unsecured config) were prompted for basic credentials instead of the SSO login. <a>#4574</a>",
@@ -1975,8 +1990,6 @@
   "Renamed isHomeProfile context helper function to isGlobalProfile for clarity. <a>#2026</a>": "Renamed isHomeProfile context helper function to isGlobalProfile for clarity. <a>#2026</a>",
   "Renamed references to \"MVS Command\" to \"Console Command\" for clarity. <a>#4300</a>": "Renamed references to \"MVS Command\" to \"Console Command\" for clarity. <a>#4300</a>",
   "Renamed the \"Edit History\" command to \"Manage Saved Data\". <a>#3804</a>": "Renamed the \"Edit History\" command to \"Manage Saved Data\". <a>#3804</a>",
-  "Renamed the \"Restart zowex server on host...\" command to \"\"Restart SSH server on host...\". <a>#4489</a>": "Renamed the \"Restart zowex server on host...\" command to \"\"Restart SSH server on host...\". <a>#4489</a>",
-  "Renamed the \"Uninstall zowex server on host...\" command to \"\"Uninstall SSH server on host...\". <a>#4489</a>": "Renamed the \"Uninstall zowex server on host...\" command to \"\"Uninstall SSH server on host...\". <a>#4489</a>",
   "Renaming data set {0}/Old data set name": {
     "message": "Renaming data set {0}",
     "comment": [
