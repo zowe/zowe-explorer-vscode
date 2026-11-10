@@ -55,6 +55,7 @@ export class ProfileManagement {
     }
     public static AuthQpLabels = {
         add: "add-credentials",
+        changePassword: "change-password",
         disable: "disable-validation",
         edit: "edit-profile",
         enable: "enable-validation",
@@ -78,6 +79,14 @@ export class ProfileManagement {
             description: vscode.l10n.t("Update stored username and password"),
         },
     };
+
+    public static readonly changePasswordQpItems: Record<string, vscode.QuickPickItem> = {
+        [ProfileManagement.AuthQpLabels.changePassword]: {
+            label: `$(lock) ${vscode.l10n.t("Change Password")}`,
+            description: vscode.l10n.t("Change your password on the server and update stored password"),
+        },
+    };
+
     public static readonly certUpdateQpItems: Record<string, vscode.QuickPickItem> = {
         [ProfileManagement.AuthQpLabels.updateCert]: {
             label: `$(plus) ${vscode.l10n.t("Update Certificate")}`,
@@ -187,6 +196,9 @@ export class ProfileManagement {
             }
         } else if (managementType === imperative.SessConstants.AUTH_TYPE_BASIC) {
             quickPickOptions = Object.values(this.basicAuthUpdateQpItems);
+            if (profileCommonApi.changePassword != null) {
+                quickPickOptions.push(this.changePasswordQpItems[this.AuthQpLabels.changePassword]);
+            }
             if (allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT) {
                 quickPickOptions.push(this.switchAuthenticationQpItems[this.AuthQpLabels.switch]);
             }
@@ -240,6 +252,10 @@ export class ProfileManagement {
                 await ProfilesUtils.promptCredentials(node);
                 break;
             }
+            case this.changePasswordQpItems[this.AuthQpLabels.changePassword]: {
+                await ProfilesUtils.changePassword(node);
+                break;
+            }
             case this.certUpdateQpItems[this.AuthQpLabels.updateCert]: {
                 await Profiles.getInstance().promptCertificate({
                     title: vscode.l10n.t("Update Certificate"),
@@ -248,7 +264,6 @@ export class ProfileManagement {
                     showLoginButton: false,
                     openDialogOptions: { canSelectFiles: true, canSelectFolders: false, canSelectMany: false },
                 });
-
                 break;
             }
             case this.hideProfileQpItems[this.AuthQpLabels.hide]: {

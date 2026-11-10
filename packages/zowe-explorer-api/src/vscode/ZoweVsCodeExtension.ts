@@ -137,7 +137,7 @@ export class ZoweVsCodeExtension {
             let shouldSave = true;
             const autoStoreValue = (await this.profilesCache.getProfileInfo()).getTeamConfig().properties.autoStore;
             if (!setSecure && autoStoreValue) {
-                shouldSave = await ZoweVsCodeExtension.saveCredentials(loadProfile);
+                shouldSave = await ZoweVsCodeExtension.shouldSaveInPlainTextPrompt(loadProfile);
             }
 
             if (shouldSave) {
@@ -583,7 +583,7 @@ export class ZoweVsCodeExtension {
         return retP;
     }
 
-    private static async saveCredentials(profile: imperative.IProfileLoaded): Promise<boolean> {
+    public static async shouldSaveInPlainTextPrompt(profile: imperative.IProfileLoaded): Promise<boolean> {
         let save = false;
         const saveButton = "Save Credentials";
         const message = [
