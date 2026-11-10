@@ -810,7 +810,7 @@ describe("ZoweVsCodeExtension", () => {
                 updateCachedProfile: vi.fn(),
             });
             const showInputBoxSpy = vi.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
-            const saveCredentialsSpy = vi.spyOn(ZoweVsCodeExtension as any, "saveCredentials");
+            const promptToSaveSpy = vi.spyOn(ZoweVsCodeExtension, "shouldSaveInPlainTextPrompt");
             const addCredsToSessionSpy = vi.spyOn(imperative.AuthOrder, "addCredsToSession");
 
             const profileLoaded: imperative.IProfileLoaded = await ZoweVsCodeExtension.updateCredentials(
@@ -820,7 +820,7 @@ describe("ZoweVsCodeExtension", () => {
             expect(profileLoaded.profile?.user).toBe("fakeUser");
             expect(profileLoaded.profile?.password).toBe("fakePassword");
             expect(showInputBoxSpy).toHaveBeenCalledTimes(2);
-            expect(saveCredentialsSpy).toHaveBeenCalledTimes(0);
+            expect(promptToSaveSpy).toHaveBeenCalledTimes(0);
             expect(mockUpdateProperty).toHaveBeenCalledTimes(2);
             expect(addCredsToSessionSpy).toHaveBeenCalledTimes(1);
             expect(addCredsToSessionSpy.mock.calls[0][0]).toEqual(profileLoaded.profile);
@@ -848,7 +848,7 @@ describe("ZoweVsCodeExtension", () => {
                 updateCachedProfile: vi.fn(),
             });
             const showInputBoxSpy = vi.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
-            const saveCredentialsSpy = vi.spyOn(ZoweVsCodeExtension as any, "saveCredentials");
+            const promptToSaveSpy = vi.spyOn(ZoweVsCodeExtension, "shouldSaveInPlainTextPrompt");
             const addCredsToSessionSpy = vi.spyOn(imperative.AuthOrder, "addCredsToSession");
 
             const profileLoaded: imperative.IProfileLoaded = await ZoweVsCodeExtension.updateCredentials(
@@ -861,7 +861,7 @@ describe("ZoweVsCodeExtension", () => {
             expect(profileLoaded.profile?.user).toBe("fakeUser");
             expect(profileLoaded.profile?.password).toBe("fakePassword");
             expect(showInputBoxSpy).toHaveBeenCalledTimes(2);
-            expect(saveCredentialsSpy).toHaveBeenCalledTimes(0);
+            expect(promptToSaveSpy).toHaveBeenCalledTimes(0);
             expect(mockUpdateProperty).toHaveBeenCalledTimes(2);
 
             expect(addCredsToSessionSpy).toHaveBeenCalledTimes(1);
@@ -891,7 +891,7 @@ describe("ZoweVsCodeExtension", () => {
             });
             const showInputBoxSpy = vi.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
             vi.spyOn(Gui, "showMessage").mockResolvedValueOnce("yes");
-            const saveCredentialsSpy = vi.spyOn(ZoweVsCodeExtension as any, "saveCredentials");
+            const promptToSaveSpy = vi.spyOn(ZoweVsCodeExtension, "shouldSaveInPlainTextPrompt");
             const addCredsToSessionSpy = vi.spyOn(imperative.AuthOrder, "addCredsToSession");
 
             const profileLoaded: imperative.IProfileLoaded = await ZoweVsCodeExtension.updateCredentials(
@@ -901,7 +901,7 @@ describe("ZoweVsCodeExtension", () => {
             expect(profileLoaded.profile?.user).toBe("fakeUser");
             expect(profileLoaded.profile?.password).toBe("fakePassword");
             expect(showInputBoxSpy).toHaveBeenCalledTimes(2);
-            expect(saveCredentialsSpy).toHaveBeenCalledTimes(1);
+            expect(promptToSaveSpy).toHaveBeenCalledTimes(1);
             expect(mockUpdateProperty).toHaveBeenCalledTimes(2);
             expect(addCredsToSessionSpy).toHaveBeenCalledTimes(1);
             expect(addCredsToSessionSpy.mock.calls[0][0]).toEqual(profileLoaded.profile);
@@ -930,7 +930,7 @@ describe("ZoweVsCodeExtension", () => {
             });
             const showInputBoxSpy = vi.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
             vi.spyOn(Gui, "showMessage").mockResolvedValueOnce(undefined);
-            const saveCredentialsSpy = vi.spyOn(ZoweVsCodeExtension as any, "saveCredentials");
+            const promptToSaveSpy = vi.spyOn(ZoweVsCodeExtension, "shouldSaveInPlainTextPrompt");
             const profileLoaded: imperative.IProfileLoaded = await ZoweVsCodeExtension.updateCredentials(
                 promptCredsOptions,
                 undefined as unknown as Types.IApiRegisterClient
@@ -938,7 +938,7 @@ describe("ZoweVsCodeExtension", () => {
             expect(profileLoaded.profile?.user).toBe("fakeUser");
             expect(profileLoaded.profile?.password).toBe("fakePassword");
             expect(showInputBoxSpy).toHaveBeenCalledTimes(2);
-            expect(saveCredentialsSpy).toHaveBeenCalledTimes(1);
+            expect(promptToSaveSpy).toHaveBeenCalledTimes(1);
             expect(mockUpdateProperty).toHaveBeenCalledTimes(0);
         });
 

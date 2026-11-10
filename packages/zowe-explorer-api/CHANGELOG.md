@@ -13,8 +13,11 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 - Added the `isReadOnlyUri`, `applyReadOnlyPermission`, and `throwIfReadOnly` functions to `FsAbstractUtils` for handling filesystem URIs with the `readonly=true` query parameter. [#2297](https://github.com/zowe/zowe-explorer-vscode/issues/2297)
 - Added optional `ssoLogin` and `ssoLogout` functions to the `IApiExplorerExtender` interface to expose SSO login and logout capabilities to Zowe Explorer extenders. [#4137](https://github.com/zowe/zowe-explorer-vscode/issues/4137)
 - Added the `vscode-codicon-stylesheet` id to the codicons `<link>` in the webview HTML template so VS Code Elements components can render icons. [#4534](https://github.com/zowe/zowe-explorer-vscode/pull/4534)
+- Added the `changePassword` API which allows the user to update their password on the remote system, alongside its `IChangePasswordResponse` interface. [#4212](https://github.com/zowe/zowe-explorer-vscode/pull/4212)
 
 ### Bug fixes
+
+- Updated Zowe SDKs to `8.43.0` for technical currency. [#4556](https://github.com/zowe/zowe-explorer-vscode/pull/4556)
 
 ## `3.6.1`
 

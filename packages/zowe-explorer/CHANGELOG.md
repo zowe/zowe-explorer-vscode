@@ -16,6 +16,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Added support for opening data sets and USS files in read-only mode by adding the `readonly=true` query parameter to their resource URI. [#2297](https://github.com/zowe/zowe-explorer-vscode/issues/2297)
 - Renamed the "Edit History" command to "Manage Saved Data". [#3804](https://github.com/zowe/zowe-explorer-vscode/issues/3804)
 - Migrated webviews from the deprecated Webview UI Toolkit to VS Code Elements. [#3443](https://github.com/zowe/zowe-explorer-vscode/issues/3443)
+- Added support for changing the password on the remote system, which then also updates the locally stored password. Currently only supports the z/OSMF profile type. [#1538](https://github.com/zowe/zowe-explorer-vscode/issues/1538)
 - Replaced confusing "SSH server" terminology with "zo server" in deployment prompts, status messages, settings descriptions, and Command Palette labels. [#4583](https://github.com/zowe/zowe-explorer-vscode/issues/4583)
 
 ### Bug fixes
@@ -25,6 +26,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where profiles with `authOrder` starting with `token` or `bearer` and no stored credentials (for example, after logging out with an unsecured config) were prompted for basic credentials instead of the SSO login. [#4574](https://github.com/zowe/zowe-explorer-vscode/issues/4574)
 - Fixed an issue where pressing `Esc` on the "Do you wish to apply this for all trees?" prompt, after choosing a profile to add to a tree, still added the profile. Cancelling the prompt now adds nothing. [#4514](https://github.com/zowe/zowe-explorer-vscode/issues/4514)
 - Fixed an accessibility issue where screen readers did not automatically announce the success or failure message after running the command palette option to "Export Redacted Configuration Files". The result is now shown in a modal dialog that receives focus so that it is announced automatically, and the message is condensed to a single line, with the export location written to the Zowe Explorer log. [#4602](https://github.com/zowe/zowe-explorer-vscode/issues/4602)
+- Updated Zowe SDKs to `8.43.0` for technical currency. [#4556](https://github.com/zowe/zowe-explorer-vscode/pull/4556)
 
 ## `3.6.1`
 

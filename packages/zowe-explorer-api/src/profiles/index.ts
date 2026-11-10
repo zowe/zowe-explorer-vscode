@@ -10,6 +10,7 @@
  */
 
 export * from "./AuthHandler";
+export * from "./IChangePasswordResponse";
 export * from "./Validation";
 export * from "./UserSettings";
 export * from "./ProfilesCache";
