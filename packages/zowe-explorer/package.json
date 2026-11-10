@@ -164,6 +164,11 @@
         "category": "Zowe Explorer"
       },
       {
+        "command": "zowe.changePassword",
+        "title": "%zowe.changePassword%",
+        "category": "Zowe Explorer"
+      },
+      {
         "command": "zowe.profileManagement",
         "title": "%zowe.profileManagement%",
         "category": "Zowe Explorer"
@@ -1777,6 +1782,10 @@
           "when": "never"
         },
         {
+          "command": "zowe.changePassword",
+          "when": "never"
+        },
+        {
           "command": "zowe.selectForCompare",
           "when": "never"
         },
@@ -2445,11 +2454,11 @@
   },
   "dependencies": {
     "@vscode/codicons": "^0.0.35",
-    "@zowe/core-for-zowe-sdk": "^8.41.0",
+    "@zowe/core-for-zowe-sdk": "^8.43.0",
     "@zowe/secrets-for-zowe-sdk": "^8.39.1",
-    "@zowe/zos-files-for-zowe-sdk": "^8.41.0",
-    "@zowe/zos-jobs-for-zowe-sdk": "^8.41.0",
-    "@zowe/zosmf-for-zowe-sdk": "^8.41.0",
+    "@zowe/zos-files-for-zowe-sdk": "^8.43.0",
+    "@zowe/zos-jobs-for-zowe-sdk": "^8.43.0",
+    "@zowe/zosmf-for-zowe-sdk": "^8.43.0",
     "@zowe/zowe-explorer-api": "workspace:*",
     "dayjs": "^1.11.11",
     "isbinaryfile": "4.0.4",
