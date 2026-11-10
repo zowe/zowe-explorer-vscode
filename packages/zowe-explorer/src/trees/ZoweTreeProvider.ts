@@ -313,6 +313,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
             // Mark profile as inactive if user dismissed "token expired/login" prompt or login failed
             profileStatus.status = "inactive";
             Profiles.getInstance().validProfile = Validation.ValidationType.INVALID;
+            ZoweExplorerApiRegister.getInstance().onProfileInvalidatedEmitter.fire(profile);
         }
         if (profileStatus.status === "inactive") {
             if (

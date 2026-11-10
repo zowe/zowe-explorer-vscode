@@ -1583,7 +1583,45 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         vi.spyOn(Profiles.getInstance(), "validateProfiles").mockResolvedValue({ status: "active", name: "sestest" });
         vi.spyOn(Profiles.getInstance(), "promptCertificate").mockResolvedValue(undefined);
         vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "cert-pem" }, isUsingApiml: vi.fn() } as any);
+        const invalidatedSpy = vi.spyOn(ZoweExplorerApiRegister.getInstance().onProfileInvalidatedEmitter, "fire");
         await expect(Profiles.getInstance().checkCurrentProfile(testProfile)).resolves.toEqual({ name: "sestest", status: "inactive" });
+        expect(invalidatedSpy).toHaveBeenCalledWith(testProfile);
+    });
+
+    it("should show as unverified and not fire onProfileValidated for cert profile when validation is disabled", async () => {
+        const globalMocks = createGlobalMocks();
+        environmentSetup(globalMocks);
+        setupProfilesCheck(globalMocks);
+        Object.defineProperty(Profiles.getInstance(), "profilesValidationSetting", {
+            value: [
+                {
+                    name: "sestest",
+                    setting: false,
+                },
+            ],
+            configurable: true,
+        });
+        const testProfile = {
+            name: "sestest",
+            profile: {
+                type: "zosmf",
+                host: "test",
+                port: 1443,
+                certFile: "test",
+                certKeyFile: "test",
+                rejectUnauthorized: false,
+                name: "testName",
+            },
+            type: "zosmf",
+            message: "",
+            failNotFound: false,
+        };
+        vi.spyOn(Profiles.getInstance(), "isCertFileValid").mockReturnValueOnce(true);
+        vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "cert-pem" }, isUsingApiml: vi.fn() } as any);
+        const validatedSpy = vi.spyOn(ZoweExplorerApiRegister.getInstance().onProfileValidatedEmitter, "fire");
+
+        await expect(Profiles.getInstance().checkCurrentProfile(testProfile)).resolves.toEqual({ name: "sestest", status: "unverified" });
+        expect(validatedSpy).not.toHaveBeenCalled();
     });
 
     it("should show as inactive in status of profile using invalid certificate auth", async () => {

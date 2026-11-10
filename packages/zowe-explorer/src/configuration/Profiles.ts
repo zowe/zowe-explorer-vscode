@@ -164,6 +164,7 @@ export class Profiles extends ProfilesCache {
         let usingBasicAuth: boolean = false;
         let usingCertAuth: boolean = false;
         let usingTokenAuth: boolean = false;
+        let certAuthSucceeded: boolean = false;
         const allowedLoginMethod: string = this.getAllowedLoginMethod(theProfile);
 
         let profileSession: imperative.Session;
@@ -311,7 +312,7 @@ export class Profiles extends ProfilesCache {
             }
             profileStatus.status = "active";
             this.profilesForValidation.push(profileStatus);
-            ZoweExplorerApiRegister.getInstance().onProfileValidatedEmitter.fire(theProfile);
+            certAuthSucceeded = true;
         }
 
         if (node !== undefined) {
@@ -334,6 +335,10 @@ export class Profiles extends ProfilesCache {
             case "active":
                 this.validProfile = Validation.ValidationType.VALID;
                 break;
+        }
+
+        if (certAuthSucceeded && profileStatus.status === "active") {
+            ZoweExplorerApiRegister.getInstance().onProfileValidatedEmitter.fire(theProfile);
         }
         return profileStatus;
     }

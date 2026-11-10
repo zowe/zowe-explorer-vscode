@@ -383,6 +383,17 @@ describe("ZoweJobNode unit tests - Function checkCurrentProfile", () => {
         await blockMocks.testJobsProvider.checkCurrentProfile(blockMocks.jobNode);
         expect(checkJwtSpy).toHaveBeenCalled();
     });
+
+    it("fires onProfileInvalidated when JWT token is expired", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = await createBlockMocks(globalMocks);
+        vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "token" } } as any);
+        vi.spyOn(ZoweTreeProvider as any, "checkJwtForProfile").mockResolvedValue(JwtCheckResult.TokenExpired);
+        const invalidatedSpy = vi.spyOn(ZoweExplorerApiRegister.getInstance().onProfileInvalidatedEmitter, "fire");
+
+        await blockMocks.testJobsProvider.checkCurrentProfile(blockMocks.jobNode);
+        expect(invalidatedSpy).toHaveBeenCalledWith(blockMocks.jobNode.getProfile());
+    });
     it("Tests that checkCurrentProfile is executed successfully with unverified status", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = await createBlockMocks(globalMocks);
