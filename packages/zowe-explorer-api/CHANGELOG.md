@@ -16,6 +16,8 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### Bug fixes
 
+- Updated Zowe SDKs to `8.43.0` for technical currency. [#4556](https://github.com/zowe/zowe-explorer-vscode/pull/4556)
+
 ## `3.6.1`
 
 ### New features and enhancements
