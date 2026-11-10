@@ -139,6 +139,29 @@ describe("CommonApi", () => {
             expect(session).not.toBeUndefined();
         });
     });
+
+    describe("changePassword", () => {
+        it("should call ZosmfChangePassword.changePassword and return the response", async () => {
+            const response = {
+                success: true,
+                returnCode: 0,
+                reasonCode: 0,
+                message: "Password changed successfully",
+            };
+            const commonApi = new ZoweExplorerZosmf.CommonApi(loadedProfile);
+            const changePasswordSpy = vi.spyOn(zosmf.ZosmfChangePassword, "changePassword").mockResolvedValue(response);
+            await expect(commonApi.changePassword(fakeSession, "newPass123")).resolves.toBe(response);
+            expect(changePasswordSpy).toHaveBeenCalledWith(fakeSession, "newPass123");
+            changePasswordSpy.mockRestore();
+        });
+
+        it("should propagate errors thrown by the SDK", async () => {
+            const commonApi = new ZoweExplorerZosmf.CommonApi(loadedProfile);
+            const changePasswordSpy = vi.spyOn(zosmf.ZosmfChangePassword, "changePassword").mockRejectedValue(new Error("Change password failed."));
+            await expect(commonApi.changePassword(fakeSession, "bad")).rejects.toThrow("Change password failed.");
+            changePasswordSpy.mockRestore();
+        });
+    });
 });
 
 describe("ZosmfUssApi", () => {
