@@ -2107,8 +2107,6 @@ export class DatasetActions {
     public static async submitMember(node: IZoweDatasetTreeNode): Promise<void> {
         ZoweLogger.trace("dataset.actions.submitMember called.");
         let label: string;
-        let sesName: string;
-        let sessProfile: imperative.IProfileLoaded;
         const profiles = Profiles.getInstance();
         const nodeProfile = node.getProfile();
         await profiles.checkCurrentProfile(nodeProfile, node);
@@ -2126,21 +2124,20 @@ export class DatasetActions {
                 // For favorited or non-favorited sequential DS:
                 case SharedContext.isFavorite(node) && !SharedContext.isDsMember(node):
                 case SharedContext.isSessionNotFav(node.getParent()):
-                    sesName = node.getParent().getLabel() as string;
+                case SharedContext.isDs(node):
                     label = node.label as string;
-                    sessProfile = node.getProfile();
                     break;
                 // For favorited or non-favorited data set members:
                 case SharedContext.isFavoritePds(node.getParent()):
                 case SharedContext.isPdsNotFav(node.getParent()):
-                    sesName = node.getParent().getParent().getLabel() as string;
                     label = node.getParent().getLabel().toString() + "(" + node.label.toString() + ")";
-                    sessProfile = node.getProfile();
                     break;
                 default:
                     Gui.errorMessage(defaultMessage);
                     throw Error(defaultMessage);
             }
+            const sessProfile = node.getProfile();
+            const sesName = sessProfile.name;
             try {
                 const job = await ZoweExplorerApiRegister.getJesApi(sessProfile).submitJob(label);
                 const args = [sesName, job.jobid];
