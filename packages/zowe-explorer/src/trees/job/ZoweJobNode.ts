@@ -502,6 +502,8 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
             AuthUtils.syncSessionNode((profile) => ZoweExplorerApiRegister.getJesApi(profile), this.getSessionNode(), updated && this);
             return;
         }
+        // An authenticated request succeeded, so a profile using cert auth is now confirmed as active
+        Profiles.getInstance().markCertProfileActive(cachedProfile);
         return jobsInternal;
     }
 

@@ -247,7 +247,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
         await Profiles.getInstance().editSession(profile);
     }
 
-    private setStatusForSession(node: IZoweTreeNode, status: Validation.ValidationType): void {
+    public setStatusForSession(node: IZoweTreeNode, status: Validation.ValidationType): void {
         if (node == null) {
             // If no session node was found for this provider, don't try to update it
             return;
