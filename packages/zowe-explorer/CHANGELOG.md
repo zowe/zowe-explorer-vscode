@@ -6,6 +6,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Added the `onProfileValidated`, `onProfileInvalidated`, and `onProfileHidden` events to the API register so extenders can react instantly when a profile is validated as active, validated as inactive, or hidden from the tree views. [#4492](https://github.com/zowe/zowe-explorer-vscode/issues/4492)
 - Added support for the `allowedLoginMethod` profile property. This property can be used to restrict allowed authentication methods to a single option. If a profile has no value for `allowedLoginMethod`, or if the value is `"prompt"`, there is no change in behavior compared to previous Zowe Explorer versions. [#4531](https://github.com/zowe/zowe-explorer-vscode/pull/4531)
 - Added the `zowe.settings.historyGroupByHost` setting to group filter search history by host instead of sharing one list across all profiles, and the `zowe.settings.maxSearchHistory` setting to configure the maximum number of entries kept in filter search history. [#4477](https://github.com/zowe/zowe-explorer-vscode/pull/4477)
 - Added `ssoLogin` and `ssoLogout` methods to the API returned by `getExplorerExtenderApi()`, allowing extenders to perform SSO login and logout for a profile by name or loaded profile. The `Profiles.ssoLogout` function can now be called without a tree node and returns a boolean indicating success. [#4137](https://github.com/zowe/zowe-explorer-vscode/issues/4137)
@@ -18,13 +19,14 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
-- Fixed job submission from favorited data set searches. Sequential data sets can be submitted, and the job ID link, Open Job, and polling now use the correct profile. [#4352](https://github.com/zowe/zowe-explorer-vscode/issues/4352)
+- Fixed SSO logout for base profiles without requiring a registered service API. [#4137](https://github.com/zowe/zowe-explorer-vscode/issues/4137)
 - Fixed an issue where searching data set contents with an FTP profile failed with the error `c.searchDataSets is not a function`. Zowe Explorer now shows a message when a search starts for a profile type that does not support it. [#4511](https://github.com/zowe/zowe-explorer-vscode/issues/4511)
 - Fixed an issue where the profile actions menu (including "Hide Profile") failed to open for profiles missing required properties like host. [#4557](https://github.com/zowe/zowe-explorer-vscode/pull/4557)
 - Fixed an issue where profiles with `authOrder` starting with `token` or `bearer` and no stored credentials (for example, after logging out with an unsecured config) were prompted for basic credentials instead of the SSO login. [#4574](https://github.com/zowe/zowe-explorer-vscode/issues/4574)
 - Fixed an issue where pressing `Esc` on the "Do you wish to apply this for all trees?" prompt, after choosing a profile to add to a tree, still added the profile. Cancelling the prompt now adds nothing. [#4514](https://github.com/zowe/zowe-explorer-vscode/issues/4514)
 - Fixed an accessibility issue where screen readers did not automatically announce the success or failure message after running the command palette option to "Export Redacted Configuration Files". The result is now shown in a modal dialog that receives focus so that it is announced automatically, and the message is condensed to a single line, with the export location written to the Zowe Explorer log. [#4602](https://github.com/zowe/zowe-explorer-vscode/issues/4602)
 - Updated Zowe SDKs to `8.43.0` for technical currency. [#4556](https://github.com/zowe/zowe-explorer-vscode/pull/4556)
+- Fixed job submission from favorited data set searches. Sequential data sets can be submitted, and the job ID link, Open Job, and polling now use the correct profile. [#4352](https://github.com/zowe/zowe-explorer-vscode/issues/4352)
 
 ## `3.6.1`
 

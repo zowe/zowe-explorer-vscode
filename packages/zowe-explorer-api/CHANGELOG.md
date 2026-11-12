@@ -6,6 +6,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### New features and enhancements
 
+- Added the optional `onProfileValidated`, `onProfileInvalidated`, and `onProfileHidden` events to `IRegisterClient` so extenders can react when a profile is validated as active, validated as inactive, or hidden from the tree views. Each event provides the full `IProfileLoaded` object. [#4492](https://github.com/zowe/zowe-explorer-vscode/issues/4492)
 - Deprecated the `CertificateOptions` interface in the `PromptCredentials.ts` file, which was formerly only used by a private method in the `ZoweVsCodeExtension` class. [#4531](https://github.com/zowe/zowe-explorer-vscode/pull/4531)
 - Added the `promptCertificate` method to the `ProfilesCache` class, which opens a certificate wizard UI allowing the user to save certificate file paths used for authentication. [#4531](https://github.com/zowe/zowe-explorer-vscode/pull/4531)
 - Added the `supportsCertAuth` method to the `MainframeInteraction.ICommon` interface so that extenders can indicate if their API supports certificate authentication. [#4531](https://github.com/zowe/zowe-explorer-vscode/pull/4531)
@@ -16,6 +17,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 ### Bug fixes
 
+- Fixed SSO logout to use an explicitly selected base profile's API ML token without requiring a registered service API. [#4137](https://github.com/zowe/zowe-explorer-vscode/issues/4137)
 - Updated Zowe SDKs to `8.43.0` for technical currency. [#4556](https://github.com/zowe/zowe-explorer-vscode/pull/4556)
 
 ## `3.6.1`
