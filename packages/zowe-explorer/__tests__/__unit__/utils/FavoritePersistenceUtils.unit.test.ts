@@ -179,7 +179,7 @@ describe("FavoritePersistenceUtils — new methods", () => {
     });
 
     describe("rebuildSessionNodesAfterProfileRename", () => {
-        it("removes the old session node and re-adds it under the new name", async () => {
+        it.each([true, false])("rebuilds renamed sessions with the optional reload method present: %s", async (hasReload) => {
             const getProfileName = vi.fn().mockReturnValue("oldprof");
             const oldNode = { getProfileName, label: "oldprof" };
             const refresh = vi.fn();
@@ -191,7 +191,7 @@ describe("FavoritePersistenceUtils — new methods", () => {
                 mFavoriteSession: {},
                 refresh,
                 addSingleSession,
-                reloadSessionsFromPersistence,
+                ...(hasReload ? { reloadSessionsFromPersistence } : {}),
             };
             vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue(fakeTree as any);
             vi.spyOn(SharedTreeProviders, "uss", "get").mockReturnValue(null as any);
@@ -295,7 +295,7 @@ describe("ZoweTreeProvider.reloadSessionsFromPersistence", () => {
         const provider = {
             mPersistence: { reloadSessionsFromStorage: reloadStorageSpy },
             reloadSessionsFromPersistence() {
-                (this as any).mPersistence.reloadSessionsFromStorage();
+                this.mPersistence.reloadSessionsFromStorage();
             },
         };
 

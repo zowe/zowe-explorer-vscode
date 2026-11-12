@@ -123,7 +123,7 @@ export class ConfigEditorSaveOperations {
                 }
                 ConfigChangeHandlers.activateLayerIfNeeded(config, configPath);
                 attempted.push(configPath); // save may update the vault before a file write fails
-                await config.save();
+                await ConfigUtils.saveConfig(config);
                 committedRevisions.set(configPath, await ConfigEditorSaveOperations.readRevision(configPath));
             }
         } catch (error) {
@@ -138,7 +138,7 @@ export class ConfigEditorSaveOperations {
                     }
                     ConfigChangeHandlers.activateLayerIfNeeded(config, configPath);
                     config.api.layers.set(original.layer.properties);
-                    await config.save();
+                    await ConfigUtils.saveConfig(config);
                     await vscode.workspace.fs.writeFile(vscode.Uri.file(configPath), original.contents);
                 } catch {
                     failedRestores.push(configPath);

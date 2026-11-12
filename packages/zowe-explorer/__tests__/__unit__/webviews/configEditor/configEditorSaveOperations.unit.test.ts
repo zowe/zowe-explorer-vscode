@@ -13,7 +13,7 @@ import { vi } from "vitest";
 import * as vscode from "vscode";
 import type { IConfigLayer } from "@zowe/imperative";
 import { Gui } from "@zowe/zowe-explorer-api";
-import { createEditorConfig } from "../../../__mocks__/mockCreators/configEditor";
+import { createEditorConfig, createEditorConfigWithVault } from "../../../__mocks__/mockCreators/configEditor";
 import { ConfigEditorProfileOperations } from "../../../../src/utils/ConfigEditorProfileOperations";
 import { ConfigEditorSaveOperations } from "../../../../src/utils/ConfigEditorSaveOperations";
 import { ConfigUtils } from "../../../../src/utils/ConfigUtils";
@@ -35,7 +35,7 @@ vi.mock("vscode", () => ({
     Uri: { file: (fsPath: string) => ({ fsPath }) },
 }));
 
-function setup() {
+function setup(withVault = false) {
     const layers: IConfigLayer[] = [
         {
             path: "/mock/team.json",
@@ -56,7 +56,7 @@ function setup() {
         },
         { path: "/mock/user.json", user: true, global: false, exists: true, properties: { profiles: {}, defaults: {} } },
     ];
-    const memory = createEditorConfig(layers);
+    const memory = withVault ? createEditorConfigWithVault(layers) : createEditorConfig(layers);
     const bytes = Buffer.from("synthetic file revision");
     vi.mocked(vscode.workspace.fs.readFile).mockResolvedValue(bytes);
     vi.mocked(vscode.workspace.fs.writeFile).mockResolvedValue(undefined);
@@ -83,6 +83,79 @@ describe("ConfigEditorSaveOperations", () => {
         vi.restoreAllMocks();
         vi.clearAllMocks();
         vi.mocked(Gui.warningMessage).mockResolvedValue(undefined);
+    });
+
+    afterEach(() => vi.unstubAllEnvs());
+
+    describe.each([false, true])("credential loaded from vault: %s", (fromVault) => {
+        it.each(["unrelated", "rename", "copy", "cut", "edit"])("preserves credential storage during %s", async (operation) => {
+            vi.stubEnv("ZE_REVIEW_PASSWORD", "synthetic-resolved");
+            const { store, config, saved, configs, commit } = setup(true);
+            const password = fromVault ? "vault$ZE_REVIEW_PASSWORD" : "$ZE_REVIEW_PASSWORD";
+            config.set("profiles.base.properties.password", password);
+            if (fromVault) await config.api.secure.save();
+            let targetPath = configs[0].configPath;
+            let targetName = "base";
+            if (operation === "rename") {
+                store.getState().handleRenameProfile("base", "renamed");
+                targetName = "renamed";
+            } else if (operation === "copy" || operation === "cut") {
+                store.getState().copyProfile("base", operation === "cut");
+                store.getState().handleTabChange(1);
+                store.getState().pasteProfile(null);
+                targetPath = configs[1].configPath;
+            } else if (operation === "edit") {
+                store.getState().handleChange("profiles.base.properties.password", "replacement-credential");
+            } else {
+                store.getState().handleChange("profiles.base.properties.host", "updated");
+            }
+
+            await expect(commit()).resolves.toBe(true);
+            const profile = saved.get(targetPath)?.profiles[targetName];
+            if (operation === "edit" || fromVault) {
+                expect(profile?.properties.password).toBeUndefined();
+                expect(config.api.secure.securePropsForLayer(targetPath)).toMatchObject({
+                    [`profiles.${targetName}.properties.password`]: operation === "edit" ? "replacement-credential" : password,
+                });
+            } else {
+                expect(profile?.properties.password).toBe("$ZE_REVIEW_PASSWORD");
+                expect(config.api.secure.securePropsForLayer(targetPath)?.[`profiles.${targetName}.properties.password`]).toBeUndefined();
+            }
+            expect(config.envVarManaged).toEqual([]);
+        });
+    });
+
+    it("retains the newly chosen default when cutting the saved default into another layer", async () => {
+        const { store, config, configs, saved, commit } = setup();
+        const other = { type: "base", properties: { host: "other" } };
+        config.set("profiles.other", other);
+        configs[0].properties.profiles.other = other;
+        store.getState().handleDefaultsChange("base", "other");
+        store.getState().copyProfile("base", true);
+        store.getState().handleTabChange(1);
+        store.getState().pasteProfile(null);
+
+        await commit();
+        expect(saved.get(configs[0].configPath)?.defaults.base).toBe("other");
+    });
+
+    it.each([false, true])("restores credential storage after a failed write (from vault: %s)", async (fromVault) => {
+        vi.stubEnv("ZE_REVIEW_PASSWORD", "synthetic-resolved");
+        const { store, config, saved, configs, commit } = setup(true);
+        const password = fromVault ? "vault$ZE_REVIEW_PASSWORD" : "$ZE_REVIEW_PASSWORD";
+        config.set("profiles.base.properties.password", password);
+        if (fromVault) await config.api.secure.save();
+        store.getState().handleChange("profiles.base.properties.password", "replacement-credential");
+        vi.mocked(config.api.layers.write).mockImplementationOnce(() => {
+            throw new Error("synthetic write failure");
+        });
+
+        await expect(commit()).rejects.toThrow("The original configuration was restored");
+        expect(saved.get(configs[0].configPath)?.profiles.base.properties.password).toBe(fromVault ? undefined : password);
+        expect(config.api.secure.securePropsForLayer(configs[0].configPath)?.["profiles.base.properties.password"]).toBe(
+            fromVault ? password : undefined
+        );
+        expect(config.envVarManaged).toEqual([]);
     });
 
     it("redirects edits and deletions independently when layers rename the same profile", () => {

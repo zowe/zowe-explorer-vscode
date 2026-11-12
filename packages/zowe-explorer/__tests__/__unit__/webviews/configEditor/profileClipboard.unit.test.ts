@@ -90,6 +90,19 @@ describe("profileClipboard", () => {
         expect(getUniqueProfileKey("free", [])).toBe("free");
     });
 
+    it.each(["unrelated", ""])("preserves a pending default override of '%s' when cutting the saved default", (value) => {
+        const clipboard: ProfileClipboard = { type: "cut", sourceKey: "parent", configPath, profiles: {} };
+        const defaults = { [configPath]: { zosmf: { value, path: ["zosmf"] } } };
+        expect(clearCutProfileDefaults(defaults, { zosmf: "parent.child" }, clipboard)).toBe(defaults);
+    });
+
+    it("clears a pending default pointing into the cut subtree even if the saved default is elsewhere", () => {
+        const clipboard: ProfileClipboard = { type: "cut", sourceKey: "parent", configPath, profiles: {} };
+        const defaults = { [configPath]: { zosmf: { value: "parent.child", path: ["zosmf"] } } };
+        expect(clearCutProfileDefaults(defaults, { zosmf: "unrelated" }, clipboard)[configPath].zosmf.value).toBe("");
+        expect(defaults[configPath].zosmf.value).toBe("parent.child");
+    });
+
     it("cleans only the cut subtree's source edits and defaults, preserving existing state", () => {
         const clipboard: ProfileClipboard = { type: "cut", sourceKey: "parent", configPath, profiles: collect() };
         const edits: PendingChangesMap = {

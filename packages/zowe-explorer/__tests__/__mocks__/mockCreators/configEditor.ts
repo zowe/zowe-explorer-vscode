@@ -13,6 +13,7 @@ import { vi } from "vitest";
 import type { ChangeEntry } from "../../../src/utils/ConfigTypes";
 import type { Config, IConfigLayer, ProfileInfo } from "@zowe/imperative";
 import { Config as RealConfig } from "@zowe/imperative/lib/config/src/Config";
+import { EventOperator } from "@zowe/imperative/lib/events/src/EventOperator";
 
 /** Installed SDK mutations with isolated, injectable persistence. Never reads a user's files or vault. */
 export function createEditorConfig(layers: IConfigLayer[]) {
@@ -40,6 +41,8 @@ export function createEditorConfig(layers: IConfigLayer[]) {
                 },
             },
             secure: {
+                securePropsForLayer: () => null,
+                secureFields: () => [],
                 get loadFailed() {
                     return false;
                 },
@@ -55,6 +58,32 @@ export function createEditorConfig(layers: IConfigLayer[]) {
     };
     const profileInfo = { getTeamConfig: () => config, readProfilesFromDisk: vi.fn() } as unknown as ProfileInfo;
     return { config: config as unknown as Config, profileInfo, saved, save: config.save };
+}
+
+/** Real SDK save/secure handling with in-memory file and vault boundaries. */
+export function createEditorConfigWithVault(layers: IConfigLayer[]) {
+    vi.spyOn(EventOperator, "getZoweProcessor").mockReturnValue({
+        emitZoweEvent: vi.fn(),
+    } as unknown as ReturnType<typeof EventOperator.getZoweProcessor>);
+    const vaultSave = vi.fn(async (_account: string, _contents: string) => {});
+    const config: Config = Object.assign(Object.create(RealConfig.prototype), {
+        mLayers: structuredClone(layers),
+        mActive: { user: layers[0].user, global: layers[0].global },
+        mEnvVarManaged: [],
+        mSecure: {},
+        mVault: { save: vaultSave },
+    });
+    vi.spyOn(config.api.secure, "loadFailed", "get").mockReturnValue(false);
+    const saved = new Map(layers.map((layer) => [layer.path, structuredClone(layer.properties)]));
+    const write = vi.spyOn(config.api.layers, "write").mockImplementation(() => {
+        const layer = config.api.layers.get();
+        // Match the SDK file boundary: prune a clone, retaining credentials in memory.
+        (config.api.secure as unknown as { cacheAndPrune(layer: IConfigLayer): void }).cacheAndPrune(layer);
+        saved.set(layer.path, layer.properties);
+    });
+    const save = vi.spyOn(config, "save");
+    const profileInfo = { getTeamConfig: () => config, readProfilesFromDisk: vi.fn() } as unknown as ProfileInfo;
+    return { config, profileInfo, saved, save, write, vaultSave };
 }
 
 /** Synthetic schema wrapper; tests supply only the property definitions relevant to their case. */

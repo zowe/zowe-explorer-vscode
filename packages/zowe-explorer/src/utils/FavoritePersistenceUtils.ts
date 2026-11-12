@@ -104,7 +104,7 @@ export class FavoritePersistenceUtils {
         const trees = [SharedTreeProviders.ds, SharedTreeProviders.uss, SharedTreeProviders.job].filter(Boolean);
         const profiles = Profiles.getInstance();
         for (const tree of trees) {
-            tree.reloadSessionsFromPersistence();
+            tree.reloadSessionsFromPersistence?.();
             const sessionNodes = tree.mSessionNodes.filter((n: IZoweTreeNode) => n !== tree.mFavoriteSession);
             const newNamesToAdd: string[] = [];
             const nodesToRemove: IZoweTreeNode[] = [];
