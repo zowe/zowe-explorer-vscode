@@ -252,6 +252,7 @@ export class Profiles extends ProfilesCache {
                     theProfile = Profiles.getInstance().loadNamedProfile(theProfile.name);
 
                     if (!loggedIn) {
+                        ZoweExplorerApiRegister.getInstance().onProfileInvalidatedEmitter.fire(theProfile);
                         return { ...profileStatus, status: "inactive" };
                     }
                 } catch (error) {
@@ -277,6 +278,7 @@ export class Profiles extends ProfilesCache {
                 theProfile.profile.password = values[1];
             } else {
                 this.validProfile = Validation.ValidationType.INVALID;
+                ZoweExplorerApiRegister.getInstance().onProfileInvalidatedEmitter.fire(theProfile);
                 return { ...profileStatus, status: "inactive" };
             }
         } else if (!usingTokenAuth && !usingBasicAuth && usingCertAuth) {
@@ -298,6 +300,7 @@ export class Profiles extends ProfilesCache {
                         })
                     );
                     this.validProfile = Validation.ValidationType.INVALID;
+                    ZoweExplorerApiRegister.getInstance().onProfileInvalidatedEmitter.fire(theProfile);
                     return { ...profileStatus, status: "inactive" };
                 } else {
                     Profiles.getInstance().updateCachedProfile({
@@ -917,6 +920,7 @@ export class Profiles extends ProfilesCache {
                             name: theProfile.name,
                         };
                         this.profilesForValidation.push(filteredProfile);
+                        ZoweExplorerApiRegister.getInstance().onProfileValidatedEmitter.fire(theProfile);
                         break;
                     case "inactive":
                         filteredProfile = {
@@ -924,6 +928,7 @@ export class Profiles extends ProfilesCache {
                             name: theProfile.name,
                         };
                         this.profilesForValidation.push(filteredProfile);
+                        ZoweExplorerApiRegister.getInstance().onProfileInvalidatedEmitter.fire(theProfile);
                         break;
                     // default will cover "unverified" and undefined
                     default:
@@ -952,6 +957,7 @@ export class Profiles extends ProfilesCache {
                     name: theProfile.name,
                 };
                 this.profilesForValidation.push(filteredProfile);
+                ZoweExplorerApiRegister.getInstance().onProfileInvalidatedEmitter.fire(theProfile);
             }
         }
 
