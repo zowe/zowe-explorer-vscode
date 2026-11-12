@@ -25,6 +25,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Fixed an issue where pressing `Esc` on the "Do you wish to apply this for all trees?" prompt, after choosing a profile to add to a tree, still added the profile. Cancelling the prompt now adds nothing. [#4514](https://github.com/zowe/zowe-explorer-vscode/issues/4514)
 - Fixed an accessibility issue where screen readers did not automatically announce the success or failure message after running the command palette option to "Export Redacted Configuration Files". The result is now shown in a modal dialog that receives focus so that it is announced automatically, and the message is condensed to a single line, with the export location written to the Zowe Explorer log. [#4602](https://github.com/zowe/zowe-explorer-vscode/issues/4602)
 - Updated Zowe SDKs to `8.43.0` for technical currency. [#4556](https://github.com/zowe/zowe-explorer-vscode/pull/4556)
+- Fixed incorrect profile validation results for profiles that use certificates or set the `authOrder` property. [#4617](https://github.com/zowe/zowe-explorer-vscode/pull/4617)
 
 ## `3.6.1`
 
