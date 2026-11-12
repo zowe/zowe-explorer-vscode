@@ -1311,8 +1311,6 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
             AuthUtils.syncSessionNode((prof) => ZoweExplorerApiRegister.getMvsApi(prof), this.getSessionNode(), updated && this);
             return;
         }
-        // An authenticated request succeeded, so a profile using cert auth is now confirmed as active
-        Profiles.getInstance().markCertProfileActive(profile);
         return responses;
     }
 

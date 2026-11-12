@@ -1510,11 +1510,10 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         expect(errorSpy).toHaveBeenCalledWith(Error("test error"));
         errorSpy.mockClear();
     });
-    it("should show as unverified in status of profile using certificate auth until an authenticated request succeeds", async () => {
+    it("should show as active in status of profile using certificate auth", async () => {
         const globalMocks = createGlobalMocks();
         environmentSetup(globalMocks);
         setupProfilesCheck(globalMocks);
-        Profiles.getInstance().profilesForValidation = [];
         const testProfile = {
             name: "sestest",
             profile: {
@@ -1533,59 +1532,12 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         vi.spyOn(Profiles.getInstance(), "isCertFileValid").mockReturnValueOnce(true);
         vi.spyOn(Profiles.getInstance(), "validateProfiles").mockResolvedValue({ status: "active", name: "sestest" });
         vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "cert-pem" }, isUsingApiml: vi.fn() } as any);
-        const validatedSpy = vi.spyOn(ZoweExplorerApiRegister.getInstance().onProfileValidatedEmitter, "fire");
-        validatedSpy.mockClear();
-        await expect(Profiles.getInstance().checkCurrentProfile(testProfile)).resolves.toEqual({ name: "sestest", status: "unverified" });
-        expect(Profiles.getInstance().validProfile).toBe(Validation.ValidationType.UNVERIFIED);
-        expect(validatedSpy).not.toHaveBeenCalled();
-    });
-    it("should mark a cert auth profile as active and fire onProfileValidated once an authenticated request succeeds", async () => {
-        const globalMocks = createGlobalMocks();
-        environmentSetup(globalMocks);
-        setupProfilesCheck(globalMocks);
-        Profiles.getInstance().profilesForValidation = [];
-        const testProfile = {
-            name: "sestest",
-            profile: { type: "zosmf", host: "test", port: 1443, certFile: "test", certKeyFile: "test", rejectUnauthorized: false, name: "testName" },
-            type: "zosmf",
-            message: "",
-            failNotFound: false,
-        };
-        vi.spyOn(Profiles.getInstance(), "isCertFileValid").mockReturnValue(true);
-        vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "cert-pem" }, isUsingApiml: vi.fn() } as any);
-        const setStatusForSession = vi.fn();
-        const sessionNode = { getProfileName: () => "sestest" };
-        vi.spyOn(SharedTreeProviders, "providers", "get").mockReturnValue({
-            ds: { setStatusForSession, mSessionNodes: [sessionNode] } as any,
-            uss: { setStatusForSession, mSessionNodes: [sessionNode] } as any,
-            job: { setStatusForSession, mSessionNodes: [] } as any,
-        });
-        const validatedSpy = vi.spyOn(ZoweExplorerApiRegister.getInstance().onProfileValidatedEmitter, "fire");
-        validatedSpy.mockClear();
-
-        await Profiles.getInstance().checkCurrentProfile(testProfile);
-        Profiles.getInstance().markCertProfileActive(testProfile);
-        // A second successful request must not emit the event again
-        Profiles.getInstance().markCertProfileActive(testProfile);
-
-        expect(validatedSpy).toHaveBeenCalledTimes(1);
-        expect(validatedSpy).toHaveBeenCalledWith(testProfile);
-        expect(setStatusForSession).toHaveBeenCalledWith(sessionNode, Validation.ValidationType.VALID);
-        expect(setStatusForSession).toHaveBeenCalledWith(undefined, Validation.ValidationType.VALID);
         await expect(Profiles.getInstance().checkCurrentProfile(testProfile)).resolves.toEqual({ name: "sestest", status: "active" });
     });
-    it("should not mark a profile as active if it is not using cert auth", () => {
-        Profiles.getInstance().profilesForValidation = [];
-        const validatedSpy = vi.spyOn(ZoweExplorerApiRegister.getInstance().onProfileValidatedEmitter, "fire");
-        validatedSpy.mockClear();
-        Profiles.getInstance().markCertProfileActive({ name: "not-a-cert-profile" } as any);
-        expect(validatedSpy).not.toHaveBeenCalled();
-    });
-    it("should show as unverified in status of profile using certificate auth and open cert wizard if cert is not valid", async () => {
+    it("should show as active in status of profile using certificate auth and open cert wizard if cert is not valid", async () => {
         const globalMocks = createGlobalMocks();
         environmentSetup(globalMocks);
         setupProfilesCheck(globalMocks);
-        Profiles.getInstance().profilesForValidation = [];
         const testProfile = {
             name: "sestest",
             profile: {
@@ -1605,7 +1557,7 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         vi.spyOn(Profiles.getInstance(), "validateProfiles").mockResolvedValue({ status: "active", name: "sestest" });
         vi.spyOn(Profiles.getInstance(), "promptCertificate").mockResolvedValue({ cert: "cool", certKey: "dog", action: "save" });
         vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "cert-pem" }, isUsingApiml: vi.fn() } as any);
-        await expect(Profiles.getInstance().checkCurrentProfile(testProfile)).resolves.toEqual({ name: "sestest", status: "unverified" });
+        await expect(Profiles.getInstance().checkCurrentProfile(testProfile)).resolves.toEqual({ name: "sestest", status: "active" });
     });
 
     it("should return inactive if using cert auth but the cert wizard returns no response", async () => {
@@ -1699,7 +1651,6 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         const globalMocks = createGlobalMocks();
         environmentSetup(globalMocks);
         setupProfilesCheck(globalMocks);
-        Profiles.getInstance().profilesForValidation = [];
         const testProfile = {
             name: "sestest",
             profile: {
@@ -1717,7 +1668,7 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         const isCertFileValidSpy = vi.spyOn(Profiles.getInstance(), "isCertFileValid");
         vi.spyOn(Profiles.getInstance(), "validateProfiles").mockResolvedValue({ status: "active", name: "sestest" });
         vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "cert-pem" }, isUsingApiml: vi.fn() } as any);
-        await expect(Profiles.getInstance().checkCurrentProfile(testProfile)).resolves.toEqual({ name: "sestest", status: "unverified" });
+        await expect(Profiles.getInstance().checkCurrentProfile(testProfile)).resolves.toEqual({ name: "sestest", status: "active" });
         expect(isCertFileValidSpy).not.toHaveBeenCalled();
     });
 

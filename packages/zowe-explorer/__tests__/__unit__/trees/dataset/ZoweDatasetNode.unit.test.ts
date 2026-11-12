@@ -215,7 +215,6 @@ describe("ZoweDatasetNode Unit Tests", () => {
             value: vi.fn(() => {
                 return {
                     loadNamedProfile: vi.fn().mockReturnValue(profileOne),
-                    markCertProfileActive: vi.fn(),
                 };
             }),
         });
@@ -248,7 +247,6 @@ describe("ZoweDatasetNode Unit Tests", () => {
         Object.defineProperty(Profiles, "getInstance", {
             value: vi.fn(() => ({
                 loadNamedProfile: vi.fn().mockReturnValue(profileOne),
-                markCertProfileActive: vi.fn(),
             })),
             configurable: true,
         });
@@ -278,7 +276,6 @@ describe("ZoweDatasetNode Unit Tests", () => {
             value: vi.fn(() => {
                 return {
                     loadNamedProfile: vi.fn().mockReturnValue(profileOne),
-                    markCertProfileActive: vi.fn(),
                 };
             }),
         });
@@ -427,7 +424,6 @@ describe("ZoweDatasetNode Unit Tests", () => {
             value: vi.fn(() => {
                 return {
                     loadNamedProfile: vi.fn().mockReturnValue(profileOne),
-                    markCertProfileActive: vi.fn(),
                 };
             }),
         });
@@ -469,7 +465,6 @@ describe("ZoweDatasetNode Unit Tests", () => {
             value: vi.fn(() => {
                 return {
                     loadNamedProfile: vi.fn().mockReturnValue(profileOne),
-                    markCertProfileActive: vi.fn(),
                 };
             }),
         });
@@ -514,7 +509,6 @@ describe("ZoweDatasetNode Unit Tests", () => {
         const updatedProfile = { ...profileOne, profile: { encoding: "IBM-939" } };
         const mockProfilesInstance = {
             loadNamedProfile: vi.fn().mockReturnValue(updatedProfile),
-            markCertProfileActive: vi.fn(),
         };
         const profInstanceSpy = vi.spyOn(Profiles, "getInstance").mockReturnValue(mockProfilesInstance as any);
 
@@ -554,7 +548,6 @@ describe("ZoweDatasetNode Unit Tests", () => {
     it("pagination nav items should have correct descriptions", async () => {
         const profilesMock = vi.spyOn(Profiles, "getInstance").mockReturnValue({
             loadNamedProfile: vi.fn().mockReturnValue(profileOne),
-            markCertProfileActive: vi.fn(),
         } as any);
         const sessionNode = createDatasetSessionNode(session, profileOne);
         const pdsNode = new ZoweDatasetNode({
@@ -1241,7 +1234,6 @@ describe("ZoweDatasetNode Unit Tests - getChildren() misc scenarios", () => {
             sessionNode.children = [];
             vi.spyOn(Profiles, "getInstance").mockReturnValue({
                 loadNamedProfile: vi.fn().mockReturnValue(profileOne),
-                markCertProfileActive: vi.fn(),
             } as any);
             vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValueOnce({
                 applyPatternsToChildren: vi.fn(),
@@ -1290,7 +1282,6 @@ describe("ZoweDatasetNode Unit Tests - getChildren() misc scenarios", () => {
             sessionNode.children = [];
             vi.spyOn(Profiles, "getInstance").mockReturnValue({
                 loadNamedProfile: vi.fn().mockReturnValue(profileOne),
-                markCertProfileActive: vi.fn(),
             } as any);
             vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValueOnce({
                 applyPatternsToChildren: vi.fn(),
@@ -1352,7 +1343,6 @@ describe("ZoweDatasetNode Unit Tests - getChildren() misc scenarios", () => {
             } as any);
             vi.spyOn(Profiles, "getInstance").mockReturnValueOnce({
                 loadNamedProfile: vi.fn().mockReturnValueOnce(profileOne),
-                markCertProfileActive: vi.fn(),
             } as any);
             vi.spyOn(sessionNode as any, "getDatasets").mockResolvedValueOnce([
                 {
@@ -1406,7 +1396,6 @@ describe("ZoweDatasetNode Unit Tests - getChildren() misc scenarios", () => {
             } as any);
             vi.spyOn(Profiles, "getInstance").mockReturnValueOnce({
                 loadNamedProfile: vi.fn().mockReturnValueOnce(profileOne),
-                markCertProfileActive: vi.fn(),
             } as any);
             vi.spyOn(sessionNode as any, "getDatasets").mockResolvedValueOnce([
                 {
@@ -1461,7 +1450,6 @@ describe("ZoweDatasetNode Unit Tests - getChildren() misc scenarios", () => {
             } as any);
             vi.spyOn(Profiles, "getInstance").mockReturnValueOnce({
                 loadNamedProfile: vi.fn().mockReturnValueOnce(profileOne),
-                markCertProfileActive: vi.fn(),
             } as any);
             vi.spyOn(sessionNode as any, "getDatasets").mockResolvedValueOnce([
                 {
@@ -1512,7 +1500,6 @@ describe("ZoweDatasetNode Unit Tests - getChildren() misc scenarios", () => {
             } as any);
             vi.spyOn(Profiles, "getInstance").mockReturnValueOnce({
                 loadNamedProfile: vi.fn().mockReturnValueOnce(profileOne),
-                markCertProfileActive: vi.fn(),
             } as any);
             const getDatasetsSpy = vi.spyOn(sessionNode as any, "getDatasets").mockResolvedValueOnce([
                 {
@@ -1567,7 +1554,6 @@ describe("ZoweDatasetNode Unit Tests - getChildren() misc scenarios", () => {
             } as any);
             vi.spyOn(Profiles, "getInstance").mockReturnValueOnce({
                 loadNamedProfile: vi.fn().mockReturnValueOnce(profileOne),
-                markCertProfileActive: vi.fn(),
             } as any);
             vi.spyOn(sessionNode as any, "getDatasets").mockResolvedValueOnce([
                 {
@@ -1619,7 +1605,6 @@ describe("ZoweDatasetNode Unit Tests - getChildren() misc scenarios", () => {
             } as any);
             vi.spyOn(Profiles, "getInstance").mockReturnValueOnce({
                 loadNamedProfile: vi.fn().mockReturnValueOnce(profileOne),
-                markCertProfileActive: vi.fn(),
             } as any);
             vi.spyOn(sessionNode as any, "getDatasets").mockResolvedValueOnce([
                 {
@@ -1662,7 +1647,6 @@ describe("ZoweDatasetNode Unit Tests - getChildren() misc scenarios", () => {
         const errorHandlingMock = new MockedProperty(AuthUtils, "errorHandling");
         const mockProfilesInstance = vi.spyOn(Profiles, "getInstance").mockReturnValue({
             loadNamedProfile: vi.fn().mockReturnValue(profileOne),
-            markCertProfileActive: vi.fn(),
         } as any);
 
         const sessionNode = new ZoweDatasetNode({
@@ -1691,7 +1675,6 @@ describe("ZoweDatasetNode Unit Tests - getChildren() misc scenarios", () => {
         const errorHandlingMock = new MockedProperty(AuthUtils, "errorHandling");
         const mockProfilesInstance = vi.spyOn(Profiles, "getInstance").mockReturnValue({
             loadNamedProfile: vi.fn().mockReturnValue(profileOne),
-            markCertProfileActive: vi.fn(),
         } as any);
 
         const sessionNode = new ZoweDatasetNode({
@@ -1737,7 +1720,6 @@ describe("ZoweDatasetNode Unit Tests - getChildren() misc scenarios", () => {
         const getDatasetsSpy = vi.spyOn(sessionNode as any, "getDatasets").mockResolvedValueOnce(undefined);
         const mockProfilesInstance = vi.spyOn(Profiles, "getInstance").mockReturnValue({
             loadNamedProfile: vi.fn().mockReturnValue(profileOne),
-            markCertProfileActive: vi.fn(),
         } as any);
 
         const result = await sessionNode.getChildren();
@@ -1763,7 +1745,6 @@ describe("ZoweDatasetNode Unit Tests - getChildren() favoritedMemberNames behavi
     it("filters children to only favorited members when favoritedMemberNames is set", async () => {
         vi.spyOn(Profiles, "getInstance").mockReturnValue({
             loadNamedProfile: vi.fn().mockReturnValue(profileOne),
-            markCertProfileActive: vi.fn(),
         } as any);
         const sessionNode = createDatasetSessionNode(session, profileOne);
         const getSessionNodeSpy = vi.spyOn(ZoweDatasetNode.prototype, "getSessionNode").mockReturnValue(sessionNode);
@@ -1803,7 +1784,6 @@ describe("ZoweDatasetNode Unit Tests - getChildren() favoritedMemberNames behavi
     it("preserves filter description instead of member count when filter is active", async () => {
         vi.spyOn(Profiles, "getInstance").mockReturnValue({
             loadNamedProfile: vi.fn().mockReturnValue(profileOne),
-            markCertProfileActive: vi.fn(),
         } as any);
         const sessionNode = createDatasetSessionNode(session, profileOne);
         const getSessionNodeSpy = vi.spyOn(ZoweDatasetNode.prototype, "getSessionNode").mockReturnValue(sessionNode);
@@ -1846,7 +1826,6 @@ describe("ZoweDatasetNode Unit Tests - getChildren() favoritedMemberNames behavi
     it("shows '1/1 member' description when single member is favorited in a single-member PDS", async () => {
         vi.spyOn(Profiles, "getInstance").mockReturnValue({
             loadNamedProfile: vi.fn().mockReturnValue(profileOne),
-            markCertProfileActive: vi.fn(),
         } as any);
         const sessionNode = createDatasetSessionNode(session, profileOne);
         const getSessionNodeSpy = vi.spyOn(ZoweDatasetNode.prototype, "getSessionNode").mockReturnValue(sessionNode);
@@ -1885,7 +1864,6 @@ describe("ZoweDatasetNode Unit Tests - getChildren() favoritedMemberNames behavi
     it("shows '1/3 members' description when one member is favorited out of many", async () => {
         vi.spyOn(Profiles, "getInstance").mockReturnValue({
             loadNamedProfile: vi.fn().mockReturnValue(profileOne),
-            markCertProfileActive: vi.fn(),
         } as any);
         const sessionNode = createDatasetSessionNode(session, profileOne);
         const getSessionNodeSpy = vi.spyOn(ZoweDatasetNode.prototype, "getSessionNode").mockReturnValue(sessionNode);
@@ -1924,7 +1902,6 @@ describe("ZoweDatasetNode Unit Tests - getChildren() favoritedMemberNames behavi
     it("returns all members when favoritedMemberNames is undefined (full PDS favorite)", async () => {
         vi.spyOn(Profiles, "getInstance").mockReturnValue({
             loadNamedProfile: vi.fn().mockReturnValue(profileOne),
-            markCertProfileActive: vi.fn(),
         } as any);
         const sessionNode = createDatasetSessionNode(session, profileOne);
         const getSessionNodeSpy = vi.spyOn(ZoweDatasetNode.prototype, "getSessionNode").mockReturnValue(sessionNode);
@@ -1963,7 +1940,6 @@ describe("ZoweDatasetNode Unit Tests - getChildren() favoritedMemberNames behavi
     it("marks all children of a favorited PDS with _fav context", async () => {
         vi.spyOn(Profiles, "getInstance").mockReturnValue({
             loadNamedProfile: vi.fn().mockReturnValue(profileOne),
-            markCertProfileActive: vi.fn(),
         } as any);
         const sessionNode = createDatasetSessionNode(session, profileOne);
         const getSessionNodeSpy = vi.spyOn(ZoweDatasetNode.prototype, "getSessionNode").mockReturnValue(sessionNode);
@@ -2003,7 +1979,6 @@ describe("ZoweDatasetNode Unit Tests - getChildren() favoritedMemberNames behavi
     it("disables pagination for favorited PDS in SpecificMembers state", async () => {
         vi.spyOn(Profiles, "getInstance").mockReturnValue({
             loadNamedProfile: vi.fn().mockReturnValue(profileOne),
-            markCertProfileActive: vi.fn(),
         } as any);
         const sessionNode = createDatasetSessionNode(session, profileOne);
         const getSessionNodeSpy = vi.spyOn(ZoweDatasetNode.prototype, "getSessionNode").mockReturnValue(sessionNode);
@@ -2053,7 +2028,6 @@ describe("ZoweDatasetNode Unit Tests - getChildren() favoritedMemberNames behavi
         // Even if total members exceeds items-per-page, pagination should be disabled in SpecificMembers mode.
         vi.spyOn(Profiles, "getInstance").mockReturnValue({
             loadNamedProfile: vi.fn().mockReturnValue(profileOne),
-            markCertProfileActive: vi.fn(),
         } as any);
         const sessionNode = createDatasetSessionNode(session, profileOne);
         const getSessionNodeSpy = vi.spyOn(ZoweDatasetNode.prototype, "getSessionNode").mockReturnValue(sessionNode);
@@ -2105,7 +2079,6 @@ describe("ZoweDatasetNode Unit Tests - getChildren() favoritedMemberNames behavi
         // The stale paginator should NOT cause navigation arrows to appear.
         vi.spyOn(Profiles, "getInstance").mockReturnValue({
             loadNamedProfile: vi.fn().mockReturnValue(profileOne),
-            markCertProfileActive: vi.fn(),
         } as any);
         const sessionNode = createDatasetSessionNode(session, profileOne);
         const getSessionNodeSpy = vi.spyOn(ZoweDatasetNode.prototype, "getSessionNode").mockReturnValue(sessionNode);
@@ -2171,7 +2144,6 @@ describe("ZoweDatasetNode Unit Tests - getChildren() favoritedMemberNames behavi
         // Edge case: paginator was on page 2+ when transitioning to SpecificMembers
         vi.spyOn(Profiles, "getInstance").mockReturnValue({
             loadNamedProfile: vi.fn().mockReturnValue(profileOne),
-            markCertProfileActive: vi.fn(),
         } as any);
         const sessionNode = createDatasetSessionNode(session, profileOne);
         const getSessionNodeSpy = vi.spyOn(ZoweDatasetNode.prototype, "getSessionNode").mockReturnValue(sessionNode);
@@ -2247,7 +2219,6 @@ describe("ZoweDatasetNode Unit Tests - getChildren() favoritedMemberNames behavi
         // Ensures the paginator state doesn't leak across transitions
         vi.spyOn(Profiles, "getInstance").mockReturnValue({
             loadNamedProfile: vi.fn().mockReturnValue(profileOne),
-            markCertProfileActive: vi.fn(),
         } as any);
         const sessionNode = createDatasetSessionNode(session, profileOne);
         const getSessionNodeSpy = vi.spyOn(ZoweDatasetNode.prototype, "getSessionNode").mockReturnValue(sessionNode);
@@ -2304,14 +2275,6 @@ describe("ZoweDatasetNode Unit Tests - getChildren() favoritedMemberNames behavi
 });
 
 describe("ZoweDatasetNode Unit Tests - getDatasets()", () => {
-    let profilesSpy: ReturnType<typeof vi.spyOn>;
-    beforeEach(() => {
-        profilesSpy = vi.spyOn(Profiles, "getInstance").mockReturnValue({ markCertProfileActive: vi.fn() } as any);
-    });
-    afterEach(() => {
-        profilesSpy.mockRestore();
-    });
-
     it("returns undefined from listDatasets() when session is invalid - profile node", async () => {
         const mvsApiMock = vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValueOnce({
             getSession: vi.fn().mockReturnValue(undefined),
@@ -2934,7 +2897,6 @@ describe("ZoweDatasetNode Unit Tests - getChildren() remote member change detect
     function setupPds(hasNextPage: boolean): PdsHarness {
         vi.spyOn(Profiles, "getInstance").mockReturnValue({
             loadNamedProfile: vi.fn().mockReturnValue(profileOne),
-            markCertProfileActive: vi.fn(),
         } as any);
         const sessionNode = createDatasetSessionNode(session, profileOne);
         vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue(createDatasetTree(sessionNode, createTreeView()));
@@ -3117,7 +3079,6 @@ describe("ZoweDatasetNode Unit Tests - getChildren() remote session-level change
     function setupSession(hasNextPage: boolean): SessionHarness {
         vi.spyOn(Profiles, "getInstance").mockReturnValue({
             loadNamedProfile: vi.fn().mockReturnValue(profileOne),
-            markCertProfileActive: vi.fn(),
         } as any);
         vi.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
         vi.spyOn(DatasetFSProvider.instance, "createEntry").mockImplementation((() => undefined) as any);
@@ -3239,10 +3200,7 @@ describe("ZoweDatasetNode Unit Tests - getChildren() remote session-level change
     });
 
     it("does not diff a page against a window that shifted when an earlier page changed", async () => {
-        vi.spyOn(Profiles, "getInstance").mockReturnValue({
-            loadNamedProfile: vi.fn().mockReturnValue(profileOne),
-            markCertProfileActive: vi.fn(),
-        } as any);
+        vi.spyOn(Profiles, "getInstance").mockReturnValue({ loadNamedProfile: vi.fn().mockReturnValue(profileOne) } as any);
         vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({} as any);
         vi.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
         vi.spyOn(DatasetFSProvider.instance, "createEntry").mockImplementation((() => undefined) as any);
@@ -3311,10 +3269,7 @@ describe("ZoweDatasetNode Unit Tests - getChildren() remote session-level change
     });
 
     it("does not diff a paginated listing against a non-paginated one", async () => {
-        vi.spyOn(Profiles, "getInstance").mockReturnValue({
-            loadNamedProfile: vi.fn().mockReturnValue(profileOne),
-            markCertProfileActive: vi.fn(),
-        } as any);
+        vi.spyOn(Profiles, "getInstance").mockReturnValue({ loadNamedProfile: vi.fn().mockReturnValue(profileOne) } as any);
         vi.spyOn(ZoweExplorerApiRegister, "getMvsApi").mockReturnValue({} as any);
         vi.spyOn(DatasetFSProvider.instance, "exists").mockReturnValue(false);
         vi.spyOn(DatasetFSProvider.instance, "createEntry").mockImplementation((() => undefined) as any);

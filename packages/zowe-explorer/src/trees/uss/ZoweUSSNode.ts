@@ -819,8 +819,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             } else {
                 response_list = await UssFSProvider.instance.listFiles(profile, this.resourceUri);
             }
-            // An authenticated request succeeded, so a profile using cert auth is now confirmed as active
-            Profiles.getInstance().markCertProfileActive(profile);
             return showHidden ? response_list : await USSUtils.filterHiddenFiles(response_list);
         } catch (error) {
             const updated = await AuthUtils.errorHandling(error, {

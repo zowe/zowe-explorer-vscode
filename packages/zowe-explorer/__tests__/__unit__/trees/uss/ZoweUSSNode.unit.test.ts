@@ -1413,7 +1413,6 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
                         return ["fake", "fake", "fake"];
                     }),
                     loadNamedProfile: globalMocks.mockLoadNamedProfile,
-                    markCertProfileActive: vi.fn(),
                     usesSecurity: true,
                     validProfile: Validation.ValidationType.VALID,
                     checkCurrentProfile: vi.fn(() => {
@@ -1468,7 +1467,6 @@ describe("ZoweUSSNode Unit Tests - Function node.openUSS()", () => {
             value: vi.fn(() => {
                 return {
                     loadNamedProfile: globalMocks.mockLoadNamedProfile,
-                    markCertProfileActive: vi.fn(),
                     checkCurrentProfile: blockMocks.mockCheckCurrentProfile.mockReturnValueOnce({
                         name: globalMocks.profileOne.name,
                         status: "unverified",
@@ -1724,7 +1722,6 @@ describe("ZoweUSSNode Unit Tests - Function node.pasteUssTree()", () => {
                         return ["fake", "fake", "fake"];
                     }),
                     loadNamedProfile: globalMocks.mockLoadNamedProfile,
-                    markCertProfileActive: vi.fn(),
                     usesSecurity: true,
                     validProfile: Validation.ValidationType.VALID,
                     checkCurrentProfile: vi.fn(() => {

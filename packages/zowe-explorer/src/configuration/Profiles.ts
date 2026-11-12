@@ -37,7 +37,6 @@ import { SharedTreeProviders } from "../trees/shared/SharedTreeProviders";
 import { ZoweExplorerExtender } from "../extending/ZoweExplorerExtender";
 import { FilterDescriptor, FilterItem } from "../management/FilterManagement";
 import { AuthUtils } from "../utils/AuthUtils";
-import type { ZoweTreeProvider } from "../trees/ZoweTreeProvider";
 
 export class Profiles extends ProfilesCache {
     // Processing stops if there are no profiles detected
@@ -62,8 +61,6 @@ export class Profiles extends ProfilesCache {
 
     public loadedProfile: imperative.IProfileLoaded;
     public validProfile: Validation.ValidationType = Validation.ValidationType.UNVERIFIED;
-    /** Names of profiles using cert auth that are awaiting a successful authenticated request before being marked as active */
-    private certAuthProfiles = new Set<string>();
     private mProfileInfo: imperative.ProfileInfo;
     private profilesOpCancelled = vscode.l10n.t(`Operation cancelled`);
     private manualEditMsg = vscode.l10n.t(
@@ -167,7 +164,6 @@ export class Profiles extends ProfilesCache {
         let usingBasicAuth: boolean = false;
         let usingCertAuth: boolean = false;
         let usingTokenAuth: boolean = false;
-        let certAuthPending = false;
         const allowedLoginMethod: string = this.getAllowedLoginMethod(theProfile);
 
         let profileSession: imperative.Session;
@@ -230,7 +226,6 @@ export class Profiles extends ProfilesCache {
                 ` allowedLoginMethod = ${allowedLoginMethod} `
         );
 
-        this.certAuthProfiles.delete(theProfile.name);
         if (
             usingTokenAuth ||
             // if the service profile specifies a direct login method,
@@ -314,27 +309,18 @@ export class Profiles extends ProfilesCache {
                     });
                 }
             }
-            // The cert exists and looks well-formed, but that doesn't prove the server accepts it (the status endpoint may not require
-            // authentication). Stay unverified until an authenticated request succeeds. See markCertProfileActive.
-            // Profiles with validation disabled are always unverified, so there is nothing to confirm.
-            if (!this.profilesValidationSetting.some((s) => s.name === theProfile.name && s.setting === false)) {
-                this.certAuthProfiles.add(theProfile.name);
-                certAuthPending = true;
-            }
+            profileStatus.status = "active";
+            this.profilesForValidation.push(profileStatus);
         }
 
         if (node !== undefined) {
             await this.updateProfileHoverInfo(node);
         }
 
-        if (certAuthPending) {
-            profileStatus = this.getCertProfileStatus(theProfile);
-        } else {
-            // Profile should have enough information to allow validation
-            profileStatus = await this.getProfileSetting(theProfile);
-            if (theProfile.profile.authOrder) {
-                profileStatus.status = "active";
-            }
+        // Profile should have enough information to allow validation
+        profileStatus = await this.getProfileSetting(theProfile);
+        if (theProfile.profile.authOrder) {
+            profileStatus.status = "active";
         }
 
         switch (profileStatus.status) {
@@ -349,45 +335,6 @@ export class Profiles extends ProfilesCache {
                 break;
         }
         return profileStatus;
-    }
-
-    /**
-     * Gets the validation status of a profile using cert auth without sending a validation request.
-     * The status is "active" only if an authenticated request has already succeeded; otherwise it is "unverified".
-     */
-    private getCertProfileStatus(theProfile: imperative.IProfileLoaded): Validation.IValidationProfile {
-        if (this.profilesForValidation.some((p) => p.name === theProfile.name && p.status === "active")) {
-            return { name: theProfile.name, status: "active" };
-        }
-        const profileStatus: Validation.IValidationProfile = { name: theProfile.name, status: "unverified" };
-        this.profilesForValidation = this.profilesForValidation.filter((p) => p.name !== theProfile.name);
-        this.profilesForValidation.push(profileStatus);
-        return profileStatus;
-    }
-
-    /**
-     * Marks a profile using cert auth as active once a request to an authenticated endpoint has succeeded with the certificate.
-     * Updates the session nodes and fires the onProfileValidated event. Does nothing for profiles that are not awaiting
-     * confirmation of their cert auth, or that are already active.
-     * @param theProfile The profile used for the successful request
-     */
-    public markCertProfileActive(theProfile: imperative.IProfileLoaded): void {
-        if (!this.certAuthProfiles.has(theProfile.name)) {
-            return;
-        }
-        if (this.profilesValidationSetting.some((s) => s.name === theProfile.name && s.setting === false)) {
-            return;
-        }
-        if (this.profilesForValidation.some((p) => p.name === theProfile.name && p.status === "active")) {
-            return;
-        }
-        this.profilesForValidation = this.profilesForValidation.filter((p) => p.name !== theProfile.name);
-        this.profilesForValidation.push({ name: theProfile.name, status: "active" });
-        for (const provider of Object.values(SharedTreeProviders.providers)) {
-            const session = (provider as IZoweTree<IZoweTreeNode>).mSessionNodes?.find((n) => n.getProfileName() === theProfile.name);
-            (provider as unknown as ZoweTreeProvider<IZoweTreeNode>).setStatusForSession?.(session, Validation.ValidationType.VALID);
-        }
-        ZoweExplorerApiRegister.getInstance().onProfileValidatedEmitter.fire(theProfile);
     }
 
     public async updateProfileHoverInfo(node: Types.IZoweNodeType): Promise<void> {

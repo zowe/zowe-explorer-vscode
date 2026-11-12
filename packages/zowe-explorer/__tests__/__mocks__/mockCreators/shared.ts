@@ -327,7 +327,6 @@ export function createInstanceOfProfile(profile: imperative.IProfileLoaded) {
             return match ?? profile;
         }),
         usesSecurity: true,
-        markCertProfileActive: vi.fn(),
         validProfile: Validation.ValidationType.VALID,
         checkCurrentProfile: vi.fn(() => {
             return { status: "active", name: "sestest" };
