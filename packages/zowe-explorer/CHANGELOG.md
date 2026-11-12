@@ -6,6 +6,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### New features and enhancements
 
+- Added the `onProfileValidated`, `onProfileInvalidated`, and `onProfileHidden` events to the API register so extenders can react instantly when a profile is validated as active, validated as inactive, or hidden from the tree views. [#4492](https://github.com/zowe/zowe-explorer-vscode/issues/4492)
 - Added support for the `allowedLoginMethod` profile property. This property can be used to restrict allowed authentication methods to a single option. If a profile has no value for `allowedLoginMethod`, or if the value is `"prompt"`, there is no change in behavior compared to previous Zowe Explorer versions. [#4531](https://github.com/zowe/zowe-explorer-vscode/pull/4531)
 - Added the `zowe.settings.historyGroupByHost` setting to group filter search history by host instead of sharing one list across all profiles, and the `zowe.settings.maxSearchHistory` setting to configure the maximum number of entries kept in filter search history. [#4477](https://github.com/zowe/zowe-explorer-vscode/pull/4477)
 - Added `ssoLogin` and `ssoLogout` methods to the API returned by `getExplorerExtenderApi()`, allowing extenders to perform SSO login and logout for a profile by name or loaded profile. The `Profiles.ssoLogout` function can now be called without a tree node and returns a boolean indicating success. [#4137](https://github.com/zowe/zowe-explorer-vscode/issues/4137)
