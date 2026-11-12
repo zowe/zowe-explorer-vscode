@@ -382,15 +382,16 @@ export class ZoweVsCodeExtension {
     }
 
     /**
-     * Trigger a logout operation with the merged contents between the service profile and the base profile.
-     *  If the connection details (host:port) do not match (service vs base), the token will be removed from the service profile.
-     *  If there is no API registered for the profile type, this method defaults the logout behavior to that of the APIML.
+     * Log out using a service profile and its resolved base profile, or an explicit base profile.
+     * Base profiles use API ML directly; service profiles use the registered logout implementation when provided.
+     * Removes the stored token after successful revocation.
      * @param {BaseProfileAuthOptions} opts Object defining options for base profile authentication
      */
     public static async ssoLogout(opts: BaseProfileAuthOptions): Promise<boolean> {
         const cache: ProfilesCache = opts.zeProfiles ?? ZoweVsCodeExtension.profilesCache;
         const serviceProfile = await this.getServiceProfile(opts);
-        const baseProfile = await cache.fetchBaseProfile(serviceProfile.name);
+        const isBaseProfile = serviceProfile.type === "base";
+        const baseProfile = isBaseProfile ? serviceProfile : await cache.fetchBaseProfile(serviceProfile.name);
         if (!baseProfile) {
             Gui.errorMessage(
                 `Logout failed: No base or parent profile found to remove SSO token for profile "${serviceProfile.name}". ` +
@@ -413,7 +414,8 @@ export class ZoweVsCodeExtension {
             tokenType,
             tokenValue: primaryProfile.profile.tokenValue ?? secondaryProfile.profile.tokenValue,
         });
-        await (opts.zeRegister?.getCommonApi(serviceProfile).logout ?? Logout.apimlLogout)(updSession);
+        const commonApi = isBaseProfile ? undefined : opts.zeRegister?.getCommonApi(serviceProfile);
+        await (commonApi?.logout ?? Logout.apimlLogout)(updSession);
 
         // If active profile is nested (e.g. lpar.zosmf), then update service profile since base profile may be typeless
         const connOk =
