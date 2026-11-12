@@ -372,23 +372,23 @@ export class Profiles extends ProfilesCache {
      * @param theProfile The profile used for the successful request
      */
     public markCertProfileActive(theProfile: imperative.IProfileLoaded): void {
-    if (!this.certAuthProfiles.has(theProfile.name)) {
-        return;
+        if (!this.certAuthProfiles.has(theProfile.name)) {
+            return;
+        }
+        if (this.profilesValidationSetting.some((s) => s.name === theProfile.name && s.setting === false)) {
+            return;
+        }
+        if (this.profilesForValidation.some((p) => p.name === theProfile.name && p.status === "active")) {
+            return;
+        }
+        this.profilesForValidation = this.profilesForValidation.filter((p) => p.name !== theProfile.name);
+        this.profilesForValidation.push({ name: theProfile.name, status: "active" });
+        for (const provider of Object.values(SharedTreeProviders.providers)) {
+            const session = (provider as IZoweTree<IZoweTreeNode>).mSessionNodes?.find((n) => n.getProfileName() === theProfile.name);
+            (provider as unknown as ZoweTreeProvider<IZoweTreeNode>).setStatusForSession?.(session, Validation.ValidationType.VALID);
+        }
+        ZoweExplorerApiRegister.getInstance().onProfileValidatedEmitter.fire(theProfile);
     }
-    if (this.profilesValidationSetting.some((s) => s.name === theProfile.name && s.setting === false)) {
-        return;
-    }
-    if (this.profilesForValidation.some((p) => p.name === theProfile.name && p.status === "active")) {
-        return;
-    }
-    this.profilesForValidation = this.profilesForValidation.filter((p) => p.name !== theProfile.name);
-    this.profilesForValidation.push({ name: theProfile.name, status: "active" });
-    for (const provider of Object.values(SharedTreeProviders.providers)) {
-        const session = (provider as IZoweTree<IZoweTreeNode>).mSessionNodes?.find((n) => n.getProfileName() === theProfile.name);
-        (provider as unknown as ZoweTreeProvider<IZoweTreeNode>).setStatusForSession?.(session, Validation.ValidationType.VALID);
-    }
-    ZoweExplorerApiRegister.getInstance().onProfileValidatedEmitter.fire(theProfile);
-}
 
     public async updateProfileHoverInfo(node: Types.IZoweNodeType): Promise<void> {
         const toolTipList = (node.tooltip as string)?.split("\n") ?? [];
