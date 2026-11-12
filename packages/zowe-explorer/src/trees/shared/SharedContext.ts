@@ -139,6 +139,15 @@ export class SharedContext {
     }
 
     /**
+     * Helper function which identifies if the node is a symbolic link
+     * @param node
+     * @return true if a symbolic link, false otherwise
+     */
+    public static isSymlink(node: TreeItem): boolean {
+        return new RegExp(Constants.SYMLINK_SUFFIX).test(node.contextValue);
+    }
+
+    /**
      * Helper function which identifies if the node is a document
      * @param node
      * @return true if a document, false otherwise
@@ -439,6 +448,15 @@ export class SharedContext {
      */
     public static isVsam(node: TreeItem): boolean {
         return new RegExp("^(" + Constants.VSAM_CONTEXT + ")").test(node.contextValue);
+    }
+
+    /**
+     * Helper function which identifies if the node is an ALIAS data set
+     * @param node
+     * @return true if an ALIAS data set, false otherwise
+     */
+    public static isAlias(node: TreeItem): boolean {
+        return new RegExp(Constants.DS_ALIAS_SUFFIX).test(node.contextValue);
     }
 
     /**

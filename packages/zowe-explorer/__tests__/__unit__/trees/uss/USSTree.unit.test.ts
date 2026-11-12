@@ -303,6 +303,29 @@ describe("USSTree Unit Tests - Function initializeFavorites", () => {
         expect(blockMocks.testTree.mFavorites.length).toBe(1);
         expect(blockMocks.testTree.mFavorites[0].children?.map((item) => item.fullPath)).toEqual(["/u/aDir"]);
     });
+
+    it("restores saved favorites of symlinks as symlinks", async () => {
+        createGlobalMocks();
+        const testTree = new USSTree();
+        testTree.mSessionNodes.push(createUSSSessionNode(createISession(), createIProfile()));
+        vi.spyOn(testTree as any, "mPersistence" as any, "get").mockReturnValue({
+            readFavorites: () => [
+                "[test]: /u/aDir{directory}",
+                "[test]: /u/dirLink{directory}{symlink}",
+                "[test]: /u/fileLink.txt{textFile}{symlink}",
+            ],
+        } as any);
+
+        await testTree.initializeFavorites(imperative.Logger.getAppLogger());
+
+        const [dir, dirLink, fileLink] = testTree.mFavorites[0].children;
+        expect(SharedContext.isSymlink(dir)).toBe(false);
+        expect(dirLink.contextValue).toBe(Constants.USS_DIR_CONTEXT + Constants.SYMLINK_SUFFIX + Constants.FAV_SUFFIX);
+        expect(dirLink.collapsibleState).toBe(vscode.TreeItemCollapsibleState.Collapsed);
+        expect(JSON.stringify(dirLink.iconPath)).toContain("file-symlink-directory.svg");
+        expect(fileLink.contextValue).toBe(Constants.USS_TEXT_FILE_CONTEXT + Constants.SYMLINK_SUFFIX + Constants.FAV_SUFFIX);
+        expect(JSON.stringify(fileLink.iconPath)).toContain("file-symlink-file.svg");
+    });
 });
 
 describe("USSTree Unit Tests - Function initializeFavChildNodeForProfile", () => {
@@ -1656,6 +1679,54 @@ describe("USSTree Unit Tests - Function addFavorite", () => {
         expect(favProfileNode.children[0].fullPath).toEqual(blockMocks.childFile.fullPath);
     });
 
+    it.each([
+        ["folder", vscode.TreeItemCollapsibleState.Collapsed, Constants.USS_DIR_CONTEXT, "file-symlink-directory.svg"],
+        ["file", vscode.TreeItemCollapsibleState.None, Constants.USS_TEXT_FILE_CONTEXT, "file-symlink-file.svg"],
+    ])("Tests that addFavorite() keeps a symlink to a %s marked as a symlink", async (_kind, collapsibleState, baseContext, icon) => {
+        // An earlier test replaces the icon lookup without restoring it, so use the real one
+        vi.spyOn(IconGenerator, "getIconByNode").mockRestore();
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const link = new ZoweUSSNode({
+            label: "link",
+            collapsibleState,
+            parentNode: blockMocks.parentDir,
+            parentPath: "/parent",
+            isSymlink: true,
+        });
+
+        await globalMocks.testTree.addFavorite(link);
+        const favorite = globalMocks.testTree.mFavorites[0].children[0];
+
+        expect(favorite.contextValue).toBe(baseContext + Constants.SYMLINK_SUFFIX + Constants.FAV_SUFFIX);
+        expect(JSON.stringify(favorite.iconPath)).toContain(icon);
+    });
+
+    it("Tests that addFavorite() saves a symlink with a marker that older versions ignore", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const link = new ZoweUSSNode({
+            label: "link",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.parentDir,
+            parentPath: "/parent",
+            isSymlink: true,
+        });
+        const updateFavoritesSpy = vi.spyOn(ZowePersistentFilters.prototype, "updateFavorites").mockResolvedValue(undefined);
+
+        try {
+            await globalMocks.testTree.addFavorite(blockMocks.parentDir);
+            await globalMocks.testTree.addFavorite(link);
+
+            const saved: string[] = updateFavoritesSpy.mock.calls.at(-1)[0].favorites;
+            expect(saved).toEqual(expect.arrayContaining(["[sestest]: /parent{directory}", "[sestest]: /parent/link{directory}{symlink}"]));
+            // The context value that an older version reads is unchanged
+            expect(SharedUtils.parseFavorites(saved).map((fav) => fav.contextValue)).toEqual(["directory", "directory"]);
+        } finally {
+            updateFavoritesSpy.mockRestore();
+        }
+    });
+
     it("Tests that addFavorite() doesn't add duplicates", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
@@ -2308,6 +2379,182 @@ describe("USSTree Unit Tests - Function openWithEncoding", () => {
         expect(setEncodingSpy).not.toHaveBeenCalled();
         expect(node.openUSS).toHaveBeenCalledTimes(0);
         getEncodingMock.mockRestore();
+    });
+});
+
+function initializeEmptyLocalStorage(): void {
+    ZoweLocalStorage.initializeZoweLocalStorage(
+        {
+            get: () => ({ persistence: true, favorites: [], history: [], sessions: [], searchHistory: [], fileHistory: [] }),
+            update: vi.fn(),
+            keys: () => [],
+        } as any,
+        { get: vi.fn(), update: vi.fn(), keys: () => [] } as any
+    );
+}
+
+describe("USSTree.crossLparMove - handling symlinks", () => {
+    const session = createISession();
+    const profile = createIProfile();
+    const symlinkDir = Constants.USS_DIR_CONTEXT + Constants.SYMLINK_SUFFIX;
+    const symlinkFile = Constants.USS_TEXT_FILE_CONTEXT + Constants.SYMLINK_SUFFIX;
+    let tree: USSTree;
+    let parentNode: ZoweUSSNode;
+    let deleteSpy: ReturnType<typeof vi.spyOn>;
+    let writeSpy: ReturnType<typeof vi.spyOn>;
+
+    function makeNode(label: string, parentPath: string, context: string, children: IZoweUSSTreeNode[] = []): ZoweUSSNode {
+        const node = new ZoweUSSNode({
+            label,
+            collapsibleState: context.startsWith(Constants.USS_DIR_CONTEXT)
+                ? vscode.TreeItemCollapsibleState.Collapsed
+                : vscode.TreeItemCollapsibleState.None,
+            session,
+            profile,
+            parentNode,
+            parentPath,
+            contextOverride: context,
+        });
+        node.getChildren = vi.fn().mockResolvedValue(children);
+        return node;
+    }
+
+    function destFor(node: ZoweUSSNode): vscode.Uri {
+        return vscode.Uri.from({ scheme: ZoweScheme.USS, path: `/otherlpar/u/dest/${node.label as string}` });
+    }
+
+    beforeEach(() => {
+        initializeEmptyLocalStorage();
+        tree = new USSTree();
+        parentNode = createUSSSessionNode(session, profile);
+        deleteSpy = vi.spyOn(vscode.workspace.fs, "delete").mockResolvedValue(undefined);
+        writeSpy = vi.spyOn(UssFSProvider.instance, "writeFile").mockResolvedValue(undefined);
+        vi.spyOn(UssFSProvider.instance, "readFile").mockResolvedValue(new Uint8Array([1, 2, 3]));
+        vi.spyOn(UssFSProvider.instance, "exists").mockReturnValue(false);
+        vi.spyOn(UssFSProvider.instance, "createDirectory").mockReturnValue(undefined);
+        vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue({ create: vi.fn() } as any);
+        vi.spyOn(Profiles, "getInstance").mockReturnValue({ loadNamedProfile: vi.fn().mockReturnValue(profile) } as any);
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    it("does not follow a link inside a moved folder that points back to the folder", async () => {
+        const file = makeNode("a.txt", "/u/myuser/projects", Constants.USS_TEXT_FILE_CONTEXT);
+        const loop = makeNode("loop", "/u/myuser/projects", symlinkDir);
+        const projects = makeNode("projects", "/u/myuser", Constants.USS_DIR_CONTEXT, [file, loop]);
+        // Only the first listing returns the cycle, so the test fails rather than running out of memory if links are followed
+        loop.getChildren = vi.fn().mockResolvedValueOnce([file, loop]).mockResolvedValue([]);
+
+        await (tree as any).crossLparMove(projects, projects.resourceUri, destFor(projects));
+
+        expect(loop.getChildren).not.toHaveBeenCalled();
+        expect(writeSpy).toHaveBeenCalledTimes(1);
+        expect((tree as any).skippedMoveLinks).toEqual(["/u/myuser/projects/loop"]);
+    });
+
+    it("never deletes anything through a link inside a moved folder", async () => {
+        const realSub = makeNode("sub", "/u/myuser/projects/link", Constants.USS_DIR_CONTEXT, [
+            makeNode("b.txt", "/u/myuser/projects/link/sub", Constants.USS_TEXT_FILE_CONTEXT),
+        ]);
+        const link = makeNode("link", "/u/myuser/projects", symlinkDir, [realSub]);
+        const projects = makeNode("projects", "/u/myuser", Constants.USS_DIR_CONTEXT, [link]);
+
+        await (tree as any).crossLparMove(projects, projects.resourceUri, destFor(projects));
+
+        const deletedPaths = deleteSpy.mock.calls.map((call) => (call[0] as vscode.Uri).path);
+        expect(deletedPaths.filter((p) => p.includes("/projects/link"))).toEqual([]);
+    });
+
+    it.each([
+        ["folder", symlinkDir],
+        ["file", symlinkFile],
+    ])("leaves a selected link to a %s in place", async (_kind, context) => {
+        const link = makeNode("link", "/u/myuser", context, [makeNode("a.txt", "/u/myuser/link", Constants.USS_TEXT_FILE_CONTEXT)]);
+
+        await (tree as any).crossLparMove(link, link.resourceUri, destFor(link));
+
+        expect((tree as any).skippedMoveLinks).toEqual(["/u/myuser/link"]);
+        expect(link.getChildren).not.toHaveBeenCalled();
+        expect(UssFSProvider.instance.readFile).not.toHaveBeenCalled();
+        expect(writeSpy).not.toHaveBeenCalled();
+        expect(deleteSpy).not.toHaveBeenCalled();
+        expect(UssFSProvider.instance.createDirectory).not.toHaveBeenCalled();
+    });
+});
+
+describe("USSTree.handleDrop - handling symlinks", () => {
+    let ussTree: USSTree;
+    let warningSpy: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+        vi.spyOn(Gui, "setStatusBarMessage").mockReturnValue({ dispose: vi.fn() } as any);
+        warningSpy = vi.spyOn(Gui, "warningMessage").mockResolvedValue(undefined);
+        initializeEmptyLocalStorage();
+        ussTree = new USSTree();
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    async function dropOneNode(): Promise<void> {
+        const session = createISession();
+        const profile = createIProfile();
+        const srcNode = new ZoweUSSNode({
+            label: "projects",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session,
+            profile,
+            parentNode: createUSSSessionNode(session, profile),
+            parentPath: "/u/source",
+        });
+        const targetNode = new ZoweUSSNode({
+            label: "dst",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            session,
+            profile,
+            parentNode: createUSSSessionNode(session, profile),
+            parentPath: "/u",
+        });
+        targetNode.getChildren = vi.fn().mockResolvedValue([]);
+        (ussTree as any).draggedNodes = { [srcNode.resourceUri.path]: srcNode };
+        vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue(undefined as any);
+        vi.spyOn(SharedUtils, "isLikelySameUssObjectByUris").mockReturnValue(false);
+        const payload = { value: [{ label: srcNode.label as string, uri: srcNode.resourceUri }] };
+        await ussTree.handleDrop(targetNode, { get: () => payload } as any, undefined as any);
+    }
+
+    it("warns once about the links that were left in place", async () => {
+        vi.spyOn(ussTree as any, "crossLparMove").mockImplementation(async () => {
+            (ussTree as any).skippedMoveLinks.push("/u/source/projects/link1", "/u/source/projects/link2");
+        });
+
+        await dropOneNode();
+
+        expect(warningSpy).toHaveBeenCalledTimes(1);
+        expect(warningSpy.mock.calls[0][0]).toContain("/u/source/projects/link1");
+        expect(warningSpy.mock.calls[0][0]).toContain("/u/source/projects/link2");
+        expect((ussTree as any).skippedMoveLinks).toEqual([]);
+    });
+
+    it("does not warn when no links were left in place", async () => {
+        const moveSpy = vi.spyOn(ussTree as any, "crossLparMove").mockResolvedValue(undefined);
+
+        await dropOneNode();
+
+        expect(moveSpy).toHaveBeenCalled();
+        expect(warningSpy).not.toHaveBeenCalled();
+    });
+
+    it("does not repeat links from an earlier drop", async () => {
+        (ussTree as any).skippedMoveLinks = ["/u/source/old/link"];
+        vi.spyOn(ussTree as any, "crossLparMove").mockResolvedValue(undefined);
+
+        await dropOneNode();
+
+        expect(warningSpy).not.toHaveBeenCalled();
     });
 });
 

@@ -793,6 +793,8 @@ export class USSActions {
             return;
         }
 
+        const listPath = SharedContext.isSymlink(node) ? `${node.fullPath}/.` : node.fullPath;
+
         let totalFileCount = 0;
         try {
             // need to destructure includeHidden because its in IDOwnloadOptions not in IUSSListOptions
@@ -806,7 +808,7 @@ export class USSActions {
                 type: "f",
                 symlinks: !downloadOptions.dirOptions.followSymlinks,
             };
-            const listResponse = await ZoweExplorerApiRegister.getUssApi(profile).fileList(node.fullPath, countListOptions);
+            const listResponse = await ZoweExplorerApiRegister.getUssApi(profile).fileList(listPath, countListOptions);
             if (listResponse?.apiResponse?.items) {
                 totalFileCount = listResponse.apiResponse.items.length;
             }
@@ -892,7 +894,7 @@ export class USSActions {
                 };
 
                 try {
-                    const response = await ussApi.downloadDirectory(node.fullPath, options, listOptions);
+                    const response = await ussApi.downloadDirectory(listPath, options, listOptions);
                     void SharedUtils.handleDownloadResponse(response, vscode.l10n.t("USS directory"), directoryPath, token?.isCancellationRequested);
                 } catch (e) {
                     await AuthUtils.errorHandling(e, { apiType: ZoweExplorerApiType.Uss, profile });
@@ -960,6 +962,9 @@ export class USSActions {
     /**
      * Builds a file/directory structure that can be traversed from root to the innermost children.
      *
+     * Symlinks inside a directory are added as entries flagged with `isUnfollowedSymlink`, and are not followed (to make it cycle-safe).
+     * A node that is itself a link is still followed, since it was chosen directly.
+     *
      * @param node Build a tree structure starting at this node
      * @returns A tree structure containing all files/directories within this node
      */
@@ -978,6 +983,17 @@ export class USSActions {
             const children = await node.getChildren();
             if (children != null && children.length > 0) {
                 for (const child of children) {
+                    if (SharedContext.isSymlink(child)) {
+                        directory.children.push({
+                            localUri: child.resourceUri,
+                            ussPath: child.fullPath,
+                            baseName: child.getLabel() as string,
+                            sessionName: child.getSessionNode().getLabel() as string,
+                            type: SharedContext.isUssDirectory(child) ? USSFileStructure.UssFileType.Directory : USSFileStructure.UssFileType.File,
+                            isUnfollowedSymlink: true,
+                        });
+                        continue;
+                    }
                     // This node is either another directory or a file
                     const subnode = await USSActions.buildFileStructure(child);
                     directory.children.push(subnode);
@@ -1047,20 +1063,6 @@ export class USSActions {
                 return USSActions.copyUssFilesToClipboard(selectedNodes);
             }
         );
-    }
-
-    public static async refreshChildNodesDirectory(node: IZoweUSSTreeNode): Promise<void> {
-        ZoweLogger.trace("uss.actions.refreshChildNodesDirectory called.");
-        const childNodes = await node.getChildren();
-        if (childNodes != null && childNodes.length > 0) {
-            for (const child of childNodes) {
-                await USSActions.refreshChildNodesDirectory(child);
-            }
-        } else {
-            if (node.contextValue !== Constants.USS_DIR_CONTEXT) {
-                await node.refreshUSS();
-            }
-        }
     }
 
     /**

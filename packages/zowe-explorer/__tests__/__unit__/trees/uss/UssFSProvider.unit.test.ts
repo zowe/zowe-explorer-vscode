@@ -914,6 +914,47 @@ describe("UssFSProvider", () => {
             createRecursiveSpy.mockRestore();
             existsSpy.mockRestore();
         });
+        it("does not create a directory entry when the dot self-entry is not a directory", async () => {
+            vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
+                fileList: vi.fn().mockResolvedValueOnce({
+                    success: true,
+                    commandResponse: "",
+                    apiResponse: { items: [{ name: ".", mode: "-rwxrwxrwx" }] },
+                }),
+            } as any);
+            const existsSpy = vi.spyOn(UssFSProvider.instance, "exists").mockReturnValue(false);
+            const createRecursiveSpy = vi
+                .spyOn(UssFSProvider.instance as any, "_createDirectoryRecursive")
+                .mockImplementation((() => undefined) as any);
+
+            await UssFSProvider.instance.listFiles(testProfile, testUris.folder);
+
+            expect(createRecursiveSpy).not.toHaveBeenCalled();
+
+            createRecursiveSpy.mockRestore();
+            existsSpy.mockRestore();
+        });
+        it("does not create a directory entry when a searchPath query lists a single file", async () => {
+            const searchUri = testUris.session.with({ query: "searchPath=/u/users/ibmuser/aFile.txt" });
+            const fileListMock = vi.fn().mockResolvedValueOnce({
+                success: true,
+                commandResponse: "",
+                apiResponse: { items: [{ name: "aFile.txt", mode: "-rwxrwxrwx" }] },
+            });
+            vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({ fileList: fileListMock } as any);
+            const existsSpy = vi.spyOn(UssFSProvider.instance, "exists").mockReturnValue(false);
+            const createRecursiveSpy = vi
+                .spyOn(UssFSProvider.instance as any, "_createDirectoryRecursive")
+                .mockImplementation((() => undefined) as any);
+
+            await UssFSProvider.instance.listFiles(testProfile, searchUri);
+
+            expect(fileListMock).toHaveBeenCalledWith("/u/users/ibmuser/aFile.txt");
+            expect(createRecursiveSpy).not.toHaveBeenCalled();
+
+            createRecursiveSpy.mockRestore();
+            existsSpy.mockRestore();
+        });
         it("properly returns an unsuccessful response", async () => {
             vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({
                 fileList: vi.fn().mockResolvedValueOnce({
@@ -936,9 +977,220 @@ describe("UssFSProvider", () => {
             } as any);
             await expect(UssFSProvider.instance.listFiles(testProfile, testUris.folder)).rejects.toThrow();
         });
+
+        describe("symbolic links", () => {
+            const dirListing = (items: Record<string, unknown>[]) => ({
+                success: true,
+                commandResponse: "",
+                apiResponse: { items: [{ name: ".", mode: "drwxrwxrwx" }, { name: "..", mode: "drwxrwxrwx" }, ...items] },
+            });
+
+            it("marks a symlink to a directory so it can be treated as a folder", async () => {
+                const fileListMock = vi
+                    .fn()
+                    .mockResolvedValueOnce(dirListing([{ name: "dirLink", mode: "lrwxrwxrwx" }]))
+                    .mockResolvedValueOnce(dirListing([{ name: "inner.txt", mode: "-rwxrwxrwx" }]));
+                vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({ fileList: fileListMock } as any);
+                const existsSpy = vi.spyOn(UssFSProvider.instance, "exists").mockReturnValue(true);
+
+                const result = await UssFSProvider.instance.listFiles(testProfile, testUris.folder);
+
+                expect(fileListMock).toHaveBeenCalledTimes(2);
+                expect(fileListMock).toHaveBeenNthCalledWith(2, "/aFolder/dirLink");
+                expect(result.apiResponse.items).toStrictEqual([
+                    { name: "dirLink", mode: "lrwxrwxrwx", isSymlink: true, isSymlinkToDirectory: true },
+                ]);
+                existsSpy.mockRestore();
+            });
+
+            it("marks a symlink to a file as a non-directory symlink", async () => {
+                const fileListMock = vi
+                    .fn()
+                    .mockResolvedValueOnce(dirListing([{ name: "fileLink", mode: "lrwxrwxrwx" }]))
+                    .mockResolvedValueOnce({
+                        success: true,
+                        commandResponse: "",
+                        apiResponse: { items: [{ name: "/aFolder/fileLink", mode: "-rwxrwxrwx" }] },
+                    });
+                vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({ fileList: fileListMock } as any);
+                const existsSpy = vi.spyOn(UssFSProvider.instance, "exists").mockReturnValue(true);
+
+                const result = await UssFSProvider.instance.listFiles(testProfile, testUris.folder);
+
+                expect(result.apiResponse.items).toStrictEqual([
+                    { name: "fileLink", mode: "lrwxrwxrwx", isSymlink: true, isSymlinkToDirectory: false },
+                ]);
+                existsSpy.mockRestore();
+            });
+
+            it("treats a broken symlink as a file and logs a warning", async () => {
+                const fileListMock = vi
+                    .fn()
+                    .mockResolvedValueOnce(dirListing([{ name: "brokenLink", mode: "lrwxrwxrwx" }]))
+                    .mockRejectedValueOnce(new Error("EDC5129I No such file or directory."));
+                vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({ fileList: fileListMock } as any);
+                const existsSpy = vi.spyOn(UssFSProvider.instance, "exists").mockReturnValue(true);
+                const warnSpy = vi.spyOn(ZoweLogger, "warn").mockImplementation(() => undefined);
+
+                const result = await UssFSProvider.instance.listFiles(testProfile, testUris.folder);
+
+                expect(result.success).toBe(true);
+                expect(result.apiResponse.items).toStrictEqual([
+                    { name: "brokenLink", mode: "lrwxrwxrwx", isSymlink: true, isSymlinkToDirectory: false },
+                ]);
+                expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("/aFolder/brokenLink"));
+                existsSpy.mockRestore();
+                warnSpy.mockRestore();
+            });
+
+            it("does not resolve symlinks when the listing has none", async () => {
+                const fileListMock = vi.fn().mockResolvedValueOnce(dirListing([{ name: "test.txt", mode: "-rwxrwxrwx" }]));
+                vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({ fileList: fileListMock } as any);
+                const existsSpy = vi.spyOn(UssFSProvider.instance, "exists").mockReturnValue(true);
+
+                await UssFSProvider.instance.listFiles(testProfile, testUris.folder);
+
+                expect(fileListMock).toHaveBeenCalledTimes(1);
+                existsSpy.mockRestore();
+            });
+
+            describe("target caching", () => {
+                const dirTarget = () => Promise.resolve(dirListing([]));
+                const fileTarget = (linkPath: string) => () =>
+                    Promise.resolve({ success: true, commandResponse: "", apiResponse: { items: [{ name: linkPath, mode: "-rwxrwxrwx" }] } });
+
+                const listTwice = async (...responses: (() => Promise<unknown>)[]) => {
+                    const fileListMock = vi.fn();
+                    for (const resp of responses) {
+                        fileListMock.mockImplementationOnce(resp);
+                    }
+                    const getUssApiSpy = vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue({ fileList: fileListMock } as any);
+                    const existsSpy = vi.spyOn(UssFSProvider.instance, "exists").mockReturnValue(true);
+                    const first = await UssFSProvider.instance.listFiles(testProfile, testUris.folder);
+                    const second = await UssFSProvider.instance.listFiles(testProfile, testUris.folder);
+                    existsSpy.mockRestore();
+                    getUssApiSpy.mockRestore();
+                    return { fileListMock, first, second };
+                };
+                const listing = (link: Record<string, unknown>) => () => Promise.resolve(dirListing([link]));
+
+                it("reuses the resolved target when the link has not changed", async () => {
+                    const link = { name: "cachedLink", mode: "lrwxrwxrwx", mtime: "2026-10-24T10:00:00" };
+                    const { fileListMock, second } = await listTwice(listing(link), dirTarget, listing(link));
+
+                    // 1 listing + 1 target lookup, then only 1 listing
+                    expect(fileListMock).toHaveBeenCalledTimes(3);
+                    expect(fileListMock.mock.calls.map((c) => c[0])).toEqual(["/aFolder", "/aFolder/cachedLink", "/aFolder"]);
+                    expect(second.apiResponse.items).toStrictEqual([{ ...link, isSymlink: true, isSymlinkToDirectory: true }]);
+                });
+
+                it("resolves the target again when the link's mtime changes", async () => {
+                    const link = { name: "retargetedLink", mode: "lrwxrwxrwx", mtime: "2026-10-24T10:00:00" };
+                    const changedLink = { ...link, mtime: "2026-10-24T11:00:00" };
+                    const { fileListMock, first, second } = await listTwice(
+                        listing(link),
+                        dirTarget,
+                        listing(changedLink),
+                        fileTarget("/aFolder/retargetedLink")
+                    );
+
+                    expect(fileListMock).toHaveBeenCalledTimes(4);
+                    expect(first.apiResponse.items[0].isSymlinkToDirectory).toBe(true);
+                    expect(second.apiResponse.items[0].isSymlinkToDirectory).toBe(false);
+                });
+
+                it("does not cache a link whose target could not be resolved", async () => {
+                    const link = { name: "brokenCachedLink", mode: "lrwxrwxrwx", mtime: "2026-10-24T10:00:00" };
+                    const warnSpy = vi.spyOn(ZoweLogger, "warn").mockImplementation(() => undefined);
+                    const { fileListMock, second } = await listTwice(
+                        listing(link),
+                        () => Promise.reject(new Error("broken")),
+                        listing(link),
+                        dirTarget
+                    );
+
+                    expect(fileListMock).toHaveBeenCalledTimes(4);
+                    expect(second.apiResponse.items[0].isSymlinkToDirectory).toBe(true);
+                    warnSpy.mockRestore();
+                });
+
+                it("does not cache a link when the backend returns no mtime", async () => {
+                    const link = { name: "noMtimeLink", mode: "lrwxrwxrwx" };
+                    const { fileListMock } = await listTwice(listing(link), dirTarget, listing(link), dirTarget);
+
+                    expect(fileListMock).toHaveBeenCalledTimes(4);
+                });
+
+                it("keeps cached targets separate per profile", async () => {
+                    const link = { name: "perProfileLink", mode: "lrwxrwxrwx", mtime: "2026-10-24T10:00:00" };
+                    const otherProfile = { ...testProfile, name: "otherProfile" };
+                    const fileListMock = vi
+                        .fn()
+                        .mockImplementationOnce(listing(link))
+                        .mockImplementationOnce(dirTarget)
+                        .mockImplementationOnce(listing(link))
+                        .mockImplementationOnce(fileTarget("/aFolder/perProfileLink"));
+                    const getUssApiSpy = vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue({ fileList: fileListMock } as any);
+                    const loadNamedProfileSpy = vi
+                        .spyOn(Profiles.getInstance(), "loadNamedProfile")
+                        .mockImplementation((name: string) => (name === otherProfile.name ? otherProfile : testProfile) as any);
+                    const existsSpy = vi.spyOn(UssFSProvider.instance, "exists").mockReturnValue(true);
+
+                    await UssFSProvider.instance.listFiles(testProfile, testUris.folder);
+                    const other = await UssFSProvider.instance.listFiles(otherProfile, testUris.folder);
+
+                    expect(fileListMock).toHaveBeenCalledTimes(4);
+                    expect(other.apiResponse.items[0].isSymlinkToDirectory).toBe(false);
+                    existsSpy.mockRestore();
+                    loadNamedProfileSpy.mockRestore();
+                    getUssApiSpy.mockRestore();
+                });
+            });
+
+            it("does not resolve symlinks when keepRelative is true", async () => {
+                const fileListMock = vi.fn().mockResolvedValueOnce(dirListing([{ name: "dirLink", mode: "lrwxrwxrwx" }]));
+                vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValueOnce({ fileList: fileListMock } as any);
+
+                const result = await UssFSProvider.instance.listFiles(testProfile, testUris.folder, true);
+
+                expect(fileListMock).toHaveBeenCalledTimes(1);
+                expect(result.apiResponse.items[2]).toStrictEqual({ name: "dirLink", mode: "lrwxrwxrwx" });
+            });
+        });
     });
 
     describe("fetchEntries", () => {
+        it("creates a directory entry for a symlink that points to a directory", async () => {
+            const fakeFolder = Object.assign(Object.create(Object.getPrototypeOf(testEntries.folder)), testEntries.folder);
+            fakeFolder.entries = new Map();
+            const existsMock = vi.spyOn(UssFSProvider.instance, "exists").mockReturnValue(true);
+            const lookupMock = vi.spyOn(UssFSProvider.instance as any, "lookup").mockReturnValue(fakeFolder);
+            const listFilesMock = vi.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValue({
+                success: true,
+                apiResponse: {
+                    items: [
+                        { name: "dirLink", mode: "lrwxrwxrwx", isSymlink: true, isSymlinkToDirectory: true },
+                        { name: "fileLink", mode: "lrwxrwxrwx", isSymlink: true, isSymlinkToDirectory: false },
+                    ],
+                },
+                commandResponse: "",
+            });
+
+            await (UssFSProvider.instance as any).fetchEntries(testUris.folder, {
+                isRoot: false,
+                slashAfterProfilePos: testUris.folder.path.indexOf("/", 1),
+                profile: testProfile,
+                profileName: testProfile.name,
+            });
+
+            expect(fakeFolder.entries.get("dirLink")).toBeInstanceOf(UssDirectory);
+            expect(fakeFolder.entries.get("fileLink")).toBeInstanceOf(UssFile);
+
+            existsMock.mockRestore();
+            lookupMock.mockRestore();
+            listFilesMock.mockRestore();
+        });
+
         it("prompts for authentication when the profile has no credentials", async () => {
             vi.spyOn(ZoweExplorerApiRegister.prototype, "getCommonApi").mockReturnValue({
                 getSession: () => ({ ISession: { type: imperative.SessConstants.AUTH_TYPE_NONE } }),
@@ -2438,6 +2690,106 @@ describe("UssFSProvider", () => {
                 });
             });
         });
+        describe("symlinks inside a pasted folder", () => {
+            const linkTree = (sourceUri: Uri) => ({
+                localUri: sourceUri,
+                ussPath: "/folderA/innerFolder",
+                baseName: "innerFolder",
+                sessionName: "sestest",
+                type: USSFileStructure.UssFileType.Directory,
+                children: [
+                    {
+                        localUri: sourceUri.with({ path: "/sestest/folderA/innerFolder/a.txt" }),
+                        ussPath: "/folderA/innerFolder/a.txt",
+                        baseName: "a.txt",
+                        sessionName: "sestest",
+                        type: USSFileStructure.UssFileType.File,
+                    },
+                    {
+                        localUri: sourceUri.with({ path: "/sestest/folderA/innerFolder/dirlink" }),
+                        ussPath: "/folderA/innerFolder/dirlink",
+                        baseName: "dirlink",
+                        sessionName: "sestest",
+                        type: USSFileStructure.UssFileType.Directory,
+                        isUnfollowedSymlink: true,
+                    },
+                    {
+                        localUri: sourceUri.with({ path: "/sestest/folderA/innerFolder/filelink.txt" }),
+                        ussPath: "/folderA/innerFolder/filelink.txt",
+                        baseName: "filelink.txt",
+                        sessionName: "sestest",
+                        type: USSFileStructure.UssFileType.File,
+                        isUnfollowedSymlink: true,
+                    },
+                ],
+            });
+            const sourceUri = Uri.from({ scheme: ZoweScheme.USS, path: "/sestest/folderA/innerFolder" });
+            let copyTreeSpy: MockInstance | undefined;
+
+            afterEach(() => {
+                copyTreeSpy?.mockRestore();
+                copyTreeSpy = undefined;
+            });
+
+            it("leaves links to the server when it copies the folder in one request", async () => {
+                const blockMocks = getBlockMocks(true);
+                const destUri = Uri.from({ scheme: ZoweScheme.USS, path: "/sestest/folderB" });
+                blockMocks.getInfoFromUri
+                    .mockReturnValueOnce({ profile: blockMocks.profile, path: "/folderB" })
+                    .mockReturnValueOnce({ profile: blockMocks.profile, path: "/folderA/innerFolder" });
+                blockMocks.apiFuncs.fileList.mockResolvedValueOnce({ success: true, apiResponse: { items: [] } });
+                const skippedLinks: string[] = [];
+
+                await (UssFSProvider.instance as any).copyTree(sourceUri, destUri, { overwrite: true, tree: linkTree(sourceUri), skippedLinks });
+
+                expect(blockMocks.apiFuncs.copy).toHaveBeenCalledTimes(1);
+                expect(blockMocks.apiFuncs.copy).toHaveBeenCalledWith("/folderB/innerFolder", {
+                    from: "/folderA/innerFolder",
+                    recursive: true,
+                    overwrite: true,
+                });
+                expect(skippedLinks).toEqual([]);
+            });
+
+            it("skips links and reports them when it copies the folder one item at a time", async () => {
+                const blockMocks = getBlockMocks();
+                const destUri = Uri.from({ scheme: ZoweScheme.USS, path: "/sestest2/folderB" });
+                blockMocks.getInfoFromUri
+                    .mockReturnValueOnce({ profile: blockMocks.profile2, path: "/folderB" })
+                    .mockReturnValueOnce({ profile: blockMocks.profile, path: "/folderA/innerFolder" });
+                blockMocks.apiFuncs.fileList.mockResolvedValueOnce({ success: true, apiResponse: { items: [] } });
+                const provider = UssFSProvider.instance as any;
+                const originalCopyTree = provider.copyTree.bind(provider);
+                // Run the folder itself for real, and stub out the copies of its children
+                copyTreeSpy = vi.spyOn(provider, "copyTree").mockImplementationOnce(originalCopyTree).mockResolvedValue(undefined);
+                const skippedLinks: string[] = [];
+
+                await provider.copyTree(sourceUri, destUri, { overwrite: true, tree: linkTree(sourceUri), skippedLinks });
+
+                expect(blockMocks.apiFuncs.create).toHaveBeenCalledWith("/folderB/innerFolder", "directory");
+                const childCopies = copyTreeSpy.mock.calls.slice(1).map((call) => call[2].tree.baseName);
+                expect(childCopies).toEqual(["a.txt"]);
+                expect(skippedLinks).toEqual(["/folderA/innerFolder/dirlink", "/folderA/innerFolder/filelink.txt"]);
+            });
+
+            it("passes the list of skipped links on to the copies of its children", async () => {
+                const blockMocks = getBlockMocks();
+                const destUri = Uri.from({ scheme: ZoweScheme.USS, path: "/sestest2/folderB" });
+                blockMocks.getInfoFromUri
+                    .mockReturnValueOnce({ profile: blockMocks.profile2, path: "/folderB" })
+                    .mockReturnValueOnce({ profile: blockMocks.profile, path: "/folderA/innerFolder" });
+                blockMocks.apiFuncs.fileList.mockResolvedValueOnce({ success: true, apiResponse: { items: [] } });
+                const provider = UssFSProvider.instance as any;
+                const originalCopyTree = provider.copyTree.bind(provider);
+                copyTreeSpy = vi.spyOn(provider, "copyTree").mockImplementationOnce(originalCopyTree).mockResolvedValue(undefined);
+                const skippedLinks: string[] = [];
+
+                await provider.copyTree(sourceUri, destUri, { overwrite: true, tree: linkTree(sourceUri), skippedLinks });
+
+                expect(copyTreeSpy.mock.calls[1][2].skippedLinks).toBe(skippedLinks);
+            });
+        });
+
         describe("different profiles", () => {
             it("copies a file into a destination folder - collision", async () => {
                 const blockMocks = getBlockMocks();

@@ -60,6 +60,12 @@ export class USSAttributeView extends WebView {
                 }
                 break;
             case "ready":
+                if (SharedContext.isSymlink(this.ussNode)) {
+                    const targetAttrs = await this.ussNode.fetchAttributes();
+                    if (targetAttrs) {
+                        await this.ussNode.setAttributes(targetAttrs);
+                    }
+                }
                 await this.attachTag(this.ussNode);
                 await this.panel.webview.postMessage({
                     attributes: await this.ussNode.getAttributes(),

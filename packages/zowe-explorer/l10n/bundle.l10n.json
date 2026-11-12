@@ -227,6 +227,7 @@
   "Added support for logging in to multiple API ML instances per team configuration file. <a>#2264</a>": "Added support for logging in to multiple API ML instances per team configuration file. <a>#2264</a>",
   "Added support for pasting at top-level of USS tree (if filtered), and optimized copy/paste operations to avoid using local paths when possible. <a>#2041</a>": "Added support for pasting at top-level of USS tree (if filtered), and optimized copy/paste operations to avoid using local paths when possible. <a>#2041</a>",
   "Added support for resolving aliases in the Zowe data set tree and when using the Zowe data set filesystem provider. <a>#4438</a> & <a>#4489</a>": "Added support for resolving aliases in the Zowe data set tree and when using the Zowe data set filesystem provider. <a>#4438</a> & <a>#4489</a>",
+  "Added support for symbolic links in the USS tree. <a>#3661</a>": "Added support for symbolic links in the USS tree. <a>#3661</a>",
   "Added support for the allowedLoginMethod profile property. This property can be used to restrict allowed authentication methods to a single option. If a profile has no value for allowedLoginMethod, or if the value is \"prompt\", there is no change in behavior compared to previous Zowe Explorer versions. <a>#4531</a>": "Added support for the allowedLoginMethod profile property. This property can be used to restrict allowed authentication methods to a single option. If a profile has no value for allowedLoginMethod, or if the value is \"prompt\", there is no change in behavior compared to previous Zowe Explorer versions. <a>#4531</a>",
   "Added support to delete VSAM data sets via right-click action.": "Added support to delete VSAM data sets via right-click action.",
   "Added support to delete VSAM data sets. <a>#3824</a>": "Added support to delete VSAM data sets. <a>#3824</a>",
@@ -2262,6 +2263,18 @@
   "Subsystem": "Subsystem",
   "Support VS Code engine 1.79.0 and higher.": "Support VS Code engine 1.79.0 and higher.",
   "Surfaced any errors from a dataset Recall/Migrate operation. <a>#2032</a>": "Surfaced any errors from a dataset Recall/Migrate operation. <a>#2032</a>",
+  "Symbolic links cannot be moved to another system and were left in place: {0}/List of USS paths left in place": {
+    "message": "Symbolic links cannot be moved to another system and were left in place: {0}",
+    "comment": [
+      "List of USS paths left in place"
+    ]
+  },
+  "Symbolic links inside pasted folders could not be copied and were skipped: {0}/List of skipped USS paths": {
+    "message": "Symbolic links inside pasted folders could not be copied and were skipped: {0}",
+    "comment": [
+      "List of skipped USS paths"
+    ]
+  },
   "TSO command submitted.": "TSO command submitted.",
   "Tag": "Tag",
   "Team config file created, refreshing Zowe Explorer.": "Team config file created, refreshing Zowe Explorer.",

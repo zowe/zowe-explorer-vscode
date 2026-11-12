@@ -129,7 +129,8 @@ export class SharedActions {
                 const node = items.filter((item) => item.fullPath.trim() === filePath)[0];
                 ussFileProvider.setItem(ussFileProvider.getTreeView(), node);
 
-                if (node.contextValue !== Constants.USS_DIR_CONTEXT) {
+                // Compare the start of the context value, so that a symlink to a directory is not opened as a file
+                if (!SharedContext.isUssDirectory(node)) {
                     // If selected item is file, open it in workspace
                     ussFileProvider.addSearchHistory(node.fullPath, node.getProfile());
                     const ussNode = node as IZoweUSSTreeNode;

@@ -1182,6 +1182,16 @@ describe("Shared utils unit tests - function parseFavorites", () => {
         });
     });
 
+    it("parses the symlink marker saved after the context of a favorite", () => {
+        const favData = SharedUtils.parseFavorites(["[testProfile]: /u/aLink{directory}{symlink}"]);
+        expect(favData[0]).toStrictEqual({
+            profileName: "testProfile",
+            label: "/u/aLink",
+            contextValue: "directory",
+            isSymlink: true,
+        });
+    });
+
     it("filters out an incomplete favorite entry (missing label and context)", () => {
         const warnSpy = vi.spyOn(ZoweLogger, "warn");
         const favData = SharedUtils.parseFavorites(["[testProfile]: "]);

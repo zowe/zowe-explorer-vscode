@@ -306,6 +306,43 @@ describe("Shared Actions Unit Tests - Function searchInAllLoadedItems", () => {
         await SharedActions.searchInAllLoadedItems(undefined, testUssTree);
         expect(openNode).not.toHaveBeenCalled();
     });
+    it("Checking that searchInAllLoadedItems selects a symlink to a USS folder without opening it", async () => {
+        const globalMocks = await createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        const folderLink = new ZoweUSSNode({
+            label: "folderLink",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.ussSessionNode,
+            profile: globalMocks.imperativeProfile,
+            parentPath: "/",
+            isSymlink: true,
+        });
+        const testUssTree = createUSSTree([], [blockMocks.ussSessionNode], globalMocks.treeView);
+        Object.defineProperty(testUssTree, "getAllLoadedItems", {
+            value: vi.fn().mockResolvedValueOnce([folderLink]),
+            configurable: true,
+        });
+        vi.spyOn(folderLink, "getProfileName").mockImplementationOnce(() => "firstName");
+        vi.spyOn(blockMocks.ussSessionNode, "getChildren").mockResolvedValueOnce([folderLink]);
+
+        const qpItem = new FilterItem({ text: "[sestest]: /folderLink" });
+        const quickPickContent = createQuickPickContent(qpItem, [qpItem], globalMocks.qpPlaceholder);
+        quickPickContent.placeholder = "Select a filter";
+        mocked(Gui.createQuickPick).mockReturnValue(quickPickContent);
+        vi.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(qpItem);
+        const setItem = vi.fn();
+        Object.defineProperty(testUssTree, "setItem", {
+            value: setItem,
+            configurable: true,
+        });
+
+        const openNode = vi.spyOn(folderLink, "openUSS").mockImplementation((() => undefined) as any);
+        await SharedActions.searchInAllLoadedItems(undefined, testUssTree);
+        expect(setItem).toHaveBeenCalledWith(expect.anything(), folderLink);
+        expect(openNode).not.toHaveBeenCalled();
+        expect(testUssTree.addSearchHistory).not.toHaveBeenCalled();
+    });
     it("Checking that searchInAllLoadedItems works for a USS file", async () => {
         const globalMocks = await createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);

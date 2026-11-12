@@ -80,6 +80,7 @@ export namespace Definitions {
         profileName: string;
         label: string;
         contextValue?: string;
+        isSymlink?: boolean;
     };
     export type ProviderFunctions = {
         ds: () => Promise<Types.IZoweDatasetTreeType>;
@@ -132,6 +133,7 @@ export namespace Definitions {
         parentPath?: string;
         encoding?: ZosEncoding;
         etag?: string;
+        isSymlink?: boolean;
     }
     export interface IZoweProviders {
         ds: Types.IZoweDatasetTreeType;

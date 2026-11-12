@@ -41,6 +41,9 @@ export namespace USSFileStructure {
 
         // The type of the file (file or directory)
         type: UssFileType;
+
+        // Whether this is a symlink inside a copied directory (i.e. nested), which is not followed and has no children
+        isUnfollowedSymlink?: boolean;
     }
 
     /**

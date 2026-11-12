@@ -63,6 +63,8 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
     public dropMimeTypes: string[] = ["application/vnd.code.tree.zowe.uss.explorer"];
 
     private draggedNodes: Record<string, IZoweUSSTreeNode> = {};
+    // The paths of the symlinks that were left in place during a crossLparMove
+    private skippedMoveLinks: string[] = [];
 
     public constructor() {
         super(
@@ -99,6 +101,12 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
 
     private async crossLparMove(sourceNode: IZoweUSSTreeNode, sourceUri: vscode.Uri, destUri: vscode.Uri, recursiveCall?: boolean): Promise<void> {
         const destinationInfo = FsAbstractUtils.getInfoForUri(destUri, Profiles.getInstance());
+
+        // Links are left in place, as a link cannot be created on the other system
+        if (SharedContext.isSymlink(sourceNode)) {
+            this.skippedMoveLinks.push(sourceNode.fullPath);
+            return;
+        }
 
         if (SharedContext.isUssDirectory(sourceNode)) {
             if (!UssFSProvider.instance.exists(destUri)) {
@@ -296,6 +304,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         // Proceed with the moves if validation passed for all relevant items.
         const movingMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Moving USS files...")}`);
         const parentsToUpdate = new Set<IZoweUSSTreeNode>();
+        this.skippedMoveLinks = [];
 
         for (const item of droppedItems.value) {
             const node = findDraggedNode(item.uri, item.label);
@@ -327,6 +336,19 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
 
         for (const parent of parentsToUpdate) {
             this.refreshElement(parent);
+        }
+
+        if (this.skippedMoveLinks.length > 0) {
+            const skipped = this.skippedMoveLinks.join(", ");
+            ZoweLogger.warn(`Left ${this.skippedMoveLinks.length} symbolic link(s) in place while moving: ${skipped}`);
+            Gui.warningMessage(
+                vscode.l10n.t({
+                    message: "Symbolic links cannot be moved to another system and were left in place: {0}",
+                    args: [skipped],
+                    comment: ["List of USS paths left in place"],
+                })
+            );
+            this.skippedMoveLinks = [];
         }
         this.refreshElement(target);
         movingMsg.dispose();
@@ -701,6 +723,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                 session: node.getSession(),
                 profile: node.getProfile(),
                 parentPath: node.getParent().fullPath,
+                isSymlink: SharedContext.isSymlink(node),
             });
             temp.resourceUri = node.resourceUri;
             temp.contextValue = SharedContext.asFavorite(temp);
@@ -763,7 +786,9 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
         const favoritesArray = [];
         this.mFavorites.forEach((profileNode) => {
             profileNode.children.forEach((fav) => {
-                const favoriteEntry = "[" + profileNode.label.toString() + "]: " + fav.fullPath + "{" + SharedContext.getBaseContext(fav) + "}";
+                const symlinkMarker = SharedContext.isSymlink(fav) ? Constants.FAV_SYMLINK_MARKER : "";
+                const favoriteEntry =
+                    "[" + profileNode.label.toString() + "]: " + fav.fullPath + "{" + SharedContext.getBaseContext(fav) + "}" + symlinkMarker;
                 favoritesArray.push(favoriteEntry);
             });
         });
@@ -1103,7 +1128,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
             }
 
             // Initialize and attach favorited item nodes under their respective profile node in Favorites
-            const favChildNode = this.initializeFavChildNodeForProfile(fav.label, fav.contextValue, favProfileNode);
+            const favChildNode = this.initializeFavChildNodeForProfile(fav.label, fav.contextValue, favProfileNode, fav.isSymlink);
             favProfileNode.children.push(favChildNode);
         }
     }
@@ -1114,9 +1139,10 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
      * @param label The favorited file/folder's label
      * @param contextValue The favorited file/folder's context value
      * @param parentNode The profile node in this.mFavorites that the favorite belongs to
+     * @param isSymlink Whether the favorited file/folder is a symbolic link
      * @returns IZoweUssTreeNode
      */
-    public initializeFavChildNodeForProfile(label: string, context: string, parentNode: IZoweUSSTreeNode): ZoweUSSNode {
+    public initializeFavChildNodeForProfile(label: string, context: string, parentNode: IZoweUSSTreeNode, isSymlink = false): ZoweUSSNode {
         ZoweLogger.trace("USSTree.initializeFavChildNodeForProfile called.");
         const profile = parentNode.getProfile();
         let node: ZoweUSSNode;
@@ -1127,6 +1153,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                     collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                     parentNode,
                     profile,
+                    isSymlink,
                 });
                 node.description = path.dirname(label);
                 break;
@@ -1148,6 +1175,7 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                     collapsibleState: vscode.TreeItemCollapsibleState.None,
                     parentNode,
                     profile,
+                    isSymlink,
                 });
                 node.description = path.dirname(label);
                 break;
