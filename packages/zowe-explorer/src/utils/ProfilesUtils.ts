@@ -521,7 +521,7 @@ export class ProfilesUtils {
      */
     public static async changePassword(node: IZoweTreeNode): Promise<void> {
         ZoweLogger.trace("ProfilesUtils.changePassword called.");
-        const profile = node?.getProfile();
+        const profile = node.getProfile();
         if (profile == null) {
             Gui.errorMessage(vscode.l10n.t("No profile found for the selected node."));
             return;
