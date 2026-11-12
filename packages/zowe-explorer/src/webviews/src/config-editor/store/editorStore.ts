@@ -124,7 +124,6 @@ export function createEditorStore(vscodeApi: ConfigEditorWebviewApi = { postMess
             setViewModeWithStorage: setting("viewMode"),
             setPropertySortOrderWithStorage: setting("propertySortOrder", true),
             setProfileSortOrderWithStorage: setting("profileSortOrder"),
-            setDefaultsCollapsedWithStorage: setting("defaultsCollapsed"),
             setProfilesCollapsedWithStorage: setting("profilesCollapsed"),
             toggleViewMode: () => read().setViewModeWithStorage(read().configEditorSettings.viewMode === "tree" ? "flat" : "tree"),
             ...bind(createConfigurationActions, ["handleSave", "handleRefresh", "handleTabChange"], false),

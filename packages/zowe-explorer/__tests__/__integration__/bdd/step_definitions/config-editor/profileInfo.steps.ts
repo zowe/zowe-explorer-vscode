@@ -16,7 +16,6 @@ import * as path from "path";
 import { verifyProfiles, robustClick, dismissTutorialOverlay, waitForSaveToComplete } from "./profileListHelpers";
 import {
     getControlValueOn,
-    getSelectOptions,
     getTextValue,
     isVscodeElement,
     setSelectValue,
@@ -26,8 +25,6 @@ import {
 } from "./vscodeElementHelpers";
 
 declare const browser: any;
-
-let foundOptions: string[] = [];
 
 async function ensureConfigEditorReady() {
     const appContainer = await browser.$("[data-testid='config-editor-app']");
@@ -69,62 +66,25 @@ Given("the profile list is set to flat view mode", async function () {
     }
 });
 
-/** The defaults dropdowns keep their ids, but they are `vscode-single-select` hosts now. */
-function defaultDropdownSelector(type: string): string {
-    return `[id="default-dropdown-${type}"]`;
+/** Flat-list row for a profile; the Default capsule and star toggle live inside it. */
+function flatProfileRowSelector(profileName: string): string {
+    return `[data-testid='profile-list-item'][data-profile-name='${profileName}']`;
 }
 
-async function waitForDefaultsDropdown(dropdownSelector: string): Promise<void> {
-    await browser.waitUntil(
-        async () => {
-            const dropdown = await browser.$(dropdownSelector);
-            return (await dropdown.isExisting()) && (await dropdown.isDisplayed());
-        },
-        { timeout: 15000, timeoutMsg: `Dropdown ${dropdownSelector} not visible` }
-    );
-}
-
-When("the user clicks the defaults toggle button to open the defaults section", async () => {
-    const selectors = [".defaults-toggle-button", "[data-testid='defaults-toggle']", "button[title*='Defaults']", "button[aria-label*='Defaults']"];
-    let defaultsToggleButton = null;
-    for (const sel of selectors) {
-        const el = await browser.$(sel);
-        if (await el.isExisting()) {
-            defaultsToggleButton = el;
-            break;
-        }
-    }
-    if (!defaultsToggleButton) throw new Error("Could not find defaults toggle button");
-
-    // use the same robustClick helper
-    await robustClick(defaultsToggleButton, 6, 300);
-
-    // ensure defaults section is visible by waiting for any default-dropdown select
-    await browser.waitUntil(
-        async () => {
-            const anyDefaultSelect = await browser.$("[id^='default-dropdown-']");
-            return await anyDefaultSelect.isExisting();
-        },
-        { timeout: 15000, timeoutMsg: "Defaults section did not become visible" }
-    );
+Then("the {string} profile shows the default badge", async (profileName: string) => {
+    const badge = await browser.$(`${flatProfileRowSelector(profileName)} [data-testid='profile-default-badge']`);
+    await badge.waitForExist({ timeout: 15000, timeoutMsg: `Default badge not shown for ${profileName}` });
 });
 
-When("the user selects the {word} default dropdown", async (type: string) => {
-    const dropdownSelector = defaultDropdownSelector(type);
-    await waitForDefaultsDropdown(dropdownSelector);
-
-    foundOptions = (await getSelectOptions(dropdownSelector)).map((option) => option.value);
-});
-
-Then("the dropdown should have {string} as options", async (expectedOptions: string) => {
-    const expected = expectedOptions.split(",").map((o) => o.trim());
-    await expect(foundOptions).toEqual(expected);
-});
-
-When("the user selects {string} in the {word} default dropdown", async (option: string, type: string) => {
-    const dropdownSelector = defaultDropdownSelector(type);
-    await waitForDefaultsDropdown(dropdownSelector);
-    await setSelectValue(dropdownSelector, option);
+When("the user sets {string} as the default profile", async (profileName: string) => {
+    await ensureConfigEditorReady();
+    const row = await browser.$(flatProfileRowSelector(profileName));
+    await row.waitForExist({ timeout: 15000 });
+    if (await (await row.$("[data-testid='profile-default-badge']")).isExisting()) return;
+    await robustClick(await row.$(".profile-star-button"), 6, 300);
+    await (
+        await row.$("[data-testid='profile-default-badge']")
+    ).waitForExist({ timeout: 15000, timeoutMsg: `${profileName} was not set as default` });
 });
 
 Then("the {word} default should be {string}", async (type: string, expectedDefault: string) => {

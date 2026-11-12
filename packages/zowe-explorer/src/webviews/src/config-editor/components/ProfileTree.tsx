@@ -8,6 +8,7 @@ import { useIsLightTheme } from "../hooks/useIsLightTheme";
 import { useScrollToSelected } from "../hooks/useScrollToSelected";
 import { ProfileTypeBadge } from "./ProfileTypeBadge";
 import { DefaultStarButton } from "./DefaultStarButton";
+import { DefaultBadge } from "./DefaultBadge";
 import { getEffectiveProfileKeys, resolveProfileDestination } from "../utils/profileConflicts";
 import { suppressClickAfterDrag } from "../utils/dragDropUtils";
 
@@ -582,6 +583,7 @@ export function ProfileTree({
                 }}
               />
             )}
+            {isDefault && getProfileType(node.key) && <DefaultBadge profileType={getProfileType(node.key)!} />}
             {getProfileType(node.key) && (
               <DefaultStarButton
                 variant="tree"

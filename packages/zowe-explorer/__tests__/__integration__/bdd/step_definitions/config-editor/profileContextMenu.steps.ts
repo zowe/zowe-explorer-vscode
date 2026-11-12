@@ -84,8 +84,8 @@ When("the user creates a Global User configuration for context menu testing", as
     await contextMenu.createGlobalUserLayer();
 });
 
-Given("the defaults section is expanded for context menu testing", async () => {
-    await contextMenu.expandDefaults();
+When("the user sets tree profile {string} as the default profile", async (key: string) => {
+    await contextMenu.setAsDefault(key);
 });
 
 Given("the saved subtree {string} in {string} is captured for context menu testing", async function (key: string, layer: string) {
