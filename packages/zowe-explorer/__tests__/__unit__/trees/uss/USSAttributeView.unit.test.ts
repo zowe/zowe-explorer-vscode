@@ -10,6 +10,8 @@
  */
 
 import * as vscode from "vscode";
+import { Gui } from "@zowe/zowe-explorer-api";
+import { MockInstance } from "vitest";
 import { MockedProperty } from "../../../__mocks__/mockUtils";
 import { USSAttributeView } from "../../../../src/trees/uss/USSAttributeView";
 import { UssFSProvider } from "../../../../src/trees/uss/UssFSProvider";
@@ -19,6 +21,7 @@ import { ZoweUSSNode } from "../../../../src/trees/uss/ZoweUSSNode";
 import { ZoweExplorerApiRegister } from "../../../../src/extending/ZoweExplorerApiRegister";
 import { MainframeInteraction } from "../../../../../zowe-explorer-api/src/extend";
 import { SharedContext } from "../../../../src/trees/shared/SharedContext";
+import { ReadOnlyManagement } from "../../../../src/management/ReadOnlyManagement";
 import * as fs from "fs";
 
 vi.mock("fs");
@@ -160,5 +163,58 @@ describe("AttributeView unit tests", () => {
         Object.defineProperty(fs, "readFile", { value: spyReadFile, configurable: true });
         await (view as any).onDidReceiveMessage({ command: "GET_LOCALIZATION" });
         expect(spyReadFile).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe("AttributeView unit tests - read-only files", () => {
+    const context = { extensionPath: "some/fake/ext/path" } as unknown as vscode.ExtensionContext;
+    const treeProvider = { refreshElement: vi.fn(), refresh: vi.fn() } as unknown as IZoweTree<IZoweUSSTreeNode>;
+    let view: USSAttributeView;
+    let node: ZoweUSSNode;
+    let ussApi: { updateAttributes: MockInstance; getTag: () => Promise<string> };
+
+    beforeEach(() => {
+        vi.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation((() => undefined) as any);
+        node = new ZoweUSSNode({
+            label: "profile",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentPath: "/etc",
+            profile: { name: "zosmf", type: "zosmf", message: "", failNotFound: false },
+        });
+        ussApi = { updateAttributes: vi.fn(), getTag: () => Promise.resolve("ISO8859-1") };
+        vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue(ussApi as unknown as MainframeInteraction.IUss);
+        vi.spyOn(SharedContext, "isUssDirectory").mockReturnValue(false);
+        view = new USSAttributeView(context, treeProvider, node);
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    it("tells the webview the attributes are read-only for a read-only file", async () => {
+        vi.spyOn(ReadOnlyManagement, "isReadOnly").mockImplementation((uri: vscode.Uri) => uri?.path === node.resourceUri.path);
+        vi.spyOn(ZoweUSSNode.prototype, "getAttributes").mockResolvedValue({ perms: "-rw-r--r--" } as any);
+        await (view as any).onDidReceiveMessage({ command: "ready" });
+        expect(view.panel.webview.postMessage).toHaveBeenCalledWith(expect.objectContaining({ readonly: true }));
+    });
+
+    it("tells the webview the attributes are editable for a writable file", async () => {
+        vi.spyOn(ReadOnlyManagement, "isReadOnly").mockReturnValue(false);
+        vi.spyOn(ZoweUSSNode.prototype, "getAttributes").mockResolvedValue({ perms: "-rw-r--r--" } as any);
+        await (view as any).onDidReceiveMessage({ command: "ready" });
+        expect(view.panel.webview.postMessage).toHaveBeenCalledWith(expect.objectContaining({ readonly: false }));
+    });
+
+    it("does not update the attributes of a read-only file", async () => {
+        vi.spyOn(ReadOnlyManagement, "isReadOnly").mockImplementation((uri: vscode.Uri) => uri?.path === node.resourceUri.path);
+        const errorMessageSpy = vi.spyOn(Gui, "errorMessage").mockResolvedValue(undefined);
+        const setAttributesSpy = vi.spyOn(node, "setAttributes").mockImplementation((() => undefined) as any);
+        vi.spyOn(ZoweUSSNode.prototype, "getAttributes").mockResolvedValue({ owner: "IBMUSER", group: "SYS1", perms: "-rw-r--r--" } as any);
+
+        await (view as any).onDidReceiveMessage({ command: "update-attributes", attrs: { perms: "-rwxrwxrwx" } });
+
+        expect(errorMessageSpy).toHaveBeenCalledWith("/etc/profile is read-only.");
+        expect(ussApi.updateAttributes).not.toHaveBeenCalled();
+        expect(setAttributesSpy).not.toHaveBeenCalled();
     });
 });

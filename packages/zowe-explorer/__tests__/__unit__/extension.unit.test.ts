@@ -319,6 +319,8 @@ async function createGlobalMocks() {
             "zowe.troubleshootError",
             "zowe.placeholderCommand",
             "zowe.setupRemoteWorkspaceFolders",
+            "zowe.readOnly.makeReadOnly",
+            "zowe.readOnly.makeReadWrite",
         ],
     };
 
