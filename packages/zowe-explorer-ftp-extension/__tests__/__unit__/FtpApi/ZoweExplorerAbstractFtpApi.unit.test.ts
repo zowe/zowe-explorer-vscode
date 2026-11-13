@@ -19,7 +19,7 @@ import { imperative } from "@zowe/cli";
 jest.mock("../../../../../node_modules/@zowe/zos-ftp-for-zowe-cli/node_modules/zos-node-accessor");
 ZoweLogger.getExtensionName = jest.fn().mockReturnValue("Zowe Explorer FTP Extension");
 
-class Dummy extends AbstractFtpApi { }
+class Dummy extends AbstractFtpApi {}
 
 const profile = {
     message: "",
