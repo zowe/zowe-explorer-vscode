@@ -88,7 +88,7 @@ describe("ConfigEditorSaveOperations", () => {
     afterEach(() => vi.unstubAllEnvs());
 
     describe.each([false, true])("credential loaded from vault: %s", (fromVault) => {
-        it.each(["unrelated", "rename", "copy", "cut", "edit"])("preserves credential storage during %s", async (operation) => {
+        it.each(["unrelated", "rename", "cut", "edit"])("preserves credential storage during %s", async (operation) => {
             vi.stubEnv("ZE_REVIEW_PASSWORD", "synthetic-resolved");
             const { store, config, saved, configs, commit } = setup(true);
             const password = fromVault ? "vault$ZE_REVIEW_PASSWORD" : "$ZE_REVIEW_PASSWORD";
@@ -212,11 +212,11 @@ describe("ConfigEditorSaveOperations", () => {
         });
     });
 
-    it.each(["cut", "copy"])("preserves unset secure fields in a subprofile during cross-layer %s", async (operation) => {
+    it("preserves unset secure fields in a subprofile during cross-layer cut", async () => {
         const { store, config, saved, commit, configs } = setup();
         config.set("profiles.base.profiles.leaf.secure", ["password", "tokenValue"]);
         configs[0].properties.profiles.base.profiles.leaf.secure = ["password", "tokenValue"];
-        store.getState().copyProfile("base", operation === "cut");
+        store.getState().copyProfile("base", true);
         store.getState().handleTabChange(1);
         store.getState().pasteProfile(null);
 
@@ -226,7 +226,26 @@ describe("ConfigEditorSaveOperations", () => {
         expect(destination.properties.password).toBe("synthetic-credential");
         expect(destination.profiles.leaf.secure).toEqual(["password", "tokenValue"]);
         expect(destination.profiles.leaf.properties).toEqual({ host: "child" });
-        expect(saved.get(configs[0].configPath)?.profiles.base !== undefined).toBe(operation === "copy");
+        expect(saved.get(configs[0].configPath)?.profiles.base).toBeUndefined();
+    });
+
+    it("does not carry credentials or secure fields over during cross-layer copy", async () => {
+        const { store, config, saved, commit, configs } = setup();
+        config.set("profiles.base.profiles.leaf.secure", ["password", "tokenValue"]);
+        configs[0].properties.profiles.base.profiles.leaf.secure = ["password", "tokenValue"];
+        store.getState().copyProfile("base", false);
+        expect(JSON.stringify(store.getState().profileClipboard)).not.toContain("synthetic-credential");
+        store.getState().handleTabChange(1);
+        store.getState().pasteProfile(null);
+
+        await expect(commit()).resolves.toBe(true);
+
+        const destination = saved.get(configs[1].configPath)?.profiles.base;
+        expect(destination.properties.password).toBeUndefined();
+        expect(destination.secure ?? []).toEqual([]);
+        expect(destination.profiles.leaf.secure ?? []).toEqual([]);
+        expect(destination.profiles.leaf.properties).toEqual({ host: "child" });
+        expect(saved.get(configs[0].configPath)?.profiles.base).toBeDefined();
     });
 
     it("preserves an explicitly empty secure value during a cross-layer move", async () => {

@@ -18,6 +18,7 @@ import {
     collectClipboardProfiles,
     getUniqueProfileKey,
     removeCutProfileChanges,
+    stripCredentialsFromClipboardProfiles,
 } from "../utils/profileClipboard";
 import { createUtilityHelpers } from "./utilityHelpers";
 import { createProfileActions } from "./profileActions";
@@ -63,6 +64,8 @@ export function createClipboardActions(state: EditorRuntime) {
             deletions: state.deletions,
         });
     };
+    const stripCredentials = (profiles: NonNullable<typeof profileClipboard>["profiles"]) =>
+        stripCredentialsFromClipboardProfiles(profiles, config ? state.schemaValidations[config.configPath]?.propertySchema : undefined);
     const uniqueKey = (proposedKey: string) => getUniqueProfileKey(proposedKey, profileKeys);
     const addProfiles = (profiles: NonNullable<typeof profileClipboard>["profiles"], sourceKey: string, destinationKey: string) => {
         const changes = buildClipboardChanges(profiles, sourceKey, destinationKey);
@@ -72,6 +75,7 @@ export function createClipboardActions(state: EditorRuntime) {
 
     const copyProfile = (profileKey: string, isCut: boolean) => {
         if (!config) return;
+        const collected = collectProfiles(profileKey);
         setProfileClipboard({
             type: isCut ? "cut" : "copy",
             sourceKey: profileKey,
@@ -83,14 +87,15 @@ export function createClipboardActions(state: EditorRuntime) {
                     : undefined;
             })(),
             configPath: config.configPath,
-            profiles: collectProfiles(profileKey),
+            // Cut is a move, so credentials travel with it; copy must not carry them over.
+            profiles: isCut ? collected : stripCredentials(collected),
         });
     };
 
     const duplicateProfile = (profileKey: string) => {
         if (!config) return;
         const destinationKey = uniqueKey(profileKey + "_copy");
-        addProfiles(collectProfiles(profileKey), profileKey, destinationKey);
+        addProfiles(stripCredentials(collectProfiles(profileKey)), profileKey, destinationKey);
     };
 
     const pasteProfile = (targetProfileKey: string | null) => {
