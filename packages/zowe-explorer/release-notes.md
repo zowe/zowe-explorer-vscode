@@ -1,3 +1,53 @@
+## `3.7.0`
+
+### Change your password from Zowe Explorer
+
+You can now change the password for a profile on the remote system, and Zowe Explorer updates the locally stored password to match. This is currently supported for the z/OSMF profile type only.
+
+### Restrict the login method for a profile
+
+Added support for the `allowedLoginMethod` profile property, which restricts a profile to a single authentication method. If a profile has no value for `allowedLoginMethod`, or if the value is `"prompt"`, behavior is the same as in previous versions of Zowe Explorer.
+
+### TSO account and procedure for z/OSMF profiles
+
+z/OSMF profiles now support the `tsoAccount` and `tsoProcedure` properties. They are sent as the `X-IBM-Request-Acctnum` and `X-IBM-Request-Proc` headers on data set operations that support them.
+
+### Filter search history improvements
+
+Two new settings give you more control over your filter search history:
+
+- **Zowe > Settings: History Group By Host** (`zowe.settings.historyGroupByHost`) groups filter search history by host instead of sharing one list across all profiles.
+- **Zowe > Settings: Max Search History** (`zowe.settings.maxSearchHistory`) sets the maximum number of entries kept in filter search history.
+
+The **Edit History** command has also been renamed to **Manage Saved Data**.
+
+### Clearer "zo server" terminology
+
+The term "SSH server" was confusing, so deployment prompts, status messages, settings descriptions, and Command Palette labels now refer to the "zo server" instead.
+
+### Delete VSAM data sets with SSH profiles
+
+VSAM data sets can now be deleted when using an `ssh` profile.
+
+### Zowe Explorer: Core Changes
+
+#### Updated webviews
+
+Webviews now use VS Code Elements, replacing the deprecated Webview UI Toolkit.
+
+#### Notes for extenders
+
+The Zowe Explorer API adds:
+
+- The `onProfileValidated`, `onProfileInvalidated`, and `onProfileHidden` events on the API register, so extenders can react when a profile is validated as active, validated as inactive, or hidden from the tree views.
+- `ssoLogin` and `ssoLogout` methods on the API returned by `getExplorerExtenderApi()`, which let extenders perform SSO login and logout for a profile by name or loaded profile. The `Profiles.ssoLogout` function can now be called without a tree node and returns a boolean indicating success.
+- A `changePassword` API, with its `IChangePasswordResponse` interface, for updating a user's password on the remote system.
+- A `promptCertificate` method on the `ProfilesCache` class, which opens a certificate wizard for saving certificate file paths used for authentication, and a `supportsCertAuth` method on `MainframeInteraction.ICommon` so extenders can indicate whether their API supports certificate authentication. The `CertificateOptions` interface is deprecated.
+- A `vscode-codicon-stylesheet` id on the codicons `<link>` in the webview HTML template so VS Code Elements components can render icons.
+- `Created` and `Deleted` file change events for PDS members and USS resources that are added or removed on the mainframe outside of Zowe Explorer, and a `Changed` event for the parent PDS or USS directory when one of its entries is created or deleted.
+
+See the respective changelogs for the full list of changes, including bug fixes.
+
 ## `3.6.0`
 
 **Note:** Zowe Explorer now requires VS Code 1.101 or higher, as announced in the 3.5.0 release notes. This ensures you are running on a supported Node.js version. Node.js v20 reached End of Life on April 30th, 2026.
