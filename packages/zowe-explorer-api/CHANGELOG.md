@@ -19,6 +19,7 @@ All notable changes to the "zowe-explorer-api" extension will be documented in t
 
 - Fixed SSO logout to use an explicitly selected base profile's API ML token without requiring a registered service API. [#4137](https://github.com/zowe/zowe-explorer-vscode/issues/4137)
 - Updated Zowe SDKs to `8.43.0` for technical currency. [#4556](https://github.com/zowe/zowe-explorer-vscode/pull/4556)
+- Fixed an issue that prevented Zowe Explorer from loading connection profiles when a `user` or `password` environment variable looked like a number or boolean, such as `12345`, `1e5`, or `true`. `ProfilesCache`, which loads and stores connection profiles, tried to use the text method `startsWith` on the parsed value and raised `startsWith is not a function`. Credentials now keep the variable's exact text. [#4153](https://github.com/zowe/zowe-explorer-vscode/issues/4153)
 
 ## `3.6.1`
 
