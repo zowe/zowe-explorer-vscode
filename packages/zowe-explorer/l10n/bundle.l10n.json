@@ -84,7 +84,7 @@
       "Name of USS session"
     ]
   },
-  "A vscode-codicon-stylesheet id on the codicons <link> in the webview HTML template so VS Code Elements components can render icons.": "A vscode-codicon-stylesheet id on the codicons <link> in the webview HTML template so VS Code Elements components can render icons.",
+  "A vscode-codicon-stylesheet ID on the codicons <link> in the webview HTML template so VS Code Elements components can render icons.": "A vscode-codicon-stylesheet ID on the codicons <link> in the webview HTML template so VS Code Elements components can render icons.",
   "A {0} already exists with this name. Please choose a different name./Node type": {
     "message": "A {0} already exists with this name. Please choose a different name.",
     "comment": [

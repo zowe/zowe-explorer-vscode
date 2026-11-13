@@ -712,7 +712,7 @@
   "A profile does not exist for this file.": "",
   "A promptCertificate method on the ProfilesCache class, which opens a certificate wizard for saving certificate file paths used for authentication, and a supportsCertAuth method on MainframeInteraction.ICommon so extenders can indicate whether their API supports certificate authentication. The CertificateOptions interface is deprecated.": "",
   "A search must be set for {0} before it can be added to a workspace.": "",
-  "A vscode-codicon-stylesheet id on the codicons <link> in the webview HTML template so VS Code Elements components can render icons.": "",
+  "A vscode-codicon-stylesheet ID on the codicons <link> in the webview HTML template so VS Code Elements components can render icons.": "",
   "A {0} already exists with this name. Please choose a different name.": "",
   "Ability to compare 2 files from MVS and/or UNIX System Services views via right click actions, with option to compare in Read-Only mode too.": "",
   "Accessibility improvements": "",
