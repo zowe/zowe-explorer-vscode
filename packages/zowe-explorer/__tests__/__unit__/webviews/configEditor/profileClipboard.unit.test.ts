@@ -15,6 +15,7 @@ import {
     collectClipboardProfiles,
     getUniqueProfileKey,
     removeCutProfileChanges,
+    stripCredentialsFromClipboardProfiles,
 } from "../../../../src/webviews/src/config-editor/utils/profileClipboard";
 import type { Configuration, PendingChangesMap, ProfileClipboard } from "../../../../src/webviews/src/config-editor/types";
 
@@ -83,6 +84,72 @@ describe("profileClipboard", () => {
             profile: "target.copy.newChild",
         });
         expect(changes["profiles.target.profiles.copy.properties.options"].value).not.toBe(profiles.parent.properties.options);
+    });
+
+    it("strips credentials and secure properties when duplicating, without mutating the source snapshot", () => {
+        const profiles = collect();
+        profiles.parent.properties.tokenType = "apimlAuthenticationToken";
+        profiles.parent.properties.tokenValue = "abc";
+        profiles.parent.properties.tokenExpiration = "2030";
+        profiles.parent.properties.user = "me";
+        profiles.parent.properties.customSecret = "x";
+        profiles.parent.secure.push("customSecret");
+        profiles.parent.secureSources = { password: { configPath, profileKey: "parent", propertyKey: "password" } };
+        const stripped = stripCredentialsFromClipboardProfiles(profiles);
+        expect(stripped.parent.properties).toEqual({ host: "new", options: { timeout: 20 } });
+        expect(stripped.parent.secure).toEqual([]);
+        expect(stripped.parent.secureSources).toEqual({});
+        expect(stripped["parent.newChild"].properties).toEqual({});
+        expect(stripped["parent.newChild"].secure).toEqual([]);
+        expect(profiles.parent.properties.password).toBe("secret");
+        expect(profiles.parent.secure).toContain("password");
+        const changes = buildClipboardChanges(stripped, "parent", "parent_copy");
+        expect(Object.keys(changes).some((key) => key.endsWith(".password") || key.endsWith(".secure"))).toBe(false);
+    });
+
+    it("also drops properties the schema marks secure for the profile's type, even when not in the secure array", () => {
+        const profiles: ProfileClipboard["profiles"] = {
+            sshProf: {
+                profileKey: "sshProf",
+                type: "ssh",
+                properties: { host: "h", keyPassphrase: "plain", privateKey: "/key" },
+                secure: [],
+                customFields: {},
+                secureSources: {},
+            },
+        };
+        const propertySchema = {
+            ssh: { host: { secure: false }, keyPassphrase: { secure: true }, privateKey: { secure: false } },
+            zosmf: { host: { secure: false }, keyPassphrase: { secure: true } },
+        };
+        expect(stripCredentialsFromClipboardProfiles(profiles, propertySchema).sshProf.properties).toEqual({ host: "h" });
+        // A different type's schema must not apply, and without a schema only the fixed list is used.
+        expect(stripCredentialsFromClipboardProfiles(profiles, { zosmf: propertySchema.zosmf }).sshProf.properties.keyPassphrase).toBe("plain");
+        expect(stripCredentialsFromClipboardProfiles(profiles).sshProf.properties.keyPassphrase).toBe("plain");
+    });
+
+    it("drops certificate and private key references, which are bound to one identity", () => {
+        const profiles: ProfileClipboard["profiles"] = {
+            zosmfProf: {
+                profileKey: "zosmfProf",
+                type: "zosmf",
+                properties: { host: "h", certFile: "/c.pem", certKeyFile: "/k.pem", certAccount: "acct" },
+                secure: [],
+                customFields: {},
+                secureSources: {},
+            },
+            sshProf: {
+                profileKey: "sshProf",
+                type: "ssh",
+                properties: { host: "h", privateKey: "/key" },
+                secure: [],
+                customFields: {},
+                secureSources: {},
+            },
+        };
+        const stripped = stripCredentialsFromClipboardProfiles(profiles);
+        expect(stripped.zosmfProf.properties).toEqual({ host: "h" });
+        expect(stripped.sshProf.properties).toEqual({ host: "h" });
     });
 
     it("finds the first free numeric suffix", () => {
