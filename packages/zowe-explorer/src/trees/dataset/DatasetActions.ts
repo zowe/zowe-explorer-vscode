@@ -2631,6 +2631,11 @@ export class DatasetActions {
         if (SharedContext.isPds(clipboardContent[0].contextValue)) {
             await DatasetActions.copyPartitionedDatasets(clipboardContent, node);
         } else if (SharedContext.isDsMember(clipboardContent[0].contextValue)) {
+            if (SharedContext.isDsSession(node)) {
+                // A session has no data set to hold the members, so stop before prompting and keep the clipboard
+                Gui.errorMessage(vscode.l10n.t("This action is only supported for partitioned data sets."));
+                return;
+            }
             await DatasetActions.copyDatasetMembers(clipboardContent, node);
         } else if (SharedContext.isDs(clipboardContent[0].contextValue)) {
             await DatasetActions.copySequentialDatasets(clipboardContent, node);
