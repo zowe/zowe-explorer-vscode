@@ -43,7 +43,7 @@ The Zowe Explorer API adds:
 - `ssoLogin` and `ssoLogout` methods on the API returned by `getExplorerExtenderApi()`, which let extenders perform SSO login and logout for a profile by name or loaded profile. The `Profiles.ssoLogout` function can now be called without a tree node and returns a boolean indicating success.
 - A `changePassword` API, with its `IChangePasswordResponse` interface, for updating a user's password on the remote system.
 - A `promptCertificate` method on the `ProfilesCache` class, which opens a certificate wizard for saving certificate file paths used for authentication, and a `supportsCertAuth` method on `MainframeInteraction.ICommon` so extenders can indicate whether their API supports certificate authentication. The `CertificateOptions` interface is deprecated.
-- A `vscode-codicon-stylesheet` id on the codicons `<link>` in the webview HTML template so VS Code Elements components can render icons.
+- A `vscode-codicon-stylesheet` ID on the codicons `<link>` in the webview HTML template so VS Code Elements components can render icons.
 - `Created` and `Deleted` file change events for PDS members and USS resources that are added or removed on the mainframe outside of Zowe Explorer, and a `Changed` event for the parent PDS or USS directory when one of its entries is created or deleted.
 
 See the respective changelogs for the full list of changes, including bug fixes.
