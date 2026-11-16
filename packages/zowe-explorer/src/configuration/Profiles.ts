@@ -309,8 +309,6 @@ export class Profiles extends ProfilesCache {
                     });
                 }
             }
-            profileStatus.status = "active";
-            this.profilesForValidation.push(profileStatus);
         }
 
         if (node !== undefined) {
@@ -319,9 +317,6 @@ export class Profiles extends ProfilesCache {
 
         // Profile should have enough information to allow validation
         profileStatus = await this.getProfileSetting(theProfile);
-        if (theProfile.profile.authOrder) {
-            profileStatus.status = "active";
-        }
 
         switch (profileStatus.status) {
             case "unverified":
