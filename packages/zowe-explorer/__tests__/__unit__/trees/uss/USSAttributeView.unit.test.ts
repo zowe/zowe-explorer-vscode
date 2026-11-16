@@ -54,6 +54,7 @@ describe("AttributeView unit tests", () => {
 
     afterAll(() => {
         createDirMock.mockRestore();
+        createLocalDirMock.mockRestore();
         onUpdateMocked[Symbol.dispose]();
     });
 
