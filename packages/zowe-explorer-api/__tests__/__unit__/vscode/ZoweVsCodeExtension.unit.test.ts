@@ -12,7 +12,6 @@
 import * as vscode from "vscode";
 import { Gui } from "../../../src/globals/Gui";
 import { MessageSeverity, IZoweLogger } from "../../../src/logger/IZoweLogger";
-import { IProfileLoaded, Session } from "@zowe/imperative";
 import { IPromptCertificateOptions, IPromptCredentialsOptions, ZoweVsCodeExtension } from "../../../src/vscode";
 import { ProfilesCache, ZoweExplorerApi } from "../../../src";
 import { Login, Logout, imperative } from "@zowe/cli";
@@ -123,7 +122,7 @@ describe("ZoweVsCodeExtension", () => {
                     }),
                 });
                 const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
-                const profileLoaded: IProfileLoaded = await ZoweVsCodeExtension.promptCredentials(promptCredsOptions);
+                const profileLoaded = await ZoweVsCodeExtension.promptCredentials(promptCredsOptions);
                 expect(profileLoaded.profile?.user).toBe("fakeUser");
                 expect(profileLoaded.profile?.password).toBe("fakePassword");
                 expect(showInputBoxSpy).toHaveBeenCalledTimes(2);
@@ -189,7 +188,7 @@ describe("ZoweVsCodeExtension", () => {
             setProfileToChoice: jest.fn(),
             getProfile: jest.fn().mockReturnValue(serviceProfile),
         };
-        const expectedSession = new Session({
+        const expectedSession = new imperative.Session({
             hostname: "dummy",
             password: "Password",
             port: 1234,
@@ -250,7 +249,7 @@ describe("ZoweVsCodeExtension", () => {
                 const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
                 await ZoweVsCodeExtension.loginWithBaseProfile("service");
 
-                const testSession = new Session(JSON.parse(JSON.stringify(expectedSession.ISession)));
+                const testSession = new imperative.Session(JSON.parse(JSON.stringify(expectedSession.ISession)));
                 delete testSession.ISession.user;
                 delete testSession.ISession.password;
                 testSession.ISession.base64EncodedAuth = "dXNlcjpwYXNz";
@@ -270,7 +269,7 @@ describe("ZoweVsCodeExtension", () => {
                 const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
                 await ZoweVsCodeExtension.logoutWithBaseProfile("service");
 
-                const testSession = new Session(JSON.parse(JSON.stringify(expectedSession.ISession)));
+                const testSession = new imperative.Session(JSON.parse(JSON.stringify(expectedSession.ISession)));
                 testSession.ISession.tokenValue = "tokenValue";
                 delete testSession.ISession.base64EncodedAuth;
                 delete testSession.ISession.user;
@@ -294,7 +293,7 @@ describe("ZoweVsCodeExtension", () => {
                 const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
                 await ZoweVsCodeExtension.loginWithBaseProfile("service");
 
-                const testSession = new Session(JSON.parse(JSON.stringify(expectedSession.ISession)));
+                const testSession = new imperative.Session(JSON.parse(JSON.stringify(expectedSession.ISession)));
                 delete testSession.ISession.user;
                 delete testSession.ISession.password;
                 testSession.ISession.hostname = "service";
@@ -319,7 +318,7 @@ describe("ZoweVsCodeExtension", () => {
                 const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
                 await ZoweVsCodeExtension.loginWithBaseProfile("service");
 
-                const testSession = new Session(JSON.parse(JSON.stringify(expectedSession.ISession)));
+                const testSession = new imperative.Session(JSON.parse(JSON.stringify(expectedSession.ISession)));
                 delete testSession.ISession.user;
                 delete testSession.ISession.password;
                 testSession.ISession.hostname = "service";
@@ -349,7 +348,7 @@ describe("ZoweVsCodeExtension", () => {
                 const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
                 await ZoweVsCodeExtension.logoutWithBaseProfile("service");
 
-                const testSession = new Session(JSON.parse(JSON.stringify(expectedSession.ISession)));
+                const testSession = new imperative.Session(JSON.parse(JSON.stringify(expectedSession.ISession)));
                 testSession.ISession.hostname = "service";
                 testSession.ISession.tokenValue = "tokenValue";
                 delete testSession.ISession.base64EncodedAuth;
@@ -370,7 +369,7 @@ describe("ZoweVsCodeExtension", () => {
                 const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[0]);
                 await ZoweVsCodeExtension.loginWithBaseProfile(serviceProfile, "apimlAuthenticationToken", testNode, testRegister, testCache);
 
-                const testSession = new Session(JSON.parse(JSON.stringify(expectedSession.ISession)));
+                const testSession = new imperative.Session(JSON.parse(JSON.stringify(expectedSession.ISession)));
                 testSession.ISession.base64EncodedAuth = "dXNlcjpwYXNz";
 
                 expect(loginSpy).not.toHaveBeenCalled();
@@ -389,7 +388,7 @@ describe("ZoweVsCodeExtension", () => {
 
             await ZoweVsCodeExtension.logoutWithBaseProfile(newServiceProfile, testRegister, testCache);
 
-            const testSession = new Session(JSON.parse(JSON.stringify(expectedSession.ISession)));
+            const testSession = new imperative.Session(JSON.parse(JSON.stringify(expectedSession.ISession)));
             testSession.ISession.tokenValue = "tokenValue";
             delete testSession.ISession.base64EncodedAuth;
             delete testSession.ISession.user;
@@ -415,7 +414,7 @@ describe("ZoweVsCodeExtension", () => {
             const quickPickMock = jest.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[1]);
             await ZoweVsCodeExtension.loginWithBaseProfile("service");
 
-            const testSession = new Session(JSON.parse(JSON.stringify(expectedSession.ISession)));
+            const testSession = new imperative.Session(JSON.parse(JSON.stringify(expectedSession.ISession)));
             delete testSession.ISession.user;
             delete testSession.ISession.password;
             delete testSession.ISession.base64EncodedAuth;
@@ -464,7 +463,7 @@ describe("ZoweVsCodeExtension", () => {
             });
             const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
             const saveCredentialsSpy = jest.spyOn(ZoweVsCodeExtension as any, "saveCredentials");
-            const profileLoaded: IProfileLoaded = await ZoweVsCodeExtension.updateCredentials(
+            const profileLoaded = await ZoweVsCodeExtension.updateCredentials(
                 promptCredsOptions,
                 undefined as unknown as ZoweExplorerApi.IApiRegisterClient
             );
@@ -489,7 +488,7 @@ describe("ZoweVsCodeExtension", () => {
             });
             const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
             const saveCredentialsSpy = jest.spyOn(ZoweVsCodeExtension as any, "saveCredentials");
-            const profileLoaded: IProfileLoaded = await ZoweVsCodeExtension.updateCredentials(
+            const profileLoaded = await ZoweVsCodeExtension.updateCredentials(
                 {
                     ...promptCredsOptions,
                     rePrompt: true,
@@ -518,7 +517,7 @@ describe("ZoweVsCodeExtension", () => {
             const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
             jest.spyOn(Gui, "showMessage").mockResolvedValueOnce("yes");
             const saveCredentialsSpy = jest.spyOn(ZoweVsCodeExtension as any, "saveCredentials");
-            const profileLoaded: IProfileLoaded = await ZoweVsCodeExtension.updateCredentials(
+            const profileLoaded = await ZoweVsCodeExtension.updateCredentials(
                 promptCredsOptions,
                 undefined as unknown as ZoweExplorerApi.IApiRegisterClient
             );
@@ -544,7 +543,7 @@ describe("ZoweVsCodeExtension", () => {
             const showInputBoxSpy = jest.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
             jest.spyOn(Gui, "showMessage").mockResolvedValueOnce(undefined);
             const saveCredentialsSpy = jest.spyOn(ZoweVsCodeExtension as any, "saveCredentials");
-            const profileLoaded: IProfileLoaded = await ZoweVsCodeExtension.updateCredentials(
+            const profileLoaded = await ZoweVsCodeExtension.updateCredentials(
                 promptCredsOptions,
                 undefined as unknown as ZoweExplorerApi.IApiRegisterClient
             );

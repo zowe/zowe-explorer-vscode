@@ -5,10 +5,14 @@ on:
     paths:
       - packages/zowe-explorer-ftp-extension/**
       - packages/zowe-explorer-api/**
+      - .github/workflows/zowe-explorer-ftp-ci.yml
+      - yarn.lock
   pull_request:
     paths:
       - packages/zowe-explorer-ftp-extension/**
       - packages/zowe-explorer-api/**
+      - .github/workflows/zowe-explorer-ftp-ci.yml 
+      - yarn.lock
 
 jobs:
   zftp-build:
@@ -24,7 +28,7 @@ jobs:
       # Continue to run tests on the other systems if one fails
       fail-fast: false
       matrix:
-        node-version: [16.x, 18.x, 20.x]
+        node-version: [22.x, 24.x, 26.x]
         # order operating systems from best to worst
         os: [windows-latest, ubuntu-22.04, macos-latest]
 
@@ -51,25 +55,25 @@ jobs:
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
-        if: matrix.os == 'ubuntu-22.04' && matrix.node-version == '16.x'
+        if: matrix.os == 'ubuntu-22.04' && matrix.node-version == '22.x'
         with:
           name: zowe-explorer-ftp-extension-results
           path: packages/zowe-explorer-ftp-extension/results/
 
       # Run codecov upload for only one run
       # - name: Upload Results to Codecov
-      #   if: matrix.os == 'ubuntu-22.04' && matrix.node-version == '16.x'
+      #   if: matrix.os == 'ubuntu-22.04' && matrix.node-version == '22.x'
       #   uses: codecov/codecov-action@v3
       #   with:
       #     env_vars: OS,NODE
 
       - name: Package VSIX
-        if: matrix.os == 'ubuntu-22.04' && matrix.node-version == '16.x'
+        if: matrix.os == 'ubuntu-22.04' && matrix.node-version == '22.x'
         run: yarn package
         working-directory: packages/zowe-explorer-ftp-extension
 
       - name: Archive VSIX artifact
-        if: matrix.os == 'ubuntu-22.04' && matrix.node-version == '16.x'
+        if: matrix.os == 'ubuntu-22.04' && matrix.node-version == '22.x'
         uses: actions/upload-artifact@v4
         with:
           name: zowe-explorer-ftp-extension-vsix
