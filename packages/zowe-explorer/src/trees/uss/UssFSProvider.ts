@@ -344,7 +344,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
 
         if (!this.exists(uri)) {
-            this.createDirectory(uri);
+            this.createLocalDirectory(uri);
         }
     }
 
@@ -479,7 +479,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         // Ensure that an entry exists for the given profile
         if (!this.exists(profileUri)) {
-            this.createDirectory(profileUri);
+            this.createLocalDirectory(profileUri);
         }
 
         if (uriInfo.isRoot) {
@@ -1159,19 +1159,20 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         }
 
         this.createParentDirectories(parentUri);
-        this.createDirectory(parentUri);
+        this.createLocalDirectory(parentUri);
     }
 
     /**
-     * Creates a directory entry in the provider at the given URI.
-     * @param uri The URI that represents a new directory path
+     * Creates a directory entry in the local provider cache at the given URI without making remote API requests.
+     * @param uri The URI that represents a directory path
+     * @returns The created or existing directory entry
      */
-    public createDirectory(uri: vscode.Uri): void {
+    public createLocalDirectory(uri: vscode.Uri): UssDirectory {
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         const basename = path.posix.basename(uri.path);
-        const parent = this.lookupParentDirectory(uri, false);
+        const parent = uriInfo.isRoot ? this.root : this.lookupParentDirectory(uri, false);
         if (parent.entries.has(basename)) {
-            return;
+            return parent.entries.get(basename) as UssDirectory;
         }
 
         const entry = new UssDirectory(basename);
@@ -1179,7 +1180,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             ? {
                   profile: uriInfo.profile,
                   // we can strip profile name from path because its not involved in API calls
-                  path: path.posix.join(parent.metadata.path, basename),
+                  path: path.posix.join(parent.metadata?.path ?? "/", basename),
               }
             : this._getInfoFromUri(uri);
         entry.metadata = profInfo;
@@ -1187,6 +1188,56 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         parent.entries.set(entry.name, entry);
         parent.mtime = Date.now();
         parent.size += 1;
+        return entry;
+    }
+
+    /**
+     * Creates a directory entry in the provider at the given URI and creates the directory on the remote system.
+     * @param uri The URI that represents a new directory path
+     */
+    public async createDirectory(uri: vscode.Uri): Promise<void> {
+        const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
+        if (uriInfo.isRoot) {
+            this.createLocalDirectory(uri);
+            return;
+        }
+
+        const basename = path.posix.basename(uri.path);
+        const parent = this.lookupParentDirectory(uri, false);
+        if (parent.entries.has(basename)) {
+            throw vscode.FileSystemError.FileExists(uri);
+        }
+
+        const entry = this.createLocalDirectory(uri);
+        const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
+        AuthUtils.ensureAuthNotCancelled(profile);
+        await AuthHandler.waitForAuthFlow(profile);
+
+        try {
+            await AuthUtils.retryRequest(entry.metadata.profile, async () => {
+                await ZoweExplorerApiRegister.getUssApi(profile).create(entry.metadata.path, "directory");
+            });
+        } catch (err) {
+            parent.entries.delete(basename);
+            parent.size -= 1;
+            this._handleError(err, {
+                additionalContext: vscode.l10n.t({
+                    message: "Failed to create directory {0}",
+                    args: [entry.metadata.path],
+                    comment: ["Directory path"],
+                }),
+                retry: {
+                    fn: this.createDirectory.bind(this),
+                    args: [uri],
+                },
+                apiType: ZoweExplorerApiType.Uss,
+                profileType: profile.type,
+                templateArgs: { profileName: profile.name ?? "" },
+            });
+            throw err;
+        }
+
+        this.fireSoon({ type: vscode.FileChangeType.Created, uri: uri.with({ query: "" }) });
     }
 
     public watch(_resource: vscode.Uri, _options?: { readonly recursive: boolean; readonly excludes: readonly string[] }): vscode.Disposable {

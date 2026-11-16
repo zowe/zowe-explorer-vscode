@@ -825,6 +825,12 @@
       "Destination path"
     ]
   },
+  "Failed to create directory {0}/Directory path": {
+    "message": "Failed to create directory {0}",
+    "comment": [
+      "Directory path"
+    ]
+  },
   "Failed to create {0}: {1}/Data set nameError message": {
     "message": "Failed to create {0}: {1}",
     "comment": [
@@ -1111,6 +1117,7 @@
   "Fixed an issue where copying a USS file across profiles when a profile encoding was configured would corrupt characters in the destination file because the encoding was not passed to the upload call. <a>#4262</a>": "Fixed an issue where copying a USS file across profiles when a profile encoding was configured would corrupt characters in the destination file because the encoding was not passed to the upload call. <a>#4262</a>",
   "Fixed an issue where copying and pasting a file/folder in the USS tree would fail abruptly, displaying an error. <a>#3128</a>": "Fixed an issue where copying and pasting a file/folder in the USS tree would fail abruptly, displaying an error. <a>#3128</a>",
   "Fixed an issue where creating a new file in a Zowe Explorer virtual workspace would silently fail, causing write operations to fail on that file as a result. <a>#4426</a>": "Fixed an issue where creating a new file in a Zowe Explorer virtual workspace would silently fail, causing write operations to fail on that file as a result. <a>#4426</a>",
+  "Fixed an issue where creating files and directories in workspace folders added via 'Add to Workspace' failed to write back to the host. <a>#3953</a>": "Fixed an issue where creating files and directories in workspace folders added via 'Add to Workspace' failed to write back to the host. <a>#3953</a>",
   "Fixed an issue where data set migration status was incorrectly handled when the migr attribute was not present in the API response. <a>#3471</a>": "Fixed an issue where data set migration status was incorrectly handled when the migr attribute was not present in the API response. <a>#3471</a>",
   "Fixed an issue where data set nodes did not update if migrated or recalled outside of Zowe Explorer. <a>#3294</a>": "Fixed an issue where data set nodes did not update if migrated or recalled outside of Zowe Explorer. <a>#3294</a>",
   "Fixed an issue where data sets and USS files honored illegal characters in their respective names. <a>#4501</a>": "Fixed an issue where data sets and USS files honored illegal characters in their respective names. <a>#4501</a>",
@@ -1363,6 +1370,7 @@
   "Fixed z/OS Console panel background colour to be in sync with the rest of the VS Code styling. <a>#3445</a>": "Fixed z/OS Console panel background colour to be in sync with the rest of the VS Code styling. <a>#3445</a>",
   "Fixed zowe.settings.version being added to settings.json in workspaces. <a>#2312</a>": "Fixed zowe.settings.version being added to settings.json in workspaces. <a>#2312</a>",
   "Focus": "Focus",
+  "Folders cannot be created inside a Partitioned Data Set.": "Folders cannot be created inside a Partitioned Data Set.",
   "Follow Symlinks": "Follow Symlinks",
   "Follow symbolic links to their targets instead of returning them": "Follow symbolic links to their targets instead of returning them",
   "Found PDS '{0}' but could not reveal member '{1}'/PDS nameMember name": {

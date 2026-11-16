@@ -90,6 +90,7 @@ function createGlobalMocks() {
         }),
         FileSystemProvider: {
             createDirectory: vi.fn(),
+            createLocalDirectory: vi.fn(),
         },
     };
 
@@ -97,6 +98,7 @@ function createGlobalMocks() {
     const profilesForValidation = { status: "active", name: "fake" };
 
     vi.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);
+    vi.spyOn(UssFSProvider.instance, "createLocalDirectory").mockImplementation(globalMocks.FileSystemProvider.createLocalDirectory);
     vi.spyOn(UssFSProvider.instance, "createEntry").mockImplementation((() => undefined) as any);
 
     if (!Gui.setStatusBarMessage) {
