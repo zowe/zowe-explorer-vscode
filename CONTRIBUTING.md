@@ -19,8 +19,10 @@ The following information is critical to working with the code, running/writing/
 
 The following guidelines apply specifically to the extension:
 
-### Zowe SDK updates
+### Pull request feedback: three-strike rule
 
-The **Zowe SDK Compatibility** workflow posts a compatibility-review reminder when a PR raises a declared `@zowe/*-for-zowe-sdk` or `@zowe/imperative` dependency's major or minor version in a root or `packages/**/package.json` manifest. It compares pinned, caret (`^`), and tilde (`~`) versions; patch-only changes, newly added dependencies, and lockfile-only updates do not trigger a reminder.
+Contributors are expected to respond to review feedback on their pull requests. If a contributor does not respond, maintainers will send three reminders, one per week. If the contributor still has not responded after the third reminder, the pull request will be closed.
 
-The workflow maintains one comment per PR and removes it if the qualifying updates are reverted. It reads manifests through the GitHub API without checking out or executing PR code, including for fork PRs. The comment is a review reminder, not proof of compatibility: review upstream release notes, verify affected Explorer and extender behavior, and record the results before completing the PR's dependency compatibility checkbox.
+### AI assistance for good first issues
+
+Issues labeled `good first issue` are intended to help new contributors learn the codebase and gain development experience. AI should not be used to completely implement these issues. AI may be used for guidance, explanations, or feedback, but contributors should develop the implementation themselves.
