@@ -726,7 +726,7 @@ describe("Shared Actions Unit Tests - Function resetValidationSettings", () => {
             datasetSessionNode: createDatasetSessionNode(globalMocks.session, globalMocks.imperativeProfile),
             mockEnableValidationContext: vi.fn(),
             mockDisableValidationContext: vi.fn(),
-            mockCheckProfileValidationSetting: vi.fn(),
+            mockGetExplicitValidationSetting: vi.fn(),
         };
         return newMocks;
     }
@@ -742,12 +742,36 @@ describe("Shared Actions Unit Tests - Function resetValidationSettings", () => {
             value: vi.fn(() => {
                 return {
                     disableValidationContext: blockMocks.mockDisableValidationContext.mockReturnValue(mockNode),
-                    checkProfileValidationSetting: blockMocks.mockCheckProfileValidationSetting.mockReturnValue(false),
+                    getExplicitValidationSetting: blockMocks.mockGetExplicitValidationSetting.mockReturnValue(undefined),
                 };
             }),
         });
         const response = await SharedActions.resetValidationSettings(testNode, false);
         expect(response.contextValue).toContain(`${Constants.VALIDATE_SUFFIX}false`);
+        expect(blockMocks.mockGetExplicitValidationSetting).toHaveBeenCalled();
+        expect(blockMocks.mockDisableValidationContext).toHaveBeenCalled();
+    });
+
+    it("Tests that an explicit user choice overrides the global validation setting", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const testNode: Types.IZoweNodeType = blockMocks.datasetSessionNode;
+        testNode.contextValue = `${Constants.DS_SESSION_CONTEXT}${Constants.VALIDATE_SUFFIX}true`;
+        const mockNode: Types.IZoweNodeType = blockMocks.datasetSessionNode;
+        mockNode.contextValue = `${Constants.DS_SESSION_CONTEXT}${Constants.NO_VALIDATE_SUFFIX}`;
+        Object.defineProperty(Profiles, "getInstance", {
+            value: vi.fn(() => {
+                return {
+                    disableValidationContext: blockMocks.mockDisableValidationContext.mockReturnValue(mockNode),
+                    getExplicitValidationSetting: blockMocks.mockGetExplicitValidationSetting.mockReturnValue(false),
+                };
+            }),
+        });
+        // Global setting is true, but the user explicitly disabled validation for this profile
+        const response = await SharedActions.resetValidationSettings(testNode, true);
+        expect(blockMocks.mockDisableValidationContext).toHaveBeenCalled();
+        expect(blockMocks.mockEnableValidationContext).not.toHaveBeenCalled();
+        expect(response.contextValue).toBe(mockNode.contextValue);
     });
 
     it("Tests that resetValidationSettings resets contextValue to true upon global change", async () => {
@@ -761,7 +785,7 @@ describe("Shared Actions Unit Tests - Function resetValidationSettings", () => {
             value: vi.fn(() => {
                 return {
                     enableValidationContext: blockMocks.mockEnableValidationContext.mockReturnValue(mockNode),
-                    checkProfileValidationSetting: blockMocks.mockCheckProfileValidationSetting.mockReturnValue(true),
+                    getExplicitValidationSetting: blockMocks.mockGetExplicitValidationSetting.mockReturnValue(undefined),
                 };
             }),
         });
