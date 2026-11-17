@@ -41,6 +41,7 @@ import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister
 import { IconGenerator } from "../../icons/IconGenerator";
 import { ZoweTreeProvider } from "../ZoweTreeProvider";
 import { ZoweLogger } from "../../tools/ZoweLogger";
+import { ReadOnlyManagement } from "../../management/ReadOnlyManagement";
 import { TreeViewUtils } from "../../utils/TreeViewUtils";
 import { SharedContext } from "../shared/SharedContext";
 import { SharedUtils } from "../shared/SharedUtils";
@@ -114,7 +115,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         sourceUri: vscode.Uri,
         destUri: vscode.Uri,
         recursiveCall?: boolean
-    ): Promise<void> {
+    ): Promise<boolean> {
         const destinationInfo = FsAbstractUtils.getInfoForUri(destUri, Profiles.getInstance());
         const sourceInfo = FsAbstractUtils.getInfoForUri(sourceUri, Profiles.getInstance());
         let dsname = destUri.path.substring(destinationInfo.slashAfterProfilePos + 1);
@@ -141,7 +142,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 } catch (err) {
                     if (err.errorCode?.toString() === "404" || err.errorCode?.toString() === "500") {
                         Gui.errorMessage(vscode.l10n.t("Failed to move {0}: {1}", dsname, err.message));
-                        return;
+                        return false;
                     }
                     throw err;
                 }
@@ -149,12 +150,13 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 DatasetFSProvider.instance.createDirectory(destUri);
             }
             const children = await sourceNode.getChildren();
+            let allMoved = true;
             for (const childNode of children) {
                 // move members within the folder to the destination
                 if (SharedContext.isInformation(childNode)) {
                     continue;
                 }
-                await this.crossLparMove(
+                const moved = await this.crossLparMove(
                     childNode,
                     sourceUri.with({
                         path: path.posix.join(sourceUri.path, childNode.getLabel() as string),
@@ -164,8 +166,20 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                     }),
                     true
                 );
+                allMoved &&= moved;
             }
-            await vscode.workspace.fs.delete(sourceUri, { recursive: true });
+            // Deleting the source PDS would lose any members that failed to move, so keep it
+            if (!allMoved) {
+                Gui.errorMessage(vscode.l10n.t("{0} was not deleted because some of its members could not be moved.", dsname));
+                return false;
+            }
+            try {
+                await vscode.workspace.fs.delete(sourceUri, { recursive: true });
+            } catch (err) {
+                Gui.errorMessage(vscode.l10n.t("Failed to move {0}: {1}", dsname, err.message));
+                return false;
+            }
+            return true;
         } else {
             try {
                 const entry = await DatasetFSProvider.instance.fetchDatasetAtUri(destUri);
@@ -190,7 +204,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 //file might already exist. Ignore the error and try to write it to lpar
                 if (err.errorCode?.toString() === "404" || err.errorCode?.toString() === "500") {
                     Gui.errorMessage(vscode.l10n.t("Failed to move {0}: {1}", dsname, err.message));
-                    return;
+                    return false;
                 }
                 throw err;
             }
@@ -215,7 +229,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 void handleError(err, (error) => {
                     Gui.errorMessage(vscode.l10n.t("Failed to move {0}: {1}", dsname, error.message));
                 });
-                return;
+                return false;
             }
 
             if (!recursiveCall) {
@@ -224,6 +238,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 //dialog message for successful move of pds and members
                 Gui.infoMessage(vscode.l10n.t("Data set(s) moved successfully."));
             }
+            return true;
         }
     }
 
@@ -299,15 +314,42 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
                 Gui.errorMessage(vscode.l10n.t(message));
                 return;
             }
+
+            // 4. Read-only check: a move deletes the source and creates the destination, so neither can be read-only
+            const destUri = vscode.Uri.from({
+                scheme: ZoweScheme.DS,
+                path: path.posix.join("/", target.resourceUri.path, SharedUtils.getNodeProperty(node, "label")),
+            });
+            if (
+                (await ReadOnlyManagement.showErrorIfReadOnly(node.resourceUri)) ||
+                (await ReadOnlyManagement.showErrorIfReadOnly(destUri, { checkParent: true }))
+            ) {
+                return;
+            }
+            // Moving a PDS deletes and creates each of its members, so every member must be writable in both places
+            if (SharedContext.isPds(node)) {
+                for (const member of await node.getChildren()) {
+                    if (SharedContext.isInformation(member)) {
+                        continue;
+                    }
+                    const memberName = member.getLabel() as string;
+                    if (
+                        (await ReadOnlyManagement.showErrorIfReadOnly(member.resourceUri)) ||
+                        (await ReadOnlyManagement.showErrorIfReadOnly(destUri.with({ path: path.posix.join(destUri.path, memberName) })))
+                    ) {
+                        return;
+                    }
+                }
+            }
         }
 
-        // 4. Overwrite prompt (name collision only)
+        // 5. Overwrite prompt (name collision only)
         const overwrite = await SharedUtils.handleDragAndDropOverwrite(target, this.draggedNodes);
         if (!overwrite) {
             return;
         }
 
-        // 5. Move logic
+        // 6. Move logic
         const movingMsg = Gui.setStatusBarMessage(`$(sync~spin) ${vscode.l10n.t("Moving MVS files...")}`);
         const parentsToUpdate = new Set<IZoweDatasetTreeNode>();
 
@@ -350,6 +392,9 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
         ZoweLogger.trace("DatasetTree.rename called.");
         await Profiles.getInstance().checkCurrentProfile(node.getProfile(), node);
         if (await TreeViewUtils.errorForUnsavedResource(node)) {
+            return;
+        }
+        if (await ReadOnlyManagement.showErrorIfReadOnly(node.resourceUri)) {
             return;
         }
 
