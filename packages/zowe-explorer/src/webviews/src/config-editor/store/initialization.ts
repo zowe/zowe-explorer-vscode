@@ -18,6 +18,7 @@ export function createDefaultEditorSettings(): ConfigEditorSettings {
         propertySortOrder: "alphabetical",
         profileSortOrder: "natural",
         profilesWidthPercent: 35,
+        defaultsCollapsed: true,
         profilesCollapsed: false,
     };
 }

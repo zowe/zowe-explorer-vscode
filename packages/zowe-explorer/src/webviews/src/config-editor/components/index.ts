@@ -27,6 +27,7 @@ export { DeleteConfirmationModal } from "./modals/DeleteConfirmationModal";
 export { RenderConfig } from "./renderConfig";
 export { RenderProfiles } from "./renderProfiles";
 export { RenderProfileDetails } from "./RenderProfileDetails";
+export { RenderDefaults } from "./renderDefaults";
 export { WizardManager } from "./WizardManager";
 export { TutorialOverlay } from "./TutorialOverlay";
 export { InfoIcon } from "./InfoIcon";

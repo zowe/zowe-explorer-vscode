@@ -50,7 +50,6 @@ export const RenderProfiles = ({ profilesObj }: RenderProfilesProps) => {
     vscodeApi,
     configEditorSettings,
     setProfileSortOrderWithStorage,
-    setPendingDefaults,
     pendingDefaults,
   } = useEditorFields(
     "configurations",
@@ -64,7 +63,6 @@ export const RenderProfiles = ({ profilesObj }: RenderProfilesProps) => {
     "vscodeApi",
     "configEditorSettings",
     "setProfileSortOrderWithStorage",
-    "setPendingDefaults",
     "pendingDefaults"
   );
 
@@ -141,7 +139,6 @@ export const RenderProfiles = ({ profilesObj }: RenderProfilesProps) => {
       configurations={configurations}
       selectedTab={selectedTab}
       renames={renames}
-      setPendingDefaults={setPendingDefaults}
       onViewModeToggle={onViewModeToggle}
     />
   );

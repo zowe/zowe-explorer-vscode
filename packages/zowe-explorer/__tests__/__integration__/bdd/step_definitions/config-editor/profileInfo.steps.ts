@@ -66,7 +66,7 @@ Given("the profile list is set to flat view mode", async function () {
     }
 });
 
-/** Flat-list row for a profile; the Default capsule and star toggle live inside it. */
+/** Flat-list row for a profile; the Default capsule lives inside it. */
 function flatProfileRowSelector(profileName: string): string {
     return `[data-testid='profile-list-item'][data-profile-name='${profileName}']`;
 }
@@ -81,7 +81,10 @@ When("the user sets {string} as the default profile", async (profileName: string
     const row = await browser.$(flatProfileRowSelector(profileName));
     await row.waitForExist({ timeout: 15000 });
     if (await (await row.$("[data-testid='profile-default-badge']")).isExisting()) return;
-    await robustClick(await row.$(".profile-star-button"), 6, 300);
+    await row.click({ button: "right" });
+    const menu = await browser.$(".tab-context-menu");
+    await menu.waitForDisplayed({ timeout: 15000 });
+    await (await menu.$("#context-menu-set-as-default")).click();
     await (
         await row.$("[data-testid='profile-default-badge']")
     ).waitForExist({ timeout: 15000, timeoutMsg: `${profileName} was not set as default` });

@@ -9,49 +9,9 @@
  *
  */
 
-import type { Dispatch, SetStateAction } from "react";
-import { getProfileType, getRenamedProfileKeyWithNested } from "./profileUtils";
+import { getAllQualifiedProfileKeys, getProfileType, getRenamedProfileKeyWithNested } from "./profileUtils";
 import { Configuration, PendingChange, PendingDefault, ConfigStateContext, PendingDefaultsMap } from "../types";
 export type { Configuration, PendingChange, PendingDefault };
-
-type SimplePendingDefaultsMap = { [configPath: string]: { [key: string]: { value: string; path: string[] } } };
-
-interface ToggleProfileDefaultParams {
-    profileKey: string;
-    profileType: string | null;
-    isDefault: boolean;
-    configurations?: any[];
-    selectedTab?: number | null;
-    setPendingDefaults?: Dispatch<SetStateAction<SimplePendingDefaultsMap>>;
-    onSetAsDefault?: (profileKey: string) => void;
-}
-
-/**
- * Toggle a profile's default status: clears the current default when it is already the default,
- * otherwise sets it. Shared by the tree and flat profile lists' star buttons.
- */
-export function toggleProfileDefault(params: ToggleProfileDefaultParams): void {
-    const { profileKey, profileType, isDefault, configurations, selectedTab, setPendingDefaults, onSetAsDefault } = params;
-
-    if (!profileType) return; // Don't allow interaction if no type
-
-    if (isDefault) {
-        // If already default, deselect it by setting to empty
-        if (setPendingDefaults && configurations && selectedTab !== null && selectedTab !== undefined) {
-            const configPath = configurations[selectedTab]!.configPath;
-            setPendingDefaults((prev) => ({
-                ...prev,
-                [configPath]: {
-                    ...prev[configPath],
-                    [profileType]: { value: "", path: [profileType] },
-                },
-            }));
-        }
-    } else if (onSetAsDefault) {
-        // Set as default
-        onSetAsDefault(profileKey);
-    }
-}
 
 interface IsProfileDefaultParams extends ConfigStateContext {
     profileKey: string;
@@ -71,6 +31,29 @@ export function isProfileDefault(params: IsProfileDefaultParams): boolean {
     if (pendingDefault) return pendingDefault.value === profileKey;
     const savedDefault = configurations[selectedTab].properties.defaults?.[profileType];
     return typeof savedDefault === "string" && getRenamedProfileKeyWithNested(savedDefault, configPath, renames) === profileKey;
+}
+
+/**
+ * When the selected tab is a global config, finds the project config whose `defaults` points at
+ * `profileKey` even though that project config has no profile of that name (the dropdown in a
+ * project config can pick global profiles). Returns that config's path, or null.
+ */
+export function getProjectDefaultSource(params: IsProfileDefaultParams): string | null {
+    const { profileKey, selectedTab, configurations, pendingChanges, pendingDefaults, renames } = params;
+
+    if (selectedTab === null || !configurations[selectedTab]?.global) return null;
+    const profileType = getProfileType({ profileKey, selectedTab, configurations, pendingChanges, renames });
+    if (!profileType) return null;
+
+    const source = configurations.find((config) => {
+        if (config.global) return false;
+        const pendingDefault = pendingDefaults[config.configPath]?.[profileType];
+        const savedDefault = config.properties?.defaults?.[profileType];
+        const effectiveDefault = pendingDefault ? pendingDefault.value : savedDefault;
+        if (effectiveDefault !== profileKey) return false;
+        return !getAllQualifiedProfileKeys(config.properties?.profiles).includes(profileKey);
+    });
+    return source?.configPath ?? null;
 }
 
 interface IsCurrentProfileUntypedParams extends ConfigStateContext {

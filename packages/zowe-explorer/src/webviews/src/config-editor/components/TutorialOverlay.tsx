@@ -24,9 +24,10 @@ interface TutorialStep {
   // When true, if no profile is currently selected, the first profile visible in the list is
   // auto-selected on entering this step so the spotlighted panel isn't empty.
   autoSelectFirstProfile?: boolean;
-  // Force the Profiles section open (if collapsed) while this step is shown, so the
+  // Force the Profiles/Defaults sections open (if collapsed) while this step is shown, so the
   // spotlighted content is actually visible. Restored to the pre-tutorial state on close.
   expandProfiles?: boolean;
+  expandDefaults?: boolean;
 }
 
 function getSteps(): TutorialStep[] {
@@ -52,12 +53,10 @@ function getSteps(): TutorialStep[] {
       autoSelectFirstProfile: true,
     },
     {
-      title: l10n.t("Default Profiles"),
-      description: l10n.t(
-        "Click the star next to a profile to make it the default for its connection type (zosmf, ssh, etc.). Default profiles are marked with a Default badge."
-      ),
-      targetSelectors: ['.panel.active [data-tutorial-id="profiles-list"]'],
-      expandProfiles: true,
+      title: l10n.t("Defaults"),
+      description: l10n.t("The Defaults section lets you choose which profile is the default for each connection type (zosmf, ssh, etc.)."),
+      targetSelectors: ['.panel.active [data-tutorial-id="defaults-section"]'],
+      expandDefaults: true,
     },
     {
       title: l10n.t("Saving Changes"),
@@ -162,22 +161,39 @@ export function TutorialOverlay({ onClose, selectedProfileKey, onSelectProfile }
   const [spotlight, setSpotlight] = useState<Rect | null>(null);
   const [modalPosition, setModalPosition] = useState<{ top: number; left: number } | null>(null);
 
-  const { configEditorSettings, setProfilesCollapsedWithStorage } = useEditorFields("configEditorSettings", "setProfilesCollapsedWithStorage");
-  const { profilesCollapsed } = configEditorSettings;
+  const { configEditorSettings, setProfilesCollapsedWithStorage, setDefaultsCollapsedWithStorage } = useEditorFields(
+    "configEditorSettings",
+    "setProfilesCollapsedWithStorage",
+    "setDefaultsCollapsedWithStorage"
+  );
+  const { profilesCollapsed, defaultsCollapsed } = configEditorSettings;
   const [originalProfilesCollapsed] = useState(profilesCollapsed);
+  const [originalDefaultsCollapsed] = useState(defaultsCollapsed);
 
   useEffect(() => {
     if (current.expandProfiles && profilesCollapsed) {
       setProfilesCollapsedWithStorage(false);
     }
-  }, [step, current.expandProfiles, profilesCollapsed, setProfilesCollapsedWithStorage]);
+    if (current.expandDefaults && defaultsCollapsed) {
+      setDefaultsCollapsedWithStorage(false);
+    }
+  }, [
+    step,
+    current.expandProfiles,
+    current.expandDefaults,
+    profilesCollapsed,
+    defaultsCollapsed,
+    setProfilesCollapsedWithStorage,
+    setDefaultsCollapsedWithStorage,
+  ]);
 
-  // Restore the Profiles collapsed state the user had before the tutorial opened.
+  // Restore the Profiles/Defaults collapsed state the user had before the tutorial opened.
   useEffect(() => {
     return () => {
       setProfilesCollapsedWithStorage(originalProfilesCollapsed);
+      setDefaultsCollapsedWithStorage(originalDefaultsCollapsed);
     };
-  }, [originalProfilesCollapsed, setProfilesCollapsedWithStorage]);
+  }, [originalProfilesCollapsed, originalDefaultsCollapsed, setProfilesCollapsedWithStorage, setDefaultsCollapsedWithStorage]);
 
   useEffect(() => {
     if (!current.autoSelectFirstProfile || selectedProfileKey) {

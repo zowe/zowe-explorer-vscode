@@ -21,6 +21,9 @@ type ProfileContextMenuProps = ReturnType<typeof useProfileClipboard> & {
   onClose: () => void;
   onProfileSelect: (profileKey: string) => void;
   onDeleteProfile?: (profileKey: string) => void;
+  onSetAsDefault?: (profileKey: string) => void;
+  isProfileDefault: (profileKey: string) => boolean;
+  getProfileType: (profileKey: string) => string | null;
 };
 
 export function ProfileContextMenu({
@@ -29,16 +32,44 @@ export function ProfileContextMenu({
   onClose,
   onProfileSelect,
   onDeleteProfile,
+  onSetAsDefault,
+  isProfileDefault,
+  getProfileType,
   profileClipboard,
   copyProfile,
   duplicateProfile,
   pasteProfile,
 }: ProfileContextMenuProps) {
   const { setRenameProfileModalOpen } = useEditorFields("setRenameProfileModalOpen");
+  const profileType = contextMenu.profileKey !== null ? getProfileType(contextMenu.profileKey) : null;
+  const isAlreadyDefault = contextMenu.profileKey !== null && isProfileDefault(contextMenu.profileKey);
+  // A default can only be replaced by another profile of the same type, never cleared, so it is
+  // unavailable for untyped profiles and for the profile that already is the default.
+  const canSetAsDefault = Boolean(onSetAsDefault && profileType && !isAlreadyDefault);
   return (
     <div ref={contextMenuRef} className="tab-context-menu" style={{ top: contextMenu.y, left: contextMenu.x }} onClick={(e) => e.stopPropagation()}>
       {contextMenu.profileKey !== null ? (
         <>
+          <div
+            className={`tab-context-menu-item ${canSetAsDefault ? "" : "disabled"}`}
+            id="context-menu-set-as-default"
+            title={
+              !profileType
+                ? l10n.t("Cannot set as default: Profile must have a valid type")
+                : isAlreadyDefault
+                  ? l10n.t("Already the default profile for type '{0}'", profileType)
+                  : l10n.t("Replace the default profile for type '{0}' with this profile", profileType)
+            }
+            onClick={() => {
+              if (canSetAsDefault) {
+                onSetAsDefault!(contextMenu.profileKey!);
+              }
+              onClose();
+            }}
+          >
+            <span className="codicon codicon-star-full codicon-tab-menu-icon"></span>
+            <span>{l10n.t("Set as Default")}</span>
+          </div>
           <div
             className="tab-context-menu-item"
             onClick={() => {
