@@ -108,10 +108,9 @@ Feature: Context menu actions on profile tree items
     And the user presses Enter to submit the profile
     And the user saves the changes
     And the user selects the "Global Team" configuration tab
-    Given the defaults section is expanded for context menu testing
-    When the user selects "nested" in the base default dropdown
-    And the user selects "nested.child1" in the zosmf default dropdown
-    And the user selects "nested.child2" in the ssh default dropdown
+    When the user sets tree profile "nested" as the default profile
+    And the user sets tree profile "nested.child1" as the default profile
+    And the user sets tree profile "nested.child2" as the default profile
     And the user saves the changes
     Given the saved subtree "nested" in "Global Team" is captured for context menu testing
     When the user opens the context menu on tree profile "nested"

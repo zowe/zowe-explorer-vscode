@@ -77,6 +77,6 @@ export {
     resolveOriginalProfileKeyFromRenames,
 } from "./profileUtils";
 
-export { isProfileDefault, isCurrentProfileUntyped } from "./profileHelpers";
+export { isProfileDefault, getProjectDefaultSource, isCurrentProfileUntyped } from "./profileHelpers";
 
 export * from "./schemaUtils";

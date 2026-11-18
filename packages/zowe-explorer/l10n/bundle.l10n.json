@@ -286,6 +286,7 @@
   "Allow deleting migrated datasets <a>#2447</a>": "Allow deleting migrated datasets <a>#2447</a>",
   "Allow extenders to add context menu actions to a top level node, i.e. data sets, USS, Jobs, by encoding the profile type in the context value. <a>#3309</a>": "Allow extenders to add context menu actions to a top level node, i.e. data sets, USS, Jobs, by encoding the profile type in the context value. <a>#3309</a>",
   "Alphabetical": "Alphabetical",
+  "Already the default profile for type '{0}'": "Already the default profile for type '{0}'",
   "Also available for a PDS in the Favorites tree": "Also available for a PDS in the Favorites tree",
   "An SSH profile will be used for issuing UNIX commands with the profile {0}.": "An SSH profile will be used for issuing UNIX commands with the profile {0}.",
   "An optional resolveAlias function on MainframeInteraction.IMvs for providing data set alias support": "An optional resolveAlias function on MainframeInteraction.IMvs for providing data set alias support",
@@ -422,7 +423,6 @@
   "Click on Edit in settings.json to enter in desired values in the file. Specify the method and direction from the options provided by IntelliSense. For example:": "Click on Edit in settings.json to enter in desired values in the file. Specify the method and direction from the options provided by IntelliSense. For example:",
   "Click on a filter to change its value": "Click on a filter to change its value",
   "Click to navigate to profile": "Click to navigate to profile",
-  "Click to remove default": "Click to remove default",
   "Close tutorial": "Close tutorial",
   "Column settings": "Column settings",
   "Command response: {0}/Command response": {
@@ -556,6 +556,9 @@
       "Encoding name"
     ]
   },
+  "Default profile for type '{0}'": "Default profile for type '{0}'",
+  "Default profile for type '{0}' at both global and project level (also set in {1})": "Default profile for type '{0}' at both global and project level (also set in {1})",
+  "Default profile for type '{0}' in {1}": "Default profile for type '{0}' in {1}",
   "Default sort order": "Default sort order",
   "Defaults": "Defaults",
   "Delete": "Delete",
@@ -1991,6 +1994,7 @@
   "Project": "Project",
   "Project Team": "Project Team",
   "Project User": "Project User",
+  "Project default": "Project default",
   "Project: in the current working directory": "Project: in the current working directory",
   "Prompting the user for a USS path": "Prompting the user for a USS path",
   "Prompting the user for a data set pattern": "Prompting the user for a data set pattern",
@@ -2093,6 +2097,7 @@
   "Replace numeric properties (e.g. port) with placeholder values": "Replace numeric properties (e.g. port) with placeholder values",
   "Replace profile names and their references in the defaults section": "Replace profile names and their references in the defaults section",
   "Replace string properties (e.g. user, host) with placeholder values": "Replace string properties (e.g. user, host) with placeholder values",
+  "Replace the default profile for type '{0}' with this profile": "Replace the default profile for type '{0}' with this profile",
   "Replaced an import of ILocalStorageAccess from \"@zowe/zowe-explorer-api/src/extend/ILocalStorageAccess\" to \"@zowe/zowe-explorer-api\". <a>#3606</a>": "Replaced an import of ILocalStorageAccess from \"@zowe/zowe-explorer-api/src/extend/ILocalStorageAccess\" to \"@zowe/zowe-explorer-api\". <a>#3606</a>",
   "Replaced confusing \"SSH server\" terminology with \"zo server\" in deployment prompts, status messages, settings descriptions, and Command Palette labels. <a>#4583</a>": "Replaced confusing \"SSH server\" terminology with \"zo server\" in deployment prompts, status messages, settings descriptions, and Command Palette labels. <a>#4583</a>",
   "Replaced keytar dependency with keyring module from <a>@zowe/secrets-for-zowe-sdk</a>. <a>#2358</a> <a>#2348</a>": "Replaced keytar dependency with keyring module from <a>@zowe/secrets-for-zowe-sdk</a>. <a>#2358</a> <a>#2348</a>",
@@ -2279,12 +2284,14 @@
     ]
   },
   "Set a filter...": "Set a filter...",
+  "Set as Default": "Set as Default",
   "Set as default": "Set as default",
   "Set the path to your authentication certificate": "Set the path to your authentication certificate",
   "Set up <a>POEditor project</a> for contributing translations and cleaned up redundant localization strings. <a>#546</a>": "Set up <a>POEditor project</a> for contributing translations and cleaned up redundant localization strings. <a>#546</a>",
   "Setting to hide hidden USS files": "Setting to hide hidden USS files",
   "Settings have been successfully migrated for Zowe Explorer version 2 and above. To apply these settings, please reload your VS Code window.": "Settings have been successfully migrated for Zowe Explorer version 2 and above. To apply these settings, please reload your VS Code window.",
   "Several members may be favorited or unfavorited at once by doing a multi-selection.": "Several members may be favorited or unfavorited at once by doing a multi-selection.",
+  "Shared default": "Shared default",
   "Show every inherited property, including ones that are not on the schema for this profile type.": "Show every inherited property, including ones that are not on the schema for this profile type.",
   "Show host and basePath values": "Show host and basePath values",
   "Show inherited properties, limited to those the profile type's schema allows.": "Show inherited properties, limited to those the profile type's schema allows.",
@@ -2431,6 +2438,7 @@
   "This data set has {0} members. Downloading a large number of files can take a long time. Do you want to continue?": "This data set has {0} members. Downloading a large number of files can take a long time. Do you want to continue?",
   "This directory has {0} members. Downloading a large number of files may take a long time. Do you want to continue?": "This directory has {0} members. Downloading a large number of files may take a long time. Do you want to continue?",
   "This editor lets you manage your Zowe team configuration file visually. You can add, edit, and delete profiles without manually editing JSON.": "This editor lets you manage your Zowe team configuration file visually. You can add, edit, and delete profiles without manually editing JSON.",
+  "This is already the default profile for its type": "This is already the default profile for its type",
   "This log file can be found at {0}/Log file location": {
     "message": "This log file can be found at {0}",
     "comment": [

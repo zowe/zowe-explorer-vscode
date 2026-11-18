@@ -55,7 +55,6 @@ export const RenderProfileDetails = () => {
     renames,
     schemaValidations,
     mergedProperties,
-    setPendingDefaults,
   } = useEditorFields(
     "selectedProfileKey",
     "configurations",
@@ -66,13 +65,12 @@ export const RenderProfileDetails = () => {
     "pendingChanges",
     "renames",
     "schemaValidations",
-    "mergedProperties",
-    "setPendingDefaults"
+    "mergedProperties"
   );
 
   const { propertySortOrder } = configEditorSettings;
 
-  const { isProfileDefault, getProfileType, extractPendingProfiles, isCurrentProfileUntyped } = useUtilityHelpers();
+  const { isProfileDefault, extractPendingProfiles, isCurrentProfileUntyped } = useUtilityHelpers();
 
   // Ref for the card container — used to apply the blink animation.
   const cardRef = useRef<HTMLDivElement>(null);
@@ -95,6 +93,7 @@ export const RenderProfileDetails = () => {
     onHighlightProfileCardConsumed?.();
   }, [highlightProfileCard]);
 
+  const cannotSetAsDefault = Boolean(selectedProfileKey) && (isCurrentProfileUntyped() || isProfileDefault(selectedProfileKey!));
   const profileDetailsHeader = l10n.t("Profile Details");
   return (
     <div ref={cardRef}>
@@ -139,36 +138,17 @@ export const RenderProfileDetails = () => {
             >
               <span className="codicon codicon-go-to-file"></span>
             </VscodeToolbarButton>
+            {/* A type's default can only be replaced by another profile, never cleared. */}
             <VscodeToolbarButton
               id="set-as-default"
-              onClick={
-                isCurrentProfileUntyped()
-                  ? undefined
-                  : () => {
-                      if (isProfileDefault(selectedProfileKey)) {
-                        const profileType = getProfileType(selectedProfileKey, selectedTab, configurations, pendingChanges, renames);
-                        if (profileType) {
-                          const configPath = configurations[selectedTab!]!.configPath;
-                          setPendingDefaults((prev) => ({
-                            ...prev,
-                            [configPath]: {
-                              ...prev[configPath],
-                              [profileType]: { value: "", path: [profileType] },
-                            },
-                          }));
-                        }
-                      } else {
-                        handleSetAsDefault(selectedProfileKey);
-                      }
-                    }
-              }
-              aria-disabled={isCurrentProfileUntyped()}
-              tabIndex={isCurrentProfileUntyped() ? -1 : 0}
+              onClick={cannotSetAsDefault ? undefined : () => handleSetAsDefault(selectedProfileKey)}
+              aria-disabled={cannotSetAsDefault}
+              tabIndex={cannotSetAsDefault ? -1 : 0}
               title={
                 isCurrentProfileUntyped()
                   ? l10n.t("Cannot set as default: Profile must have a valid type")
                   : isProfileDefault(selectedProfileKey)
-                    ? l10n.t("Click to remove default")
+                    ? l10n.t("This is already the default profile for its type")
                     : l10n.t("Set as default")
               }
             >
