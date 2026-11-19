@@ -11,6 +11,7 @@
 
 import * as vscode from "vscode";
 import * as zosmf from "@zowe/zosmf-for-zowe-sdk";
+import { Logout } from "@zowe/core-for-zowe-sdk";
 import {
     createISessionWithoutCredentials,
     createTreeView,
@@ -40,6 +41,7 @@ import {
     Sorting,
     AuthHandler,
     PersistenceSchemaEnum,
+    ZoweExplorerZosmf,
 } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../../src/configuration/Profiles";
 import { ZoweExplorerApiRegister } from "../../../src/extending/ZoweExplorerApiRegister";
@@ -53,7 +55,7 @@ import { JobFSProvider } from "../../../src/trees/job/JobFSProvider";
 import { DatasetFSProvider } from "../../../src/trees/dataset/DatasetFSProvider";
 import { Constants } from "../../../src/configuration/Constants";
 import { AuthUtils } from "../../../src/utils/AuthUtils";
-import { FilterDescriptor } from "../../../src/management/FilterManagement";
+import { FilterDescriptor, FilterItem } from "../../../src/management/FilterManagement";
 import { ZoweDatasetNode } from "../../../src/trees/dataset/ZoweDatasetNode";
 import { USSTree } from "../../../src/trees/uss/USSTree";
 import { ZoweExplorerExtender } from "../../../src/extending/ZoweExplorerExtender";
@@ -366,6 +368,12 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
 
         return newMocks;
     }
+
+    beforeEach(() => {
+        // Some tests queue quick pick values they never consume, so drop them before the next test.
+        vi.restoreAllMocks();
+    });
+
     it("Tests that createZoweSession presents correct message when escaping selection of quickpick", async () => {
         const globalMocks = createGlobalMocks();
         const blockMocks = createBlockMocks(globalMocks);
@@ -447,6 +455,27 @@ describe("Profiles Unit Tests - Function createZoweSession", () => {
         expect(errorSpy).toHaveBeenCalledTimes(1);
         expect(errorSpy).toHaveBeenCalledWith(Error("test error"));
         errorSpy.mockClear();
+    });
+
+    it("Tests that createZoweSession does not add the profile when the apply-to-all-trees prompt is cancelled", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const addSessionSpy = vi.spyOn(blockMocks.testDatasetTree, "addSession");
+        vi.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(new FilterItem({ text: "sestest" }));
+        vi.spyOn(Profiles, "handleChangeForAllTrees").mockResolvedValueOnce(undefined);
+        await Profiles.getInstance().createZoweSession(blockMocks.testDatasetTree);
+        expect(addSessionSpy).not.toHaveBeenCalled();
+        expect(globalMocks.mockShowInformationMessage.mock.calls[0][0]).toBe("Profile selection has been cancelled.");
+    });
+
+    it("Tests that createZoweSession adds the profile with the answer from the apply-to-all-trees prompt", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const addSessionSpy = vi.spyOn(blockMocks.testDatasetTree, "addSession");
+        vi.spyOn(Gui, "resolveQuickPick").mockResolvedValueOnce(new FilterItem({ text: "sestest" }));
+        vi.spyOn(Profiles, "handleChangeForAllTrees").mockResolvedValueOnce(false);
+        await Profiles.getInstance().createZoweSession(blockMocks.testDatasetTree);
+        expect(addSessionSpy).toHaveBeenCalledWith({ sessionName: "sestest", addToAllTrees: false });
     });
 });
 
@@ -976,6 +1005,46 @@ describe("Profiles Unit Tests - function validateProfile", () => {
             status: "active",
         });
         expect(blockMocks.getStatusSpy).toHaveBeenCalledTimes(1);
+    });
+    it("should fire onProfileValidated when the profile is validated as 'active'", async () => {
+        const blockMocks = createBlockMocks();
+        blockMocks.getStatusSpy.mockResolvedValue("active");
+        const validatedSpy = vi.spyOn(ZoweExplorerApiRegister.getInstance().onProfileValidatedEmitter, "fire");
+        const invalidatedSpy = vi.spyOn(ZoweExplorerApiRegister.getInstance().onProfileInvalidatedEmitter, "fire");
+        const profile = { name: "test1", message: "", type: "", failNotFound: false };
+        await Profiles.getInstance().validateProfiles(profile);
+        expect(validatedSpy).toHaveBeenCalledTimes(1);
+        expect(validatedSpy).toHaveBeenCalledWith(profile);
+        expect(invalidatedSpy).not.toHaveBeenCalled();
+    });
+    it("should not fire onProfileValidated when the profile was already validated as 'active'", async () => {
+        const blockMocks = createBlockMocks();
+        blockMocks.profilesForValidation.push({ name: "test1", status: "active" });
+        const validatedSpy = vi.spyOn(ZoweExplorerApiRegister.getInstance().onProfileValidatedEmitter, "fire");
+        await Profiles.getInstance().validateProfiles({ name: "test1", message: "", type: "", failNotFound: false });
+        expect(validatedSpy).not.toHaveBeenCalled();
+    });
+    it("should fire onProfileInvalidated when the profile is validated as 'inactive'", async () => {
+        const blockMocks = createBlockMocks();
+        blockMocks.getStatusSpy.mockResolvedValue("inactive");
+        const validatedSpy = vi.spyOn(ZoweExplorerApiRegister.getInstance().onProfileValidatedEmitter, "fire");
+        const invalidatedSpy = vi.spyOn(ZoweExplorerApiRegister.getInstance().onProfileInvalidatedEmitter, "fire");
+        const profile = { name: "test1", message: "", type: "", failNotFound: false };
+        await Profiles.getInstance().validateProfiles(profile);
+        expect(invalidatedSpy).toHaveBeenCalledTimes(1);
+        expect(invalidatedSpy).toHaveBeenCalledWith(profile);
+        expect(validatedSpy).not.toHaveBeenCalled();
+    });
+    it("should fire onProfileInvalidated when getStatus fails and the error is not resolved", async () => {
+        const blockMocks = createBlockMocks();
+        blockMocks.getStatusSpy.mockImplementation(() => {
+            throw new Error("failed to validate profile");
+        });
+        vi.spyOn(AuthUtils, "errorHandling").mockResolvedValue(false);
+        const invalidatedSpy = vi.spyOn(ZoweExplorerApiRegister.getInstance().onProfileInvalidatedEmitter, "fire");
+        const profile = { name: "test1", message: "", type: "", failNotFound: false };
+        await Profiles.getInstance().validateProfiles(profile);
+        expect(invalidatedSpy).toHaveBeenCalledWith(profile);
     });
     it("should return an object with profile validation status of 'inactive' from session status if validated profiles does not exist", async () => {
         const blockMocks = createBlockMocks();
@@ -1653,6 +1722,152 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "cert-pem" }, isUsingApiml: vi.fn() } as any);
         await expect(Profiles.getInstance().checkCurrentProfile(testProfile)).resolves.toEqual({ name: "sestest", status: "active" });
     });
+    describe("certificate validation", () => {
+        let testProfile: imperative.IProfileLoaded;
+        let commonApi: ZoweExplorerZosmf.CommonApi;
+
+        beforeEach(() => {
+            const globalMocks = createGlobalMocks();
+            setupProfilesCheck(globalMocks);
+            testProfile = createValidIProfile();
+            testProfile.profile = {
+                ...testProfile.profile,
+                user: undefined,
+                password: undefined,
+                certFile: "test.cert",
+                certKeyFile: "test.key",
+            };
+            commonApi = new ZoweExplorerZosmf.CommonApi(testProfile);
+            vi.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockReturnValue(commonApi);
+            vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue(
+                Object.assign(new imperative.Session({ type: imperative.SessConstants.AUTH_TYPE_CERT_PEM }), {
+                    isUsingApiml: vi.fn().mockReturnValue(false),
+                })
+            );
+            vi.spyOn(Profiles.getInstance(), "isCertFileValid").mockReturnValue(true);
+            vi.spyOn(commonApi, "getStatus");
+            vi.spyOn(Gui, "withProgress");
+            vi.spyOn(ZoweExplorerApiRegister.getInstance().onProfileValidatedEmitter, "fire");
+            vi.spyOn(ZoweExplorerApiRegister.getInstance().onProfileInvalidatedEmitter, "fire");
+        });
+
+        const expectValidationStatus = async (status: "active" | "inactive" | "unverified"): Promise<void> => {
+            const profiles = Profiles.getInstance();
+            const validity = {
+                active: Validation.ValidationType.VALID,
+                inactive: Validation.ValidationType.INVALID,
+                unverified: Validation.ValidationType.UNVERIFIED,
+            };
+            const register = ZoweExplorerApiRegister.getInstance();
+
+            await expect(profiles.checkCurrentProfile(testProfile)).resolves.toEqual({ name: testProfile.name, status });
+
+            expect(commonApi.getStatus).toHaveBeenCalledExactlyOnceWith(testProfile, testProfile.type);
+            expect(Gui.withProgress).toHaveBeenCalledExactlyOnceWith(
+                expect.objectContaining({ location: vscode.ProgressLocation.Notification, title: "Validating sestest Profile." }),
+                expect.any(Function)
+            );
+            expect(profiles.validProfile).toBe(validity[status]);
+            expect(profiles.profilesForValidation).toEqual([{ name: testProfile.name, status }]);
+            expect(register.onProfileValidatedEmitter.fire).toHaveBeenCalledTimes(status === "active" ? 1 : 0);
+            expect(register.onProfileInvalidatedEmitter.fire).toHaveBeenCalledTimes(status === "inactive" ? 1 : 0);
+            if (status === "active") {
+                expect(register.onProfileValidatedEmitter.fire).toHaveBeenCalledWith(testProfile);
+            } else if (status === "inactive") {
+                expect(register.onProfileInvalidatedEmitter.fire).toHaveBeenCalledWith(testProfile);
+            }
+        };
+
+        const expectDisabledValidation = async (): Promise<void> => {
+            const profiles = Profiles.getInstance();
+            profiles.profilesValidationSetting = [{ name: testProfile.name, setting: false }];
+
+            await expect(profiles.checkCurrentProfile(testProfile)).resolves.toEqual({ name: testProfile.name, status: "unverified" });
+
+            expect(profiles.validProfile).toBe(Validation.ValidationType.UNVERIFIED);
+            expect(profiles.profilesForValidation).toEqual([{ name: testProfile.name, status: "unverified" }]);
+            expect(commonApi.getStatus).not.toHaveBeenCalled();
+            expect(Gui.withProgress).not.toHaveBeenCalled();
+            expect(ZoweExplorerApiRegister.getInstance().onProfileValidatedEmitter.fire).not.toHaveBeenCalled();
+            expect(ZoweExplorerApiRegister.getInstance().onProfileInvalidatedEmitter.fire).not.toHaveBeenCalled();
+        };
+
+        describe("PEM files", () => {
+            it("reports active from getStatus", async () => {
+                vi.spyOn(commonApi, "getStatus").mockResolvedValueOnce("active");
+
+                await expectValidationStatus("active");
+            });
+
+            it("reports inactive when the server rejects the certificate", async () => {
+                const error = new Error("Certificate rejected by server");
+                vi.spyOn(commonApi, "getStatus").mockRejectedValueOnce(error);
+                const errorHandlingSpy = vi.spyOn(AuthUtils, "errorHandling").mockResolvedValue(false);
+
+                await expectValidationStatus("inactive");
+
+                expect(errorHandlingSpy).toHaveBeenCalledExactlyOnceWith(error, { profile: testProfile });
+            });
+
+            it("reports inactive from getStatus with authOrder", async () => {
+                testProfile.profile.authOrder = "cert-pem,basic";
+                vi.spyOn(commonApi, "getStatus").mockResolvedValueOnce("inactive");
+
+                await expectValidationStatus("inactive");
+            });
+
+            it("reports unverified from getStatus with authOrder", async () => {
+                testProfile.profile.authOrder = "cert-pem,basic";
+                vi.spyOn(commonApi, "getStatus").mockResolvedValueOnce("unverified");
+
+                await expectValidationStatus("unverified");
+            });
+
+            it("remains unverified without requests or events when validation is disabled with authOrder", async () => {
+                testProfile.profile.authOrder = "cert-pem,basic";
+                await expectDisabledValidation();
+            });
+
+            it("reuses a successful validation without another request or duplicate event", async () => {
+                const profiles = Profiles.getInstance();
+                vi.spyOn(commonApi, "getStatus").mockResolvedValue("active");
+
+                await profiles.checkCurrentProfile(testProfile);
+                await expect(profiles.checkCurrentProfile(testProfile)).resolves.toEqual({ name: testProfile.name, status: "active" });
+
+                expect(commonApi.getStatus).toHaveBeenCalledTimes(1);
+                expect(ZoweExplorerApiRegister.getInstance().onProfileValidatedEmitter.fire).toHaveBeenCalledExactlyOnceWith(testProfile);
+                expect(profiles.profilesForValidation).toEqual([{ name: testProfile.name, status: "active" }]);
+            });
+        });
+
+        describe("OS keychain", () => {
+            beforeEach(() => {
+                testProfile.profile.certFile = undefined;
+                testProfile.profile.certKeyFile = undefined;
+                testProfile.profile.certAccount = "test-account";
+            });
+
+            it("reports active from getStatus", async () => {
+                vi.spyOn(commonApi, "getStatus").mockResolvedValueOnce("active");
+
+                await expectValidationStatus("active");
+
+                expect(Profiles.getInstance().isCertFileValid).not.toHaveBeenCalled();
+            });
+
+            it("reports inactive from getStatus", async () => {
+                vi.spyOn(commonApi, "getStatus").mockResolvedValueOnce("inactive");
+
+                await expectValidationStatus("inactive");
+            });
+
+            it("remains unverified without requests or events when validation is disabled", async () => {
+                await expectDisabledValidation();
+            });
+        });
+    });
+
     it("should show as active in status of profile using certificate auth and open cert wizard if cert is not valid", async () => {
         const globalMocks = createGlobalMocks();
         environmentSetup(globalMocks);
@@ -1702,7 +1917,45 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         vi.spyOn(Profiles.getInstance(), "validateProfiles").mockResolvedValue({ status: "active", name: "sestest" });
         vi.spyOn(Profiles.getInstance(), "promptCertificate").mockResolvedValue(undefined);
         vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "cert-pem" }, isUsingApiml: vi.fn() } as any);
+        const invalidatedSpy = vi.spyOn(ZoweExplorerApiRegister.getInstance().onProfileInvalidatedEmitter, "fire");
         await expect(Profiles.getInstance().checkCurrentProfile(testProfile)).resolves.toEqual({ name: "sestest", status: "inactive" });
+        expect(invalidatedSpy).toHaveBeenCalledWith(testProfile);
+    });
+
+    it("should show as unverified and not fire onProfileValidated for cert profile when validation is disabled", async () => {
+        const globalMocks = createGlobalMocks();
+        environmentSetup(globalMocks);
+        setupProfilesCheck(globalMocks);
+        Object.defineProperty(Profiles.getInstance(), "profilesValidationSetting", {
+            value: [
+                {
+                    name: "sestest",
+                    setting: false,
+                },
+            ],
+            configurable: true,
+        });
+        const testProfile = {
+            name: "sestest",
+            profile: {
+                type: "zosmf",
+                host: "test",
+                port: 1443,
+                certFile: "test",
+                certKeyFile: "test",
+                rejectUnauthorized: false,
+                name: "testName",
+            },
+            type: "zosmf",
+            message: "",
+            failNotFound: false,
+        };
+        vi.spyOn(Profiles.getInstance(), "isCertFileValid").mockReturnValueOnce(true);
+        vi.spyOn(AuthHandler, "getSessFromProfile").mockReturnValue({ ISession: { type: "cert-pem" }, isUsingApiml: vi.fn() } as any);
+        const validatedSpy = vi.spyOn(ZoweExplorerApiRegister.getInstance().onProfileValidatedEmitter, "fire");
+
+        await expect(Profiles.getInstance().checkCurrentProfile(testProfile)).resolves.toEqual({ name: "sestest", status: "unverified" });
+        expect(validatedSpy).not.toHaveBeenCalled();
     });
 
     it("should show as inactive in status of profile using invalid certificate auth", async () => {
@@ -1728,7 +1981,7 @@ describe("Profiles Unit Tests - function checkCurrentProfile", () => {
         vi.spyOn(Profiles.getInstance(), "validateProfiles").mockResolvedValue({ status: "inactive", name: "sestest" });
         await expect(Profiles.getInstance().checkCurrentProfile(testProfile)).resolves.toEqual({ name: "sestest", status: "inactive" });
     });
-    it("should skip validation for profile using certificate auth loaded from OS keychain", async () => {
+    it("should skip certificate file checks for profile using certificate auth loaded from OS keychain", async () => {
         const globalMocks = createGlobalMocks();
         environmentSetup(globalMocks);
         setupProfilesCheck(globalMocks);
@@ -2731,6 +2984,7 @@ describe("Profiles Unit Tests - function ssoLogout", () => {
     });
 
     beforeEach(() => {
+        vi.restoreAllMocks();
         globalMocks = createGlobalMocks();
         testNode = new (ZoweTreeNode as any)(
             "fake",
@@ -2750,6 +3004,38 @@ describe("Profiles Unit Tests - function ssoLogout", () => {
             configurable: true,
         });
         vi.spyOn(Gui, "showMessage").mockImplementation((() => undefined) as any);
+    });
+
+    it("logs out a base-profile session without a registered service API or stored token type", async () => {
+        const profiles = Profiles.getInstance();
+        const baseProfile: imperative.IProfileLoaded = {
+            name: "lpar.apiml",
+            type: "base",
+            profile: { host: "fake", port: 1234, tokenValue: "baseToken" },
+            failNotFound: false,
+            message: "",
+        };
+        profiles.allProfiles.splice(0, profiles.allProfiles.length, baseProfile);
+        vi.spyOn(profiles, "updateBaseProfileFileLogout").mockResolvedValue(undefined);
+        vi.spyOn(ZoweExplorerApiRegister.getInstance(), "getCommonApi").mockImplementation(() => {
+            throw new Error("No service API is registered for base profiles");
+        });
+        const logoutSpy = vi.spyOn(Logout, "apimlLogout").mockResolvedValueOnce(undefined);
+        const onProfileUpdatedSpy = vi.spyOn(ZoweVsCodeExtension.onProfileUpdatedEmitter, "fire");
+        const errorMessageSpy = vi.spyOn(Gui, "errorMessage");
+
+        const logoutOk = await profiles.ssoLogout(undefined, baseProfile.name);
+
+        expect(errorMessageSpy).not.toHaveBeenCalled();
+        expect(logoutOk).toBe(true);
+
+        expect(logoutSpy.mock.calls[0][0].ISession).toMatchObject({
+            tokenType: imperative.SessConstants.TOKEN_TYPE_APIML,
+            tokenValue: "baseToken",
+        });
+        expect(profiles.loadNamedProfile(baseProfile.name).profile.tokenValue).toBeUndefined();
+        expect(profiles.loadNamedProfile(baseProfile.name).profile.tokenType).toBeUndefined();
+        expect(onProfileUpdatedSpy).toHaveBeenCalledWith(baseProfile);
     });
     it("should logout successfully and refresh zowe explorer", async () => {
         const mockTreeProvider = {
