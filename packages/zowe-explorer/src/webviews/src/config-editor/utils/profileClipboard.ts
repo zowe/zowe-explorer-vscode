@@ -26,6 +26,7 @@ import type {
     PendingChangesMap,
     PendingDefaultsMap,
     ProfileClipboard,
+    ProfileSchemaMap,
 } from "../types";
 
 interface CollectClipboardProfilesParams extends ConfigStateContext {
@@ -121,6 +122,48 @@ export function collectClipboardProfiles(params: CollectClipboardProfilesParams)
         };
     }
     return structuredClone(profiles);
+}
+
+/**
+ * Credential properties that must never be carried over when copying or duplicating a profile.
+ * Acts as a fallback for when no schema is loaded, and covers credential-like properties
+ * that the schema does not mark as secure: token metadata (tokenType, tokenExpiration) and
+ * identity-bound certificate/key references (certFile, certKeyFile, certAccount, privateKey).
+ */
+export const DUPLICATE_EXCLUDED_PROPERTIES = [
+    "user",
+    "password",
+    "tokenType",
+    "tokenValue",
+    "tokenExpiration",
+    "certFile",
+    "certKeyFile",
+    "certAccount",
+    "privateKey",
+];
+
+/**
+ * Drop credentials from every profile in a clipboard snapshot, for copy and duplicate.
+ * A property is dropped if it is in the fixed credential list, flagged secure on the profile,
+ * or marked secure by the schema for the profile's type.
+ */
+export function stripCredentialsFromClipboardProfiles(
+    profiles: ProfileClipboard["profiles"],
+    propertySchema: ProfileSchemaMap = {}
+): ProfileClipboard["profiles"] {
+    const result = structuredClone(profiles);
+    for (const profile of Object.values(result)) {
+        const schemaSecure = Object.entries((profile.type && propertySchema[profile.type]) || {})
+            .filter(([, entry]) => entry?.secure === true)
+            .map(([propertyKey]) => propertyKey);
+        const excluded = new Set([...DUPLICATE_EXCLUDED_PROPERTIES, ...schemaSecure, ...profile.secure]);
+        for (const propertyKey of excluded) {
+            delete profile.properties[propertyKey];
+            if (profile.secureSources) delete profile.secureSources[propertyKey];
+        }
+        profile.secure = [];
+    }
+    return result;
 }
 
 export function getUniqueProfileKey(proposedKey: string, existingKeys: string[]): string {
