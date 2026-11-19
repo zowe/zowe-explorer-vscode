@@ -113,7 +113,8 @@ export class USSTree extends ZoweTreeProvider<IZoweUSSTreeNode> implements Types
                     // The directory might already exist. Ignore the error and try to move files
                 }
                 // create directory entry in local FS
-                UssFSProvider.instance.createDirectory(destUri);
+                UssFSProvider.instance.createParentDirectories(destUri);
+                UssFSProvider.instance.createLocalDirectory(destUri);
             }
             const children = await sourceNode.getChildren();
             let allMoved = true;
@@ -1271,7 +1272,7 @@ Would you like to do this now?`,
             if (!UssFSProvider.instance.exists(favorite.resourceUri)) {
                 if (SharedContext.isUssDirectory(favorite)) {
                     UssFSProvider.instance.createParentDirectories(favorite.resourceUri);
-                    UssFSProvider.instance.createDirectory(favorite.resourceUri);
+                    UssFSProvider.instance.createLocalDirectory(favorite.resourceUri);
                 } else if (SharedContext.isText(favorite) || SharedContext.isBinary(favorite)) {
                     UssFSProvider.instance.createParentDirectories(favorite.resourceUri);
                     UssFSProvider.instance.createEntry(favorite.resourceUri, "file");

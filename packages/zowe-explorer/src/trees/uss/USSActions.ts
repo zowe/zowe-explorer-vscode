@@ -142,15 +142,11 @@ export class USSActions {
                     if (!replace) {
                         await ussApi.create(filePath, nodeType);
                     }
-
                     if (nodeType === "file") {
                         const writeUri = replace ? uri.with({ query: "forceUpload=true" }) : uri;
                         await vscode.workspace.fs.writeFile(writeUri, new Uint8Array());
                     } else {
-                        if (!replace) {
-                            await vscode.workspace.fs.createDirectory(uri);
-                            UssFSProvider.instance.fireSoon({ type: vscode.FileChangeType.Created, uri: uri.with({ query: "" }) });
-                        }
+                        UssFSProvider.instance.createLocalDirectory(uri);
                     }
                 } catch (error) {
                     // If we created a cache entry optimistically but subsequent operations failed,

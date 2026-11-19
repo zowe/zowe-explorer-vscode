@@ -22,6 +22,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed an issue where creating files and directories in workspace folders added via 'Add to Workspace' failed to write back to the host. [#3953](https://github.com/zowe/zowe-explorer-vscode/issues/3953)
 - Fixed SSO logout for base profiles without requiring a registered service API. [#4137](https://github.com/zowe/zowe-explorer-vscode/issues/4137)
 - Fixed an issue where searching data set contents with an FTP profile failed with the error `c.searchDataSets is not a function`. Zowe Explorer now shows a message when a search starts for a profile type that does not support it. [#4511](https://github.com/zowe/zowe-explorer-vscode/issues/4511)
 - Fixed an issue where the profile actions menu (including "Hide Profile") failed to open for profiles missing required properties like host. [#4557](https://github.com/zowe/zowe-explorer-vscode/pull/4557)

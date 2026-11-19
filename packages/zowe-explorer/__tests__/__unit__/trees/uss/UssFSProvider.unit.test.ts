@@ -2953,7 +2953,7 @@ describe("UssFSProvider", () => {
         });
     });
 
-    describe("createDirectory", () => {
+    describe("createLocalDirectory", () => {
         it("creates a session directory with the given URI", () => {
             const root = (UssFSProvider.instance as any).root;
             root.entries.clear();
@@ -2962,7 +2962,7 @@ describe("UssFSProvider", () => {
                 profile: testProfile,
                 path: "/",
             });
-            UssFSProvider.instance.createDirectory(testUris.session);
+            UssFSProvider.instance.createLocalDirectory(testUris.session);
             expect(root.entries.has("sestest")).toBe(true);
             expect(root.size).toBe(oldSize + 1);
             getInfoFromUri.mockRestore();
@@ -2977,16 +2977,118 @@ describe("UssFSProvider", () => {
             };
             root.entries.set("sestest", sesEntry);
             const oldSize: number = sesEntry.size;
-            UssFSProvider.instance.createDirectory(testUris.folder);
+            UssFSProvider.instance.createLocalDirectory(testUris.folder);
             expect(sesEntry.entries.has("aFolder")).toBe(true);
             expect(sesEntry.size).toBe(oldSize + 1);
+        });
+
+        it("returns the existing directory entry without creating a new one", () => {
+            const root = (UssFSProvider.instance as any).root;
+            const sesEntry = new DirEntry("sestest");
+            sesEntry.metadata = {
+                profile: testProfile,
+                path: "/",
+            };
+            const existingFolder = new DirEntry("aFolder");
+            sesEntry.entries.set("aFolder", existingFolder);
+            root.entries.set("sestest", sesEntry);
+            const oldSize: number = sesEntry.size;
+
+            const result = UssFSProvider.instance.createLocalDirectory(testUris.folder);
+
+            expect(result).toBe(existingFolder);
+            expect(sesEntry.size).toBe(oldSize);
+        });
+    });
+
+    describe("createDirectory", () => {
+        it("creates a session directory with the given URI without remote API call", async () => {
+            const root = (UssFSProvider.instance as any).root;
+            root.entries.clear();
+            const oldSize: number = root.size;
+            const getInfoFromUri = vi.spyOn(UssFSProvider.instance as any, "_getInfoFromUri").mockReturnValueOnce({
+                profile: testProfile,
+                path: "/",
+            });
+            await UssFSProvider.instance.createDirectory(testUris.session);
+            expect(root.entries.has("sestest")).toBe(true);
+            expect(root.size).toBe(oldSize + 1);
+            getInfoFromUri.mockRestore();
+        });
+
+        it("creates an inner directory on the remote system and in local cache", async () => {
+            const root = (UssFSProvider.instance as any).root;
+            const sesEntry = new DirEntry("sestest");
+            sesEntry.metadata = {
+                profile: testProfile,
+                path: "/",
+            };
+            root.entries.set("sestest", sesEntry);
+            const oldSize: number = sesEntry.size;
+            const createMock = vi.fn().mockResolvedValue({ success: true });
+            const getUssApiMock = vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue({
+                create: createMock,
+            } as any);
+
+            await UssFSProvider.instance.createDirectory(testUris.folder);
+            expect(sesEntry.entries.has("aFolder")).toBe(true);
+            expect(sesEntry.size).toBe(oldSize + 1);
+            expect(createMock).toHaveBeenCalledWith("/aFolder", "directory");
+            getUssApiMock.mockRestore();
+        });
+
+        it("throws FileExists error if directory already exists in cache", async () => {
+            const root = (UssFSProvider.instance as any).root;
+            const sesEntry = new DirEntry("sestest");
+            sesEntry.metadata = {
+                profile: testProfile,
+                path: "/",
+            };
+            const existingFolder = new DirEntry("aFolder");
+            sesEntry.entries.set("aFolder", existingFolder);
+            root.entries.set("sestest", sesEntry);
+
+            await expect(UssFSProvider.instance.createDirectory(testUris.folder)).rejects.toThrow();
+        });
+
+        it("rolls back the local entry, handles the error, and rethrows if the remote request fails", async () => {
+            const root = (UssFSProvider.instance as any).root;
+            const sesEntry = new DirEntry("sestest");
+            sesEntry.metadata = {
+                profile: testProfile,
+                path: "/",
+            };
+            root.entries.set("sestest", sesEntry);
+            const oldSize: number = sesEntry.size;
+            const error = new Error("Network error");
+            const ensureAuthNotCancelledMock = vi.spyOn(AuthUtils, "ensureAuthNotCancelled").mockReturnValueOnce(undefined);
+            const waitForAuthFlowMock = vi.spyOn(AuthHandler, "waitForAuthFlow").mockResolvedValueOnce(undefined);
+            const retryRequestMock = vi.spyOn(AuthUtils, "retryRequest").mockRejectedValueOnce(error);
+            const handleErrorMock = vi.spyOn(UssFSProvider.instance as any, "_handleError").mockImplementation((() => undefined) as any);
+            const fireSoonMock = vi.spyOn(UssFSProvider.instance as any, "fireSoon").mockImplementation((() => undefined) as any);
+
+            await expect(UssFSProvider.instance.createDirectory(testUris.folder)).rejects.toThrow("Network error");
+
+            expect(sesEntry.entries.has("aFolder")).toBe(false);
+            expect(sesEntry.size).toBe(oldSize);
+            expect(handleErrorMock).toHaveBeenCalledWith(
+                error,
+                expect.objectContaining({ apiType: ZoweExplorerApiType.Uss, retry: expect.objectContaining({ args: [testUris.folder] }) })
+            );
+            expect(fireSoonMock).not.toHaveBeenCalled();
+
+            ensureAuthNotCancelledMock.mockRestore();
+            waitForAuthFlowMock.mockRestore();
+            retryRequestMock.mockRestore();
+            handleErrorMock.mockRestore();
+            fireSoonMock.mockRestore();
         });
     });
 
     describe("createParentDirectories", () => {
         it("creates each missing ancestor directory, deepest last", () => {
             const existsMock = vi.spyOn(UssFSProvider.instance, "exists").mockReturnValue(false);
-            const createDirectoryMock = vi.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(() => {});
+            const createDirectoryMock = vi.spyOn(UssFSProvider.instance, "createLocalDirectory").mockImplementation(() => ({}) as any);
             const deepUri = Uri.from({ scheme: ZoweScheme.USS, path: "/sestest/u/myuser/aFile.txt" });
 
             UssFSProvider.instance.createParentDirectories(deepUri);
@@ -2998,7 +3100,7 @@ describe("UssFSProvider", () => {
 
         it("stops walking up once an ancestor already exists", () => {
             const existsMock = vi.spyOn(UssFSProvider.instance, "exists").mockImplementation((uri) => uri.path === "/sestest/u");
-            const createDirectoryMock = vi.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(() => {});
+            const createDirectoryMock = vi.spyOn(UssFSProvider.instance, "createLocalDirectory").mockImplementation(() => ({}) as any);
             const deepUri = Uri.from({ scheme: ZoweScheme.USS, path: "/sestest/u/myuser/aFile.txt" });
 
             UssFSProvider.instance.createParentDirectories(deepUri);
@@ -3010,7 +3112,7 @@ describe("UssFSProvider", () => {
 
         it("does nothing for a URI directly beneath the root", () => {
             const existsMock = vi.spyOn(UssFSProvider.instance, "exists").mockReturnValue(false);
-            const createDirectoryMock = vi.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(() => {});
+            const createDirectoryMock = vi.spyOn(UssFSProvider.instance, "createLocalDirectory").mockImplementation(() => ({}) as any);
 
             UssFSProvider.instance.createParentDirectories(testUris.session);
 

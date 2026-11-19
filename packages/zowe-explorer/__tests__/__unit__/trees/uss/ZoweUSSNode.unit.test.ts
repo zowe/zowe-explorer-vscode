@@ -83,6 +83,7 @@ function createGlobalMocks() {
         basePath: vi.fn(),
         FileSystemProvider: {
             createDirectory: vi.fn(),
+            createLocalDirectory: vi.fn(),
         },
         loggerError: vi.spyOn(ZoweLogger, "error").mockImplementation((() => undefined) as any),
     };
@@ -92,6 +93,7 @@ function createGlobalMocks() {
     globalMocks["readTextMock"] = new MockedProperty(vscode.env.clipboard, "readText", undefined, globalMocks.readText);
 
     vi.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(globalMocks.FileSystemProvider.createDirectory);
+    vi.spyOn(UssFSProvider.instance, "createLocalDirectory").mockImplementation(globalMocks.FileSystemProvider.createLocalDirectory);
     vi.spyOn(UssFSProvider.instance, "createEntry").mockImplementation((() => undefined) as any);
 
     globalMocks.textDocumentsArray.push(globalMocks.mockTextDocument);
@@ -1195,7 +1197,7 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
         await parentNode.getChildren();
 
         expect(getUssFilesMock).toHaveBeenCalledTimes(1);
-        expect(globalMocks.FileSystemProvider.createDirectory).toHaveBeenCalled();
+        expect(globalMocks.FileSystemProvider.createLocalDirectory).toHaveBeenCalled();
         expect(fsCreateDirectorySpy).not.toHaveBeenCalled();
         expect(providerStatSpy).not.toHaveBeenCalled();
 
@@ -1243,7 +1245,7 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
         expect(children[1].label).toBe("subDir");
         expect(children[1].fullPath).toBe("/u/testDir/subDir");
 
-        expect(globalMocks.FileSystemProvider.createDirectory).toHaveBeenCalled();
+        expect(globalMocks.FileSystemProvider.createLocalDirectory).toHaveBeenCalled();
         expect(createEntrySpy).toHaveBeenCalled();
 
         createEntrySpy.mockRestore();
@@ -2326,6 +2328,7 @@ describe("ZoweUSSNode Unit Tests - getChildren() remote change detection", () =>
         vi.spyOn(UssFSProvider.instance, "exists").mockReturnValue(false);
         vi.spyOn(UssFSProvider.instance, "createParentDirectories").mockImplementation((() => undefined) as any);
         vi.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation((() => undefined) as any);
+        vi.spyOn(UssFSProvider.instance, "createLocalDirectory").mockImplementation((() => undefined) as any);
         vi.spyOn(UssFSProvider.instance, "createEntry").mockImplementation((() => undefined) as any);
 
         return {
