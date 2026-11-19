@@ -5181,51 +5181,62 @@ describe("Dataset Tree Unit Tests - Function initializeFavorites", () => {
         expect(blockMocks.testTree.mFavorites[0].children?.map((item) => item.label)).toEqual(["SAMPLE.DS"]);
     });
 
-    it("restores member-specific PDS favorites from persistence", async () => {
-        createGlobalMocks();
-        const blockMocks = createBlockMocks();
+    it.each(["pds", "pds.profile=ssh.", "pds.profile=zftp.", "pds.profile=custom."])(
+        "restores member-specific PDS favorites with context %s from persistence",
+        async (context) => {
+            createGlobalMocks();
+            const blockMocks = createBlockMocks();
 
-        vi.spyOn(blockMocks.testTree as any, "mPersistence" as any, "get").mockReturnValue({
-            readFavorites: () => ["[test]: SAMPLE.PDS(MEM1){pds}", "[test]: SAMPLE.PDS(MEM2){pds}", "[test]: SAMPLE.PS.DS{ds}"],
-            readVsamFavorites: () => [],
-            readMemberFavorites: () => [],
-            readMigratedFavorites: () => [],
-        } as any);
-        await blockMocks.testTree.initializeFavorites(blockMocks.log);
+            const persistence = blockMocks.testTree["mPersistence"];
+            vi.spyOn(persistence, "readFavorites").mockReturnValue(["[test]: SAMPLE.PS.DS{ds}"]);
+            vi.spyOn(persistence, "readVsamFavorites").mockReturnValue([]);
+            vi.spyOn(persistence, "readMemberFavorites").mockReturnValue([
+                `[test]: SAMPLE.PDS(MEM1){${context}}`,
+                `[test]: SAMPLE.PDS(MEM2){${context}}`,
+            ]);
+            vi.spyOn(persistence, "readMigratedFavorites").mockReturnValue([]);
+            await blockMocks.testTree.initializeFavorites(blockMocks.log);
 
-        expect(blockMocks.testTree.mFavorites.length).toBe(1);
-        const profileNode = blockMocks.testTree.mFavorites[0];
-        expect(profileNode.children?.map((item) => item.label)).toEqual(["SAMPLE.PDS", "SAMPLE.PS.DS"]);
+            expect(blockMocks.testTree.mFavorites.length).toBe(1);
+            const profileNode = blockMocks.testTree.mFavorites[0];
+            expect(profileNode.children?.map((item) => item.label)).toEqual(["SAMPLE.PDS", "SAMPLE.PS.DS"]);
 
-        // Check that the PDS node has the correct member favorites
-        const pdsNode = profileNode.children[0] as ZoweDatasetNode;
-        expect(pdsNode.favoritedMemberNames).toEqual(["MEM1", "MEM2"]);
-        expect(pdsNode.description).toBeUndefined();
-        expect(SharedContext.isFavoritePds(pdsNode)).toBe(true);
-    });
+            // Check that the PDS node has the correct member favorites
+            const pdsNode = profileNode.children[0] as ZoweDatasetNode;
+            expect(pdsNode.pdsFavoriteState).toBe(Definitions.PdsFavoriteState.SpecificMembers);
+            expect(pdsNode.favoritedMemberNames).toEqual(["MEM1", "MEM2"]);
+            expect(pdsNode.description).toBeUndefined();
+            expect(pdsNode.collapsibleState).toBe(vscode.TreeItemCollapsibleState.Collapsed);
+            expect(pdsNode.resourceUri.path).toMatch(/\/SAMPLE\.PDS$/);
+            expect(SharedContext.isFavoritePds(pdsNode)).toBe(true);
+        }
+    );
 
-    it("does not duplicate member favorites when refreshing", async () => {
-        createGlobalMocks();
-        const blockMocks = createBlockMocks();
+    it.each(["pds", "pds.profile=ssh.", "pds.profile=zftp.", "pds.profile=custom."])(
+        "does not duplicate member favorites with context %s when refreshing",
+        async (context) => {
+            createGlobalMocks();
+            const blockMocks = createBlockMocks();
 
-        vi.spyOn(blockMocks.testTree as any, "mPersistence" as any, "get").mockReturnValue({
-            readFavorites: () => ["[test]: SAMPLE.PDS(MEM1){pds}", "[test]: SAMPLE.PDS(MEM2){pds}"],
-            readVsamFavorites: () => [],
-            readMemberFavorites: () => [],
-            readMigratedFavorites: () => [],
-        } as any);
-        await blockMocks.testTree.initializeFavorites(blockMocks.log);
+            const persistence = blockMocks.testTree["mPersistence"];
+            vi.spyOn(persistence, "readFavorites").mockReturnValue([`[test]: SAMPLE.PDS(MEM1){${context}}`, `[test]: SAMPLE.PDS(MEM2){${context}}`]);
+            vi.spyOn(persistence, "readVsamFavorites").mockReturnValue([]);
+            vi.spyOn(persistence, "readMemberFavorites").mockReturnValue([]);
+            vi.spyOn(persistence, "readMigratedFavorites").mockReturnValue([]);
+            await blockMocks.testTree.initializeFavorites(blockMocks.log);
 
-        const profileNode = blockMocks.testTree.mFavorites[0];
-        const pdsNode = profileNode.children[0] as ZoweDatasetNode;
-        expect(pdsNode.favoritedMemberNames).toEqual(["MEM1", "MEM2"]);
+            const profileNode = blockMocks.testTree.mFavorites[0];
+            const pdsNode = profileNode.children[0] as ZoweDatasetNode;
+            expect(pdsNode.favoritedMemberNames).toEqual(["MEM1", "MEM2"]);
 
-        // Refresh should not duplicate members
-        await blockMocks.testTree.refreshFavorites();
-        const pdsNodeAfterRefresh = blockMocks.testTree.mFavorites[0].children[0] as ZoweDatasetNode;
-        expect(pdsNodeAfterRefresh.favoritedMemberNames).toEqual(["MEM1", "MEM2"]);
-        expect(pdsNodeAfterRefresh.description).toBeUndefined();
-    });
+            // Refresh should not duplicate members
+            await blockMocks.testTree.refreshFavorites();
+            expect(blockMocks.testTree.mFavorites[0].children).toHaveLength(1);
+            const pdsNodeAfterRefresh = blockMocks.testTree.mFavorites[0].children[0] as ZoweDatasetNode;
+            expect(pdsNodeAfterRefresh.favoritedMemberNames).toEqual(["MEM1", "MEM2"]);
+            expect(pdsNodeAfterRefresh.description).toBeUndefined();
+        }
+    );
 
     it("successfully initializes migrated favorites from the main favorites list alongside non-migrated favorites, sorted alphabetically", async () => {
         createGlobalMocks();

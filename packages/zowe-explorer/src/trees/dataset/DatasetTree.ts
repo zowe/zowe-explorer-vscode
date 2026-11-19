@@ -655,7 +655,7 @@ export class DatasetTree extends ZoweTreeProvider<IZoweDatasetTreeNode> implemen
             }
 
             const memberMatch = Constants.DS_HAS_MEMBER_REGEX_CHECK.exec(fav.label);
-            if (memberMatch && fav.contextValue === Constants.DS_PDS_CONTEXT) {
+            if (memberMatch && SharedContext.isPds(fav.contextValue)) {
                 const pdsName = memberMatch[1];
                 const memberName = memberMatch[2];
 
