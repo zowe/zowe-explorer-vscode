@@ -1043,6 +1043,7 @@
   "Fixed \"Allocate Like\" error that prevented proper execution. <a>#1973</a>": "Fixed \"Allocate Like\" error that prevented proper execution. <a>#1973</a>",
   "Fixed \"Open Selected Data Set\" action opening data sets in the z/OSMF tree instead of the originating extender profile's tree when invoked from a spool file. <a>#4372</a>": "Fixed \"Open Selected Data Set\" action opening data sets in the z/OSMF tree instead of the originating extender profile's tree when invoked from a spool file. <a>#4372</a>",
   "Fixed JSON errors being ignored when zowe.config.json files change on disk and are reloaded. <a>#3066</a> <a>#3074</a>": "Fixed JSON errors being ignored when zowe.config.json files change on disk and are reloaded. <a>#3066</a> <a>#3074</a>",
+  "Fixed PDS member favorites being restored as directories for extender type profiles.": "Fixed PDS member favorites being restored as directories for extender type profiles.",
   "Fixed PDS members and USS files not being supported as drop targets when resources are drag-and-dropped. <a>#3999</a>": "Fixed PDS members and USS files not being supported as drop targets when resources are drag-and-dropped. <a>#3999</a>",
   "Fixed SSO logout for base profiles without requiring a registered service API. <a>#4137</a>": "Fixed SSO logout for base profiles without requiring a registered service API. <a>#4137</a>",
   "Fixed VSC Compare function, not working with Favorites from Zowe Explorer. <a>#2549</a>": "Fixed VSC Compare function, not working with Favorites from Zowe Explorer. <a>#2549</a>",
