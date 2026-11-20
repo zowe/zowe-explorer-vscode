@@ -21,7 +21,7 @@ The following guidelines apply specifically to the extension:
 
 ### Pull request feedback: three-strike rule
 
-Contributors are expected to respond to review feedback on their pull requests. If a contributor does not respond, maintainers will send three reminders, one per week. If the contributor still has not responded after the third reminder, the pull request will be closed.
+Contributors are expected to respond to review feedback on their pull requests. If a contributor does not respond, maintainers will send three reminders, one per week. If the contributor still has not responded within one week after the third reminder, the pull request will be closed.
 
 ### AI assistance for good first issues
 
