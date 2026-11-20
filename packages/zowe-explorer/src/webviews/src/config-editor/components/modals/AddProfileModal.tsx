@@ -12,6 +12,8 @@ interface AddProfileModalProps {
   newProfileValue: string;
   showDropdown: boolean;
   typeOptions: string[];
+  allPropertyKeys?: string[];
+  existingPropertyKeys?: string[];
   propertyDescriptions: { [key: string]: string };
   isSecure: boolean;
   secureValuesAllowed: boolean;
@@ -34,6 +36,8 @@ export function AddProfileModal({
   newProfileValue,
   showDropdown,
   typeOptions,
+  allPropertyKeys = [],
+  existingPropertyKeys = [],
   propertyDescriptions,
   isSecure,
   secureValuesAllowed,
@@ -51,8 +55,29 @@ export function AddProfileModal({
 }: AddProfileModalProps) {
   if (!isOpen) return null;
 
+  const trimmedKey = newProfileKey.trim();
+  let keyValidationError: string | undefined;
+  let keyValidationWarning: string | undefined;
+
+  if (trimmedKey) {
+    if (existingPropertyKeys.includes(trimmedKey)) {
+      if (!focusValueInput) {
+        keyValidationError = l10n.t("Property key already exists");
+      }
+    } else if (typeOptions.includes(trimmedKey)) {
+      keyValidationError = undefined;
+    } else if (allPropertyKeys.length > 0) {
+      keyValidationWarning = l10n.t("Property is not defined in the schema for this profile");
+    }
+  }
+
+  const isKeyValid = trimmedKey.length > 0 && !keyValidationError;
+  const isAuthOrderValid = !isAuthOrderProperty(trimmedKey) || isValidAuthOrder(newProfileValue);
+  const isAddDisabled = !isKeyValid || !isAuthOrderValid;
+
   const handleKeyDown = (e: any) => {
     if (e.key === "Enter") {
+      if (isAddDisabled) return;
       onAdd();
     }
   };
@@ -78,7 +103,7 @@ export function AddProfileModal({
           onFocus={() => onShowDropdownChange(true)}
           onBlur={() => setTimeout(() => onShowDropdownChange(false), 100)}
           onKeyDown={handleKeyDown}
-          className="modal-input"
+          className={`modal-input ${keyValidationError ? "error" : keyValidationWarning ? "warning" : ""}`}
           placeholder={l10n.t("New Key")}
           style={{ paddingRight: "2rem" }}
         />
@@ -113,6 +138,19 @@ export function AddProfileModal({
           </ul>
         )}
       </div>
+
+      {keyValidationError && (
+        <div className="modal-error" id="property-key-error" style={{ marginBottom: "8px" }}>
+          {keyValidationError}
+        </div>
+      )}
+
+      {keyValidationWarning && (
+        <div className="modal-warning" id="property-key-warning" style={{ marginBottom: "8px" }}>
+          <span className="codicon codicon-warning" style={{ flexShrink: 0 }} />
+          <span>{keyValidationWarning}</span>
+        </div>
+      )}
 
       {isAuthOrderProperty(newProfileKey.trim()) && <AuthOrderControls value={newProfileValue} onChange={onNewProfileValueChange} />}
 
@@ -238,11 +276,7 @@ export function AddProfileModal({
           <VscodeButton secondary onClick={onCancel} data-testid="add-property-cancel">
             {l10n.t("Cancel")}
           </VscodeButton>
-          <VscodeButton
-            onClick={onAdd}
-            disabled={isAuthOrderProperty(newProfileKey.trim()) && !isValidAuthOrder(newProfileValue)}
-            data-testid="add-property-confirm"
-          >
+          <VscodeButton onClick={onAdd} disabled={isAddDisabled} data-testid="add-property-confirm">
             {l10n.t("Add")}
           </VscodeButton>
         </div>

@@ -409,4 +409,49 @@ describe("editorStore", () => {
         expect(store.getState().pendingChanges).toBe(pendingChanges);
         expect(store.getState().undoStack).toBe(undoStack);
     });
+
+    it("rejects duplicate property key when adding new profile property", () => {
+        const { store, team } = makeEditor();
+        store.setState({
+            newProfileKey: "host",
+            newProfileValue: "new-host",
+            newProfileKeyPath: ["profiles", "base", "properties"],
+        });
+        store.getState().handleAddNewProfileKey();
+        expect(store.getState().pendingChanges[team.configPath]).toBeUndefined();
+    });
+
+    it("adds property when adding new schema or custom property key", () => {
+        const { store, team } = makeEditor();
+        store.setState({
+            newProfileKey: "customProp",
+            newProfileValue: "customValue",
+            newProfileKeyPath: ["profiles", "base", "properties"],
+        });
+        store.getState().handleAddNewProfileKey();
+        expect(store.getState().pendingChanges[team.configPath]["profiles.base.properties.customProp"].value).toBe("customValue");
+    });
+
+    it("rejects duplicate property key in profile wizard", () => {
+        const store = createEditorStore();
+        store.setState({
+            wizardProperties: [{ key: "host", value: "example.com", secure: false }],
+            wizardNewPropertyKey: "host",
+            wizardNewPropertyValue: "other.com",
+        });
+        store.getState().handleWizardAddProperty();
+        expect(store.getState().wizardProperties).toHaveLength(1);
+    });
+
+    it("adds new property key in profile wizard", () => {
+        const store = createEditorStore();
+        store.setState({
+            wizardProperties: [{ key: "host", value: "example.com", secure: false }],
+            wizardNewPropertyKey: "port",
+            wizardNewPropertyValue: "443",
+        });
+        store.getState().handleWizardAddProperty();
+        expect(store.getState().wizardProperties).toHaveLength(2);
+        expect(store.getState().wizardProperties[1]).toMatchObject({ key: "port", value: "443" });
+    });
 });

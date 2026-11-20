@@ -6,7 +6,13 @@ import { ConfigParseErrorsModal } from "./modals/ConfigParseErrorsModal";
 import { RenameProfileModal } from "./modals/RenameProfileModal";
 import { useEditorFields } from "../context/EditorStoreContext";
 import { useUtilityHelpers } from "../hooks/useUtilityHelpers";
-import { getPropertyTypeForAddProfile, fetchTypeOptions, getPropertyDescriptions } from "../utils/propertyUtils";
+import {
+  getPropertyTypeForAddProfile,
+  fetchTypeOptions,
+  fetchAllPropertyKeys,
+  fetchExistingPropertyKeys,
+  getPropertyDescriptions,
+} from "../utils/propertyUtils";
 import { getAllQualifiedProfileKeys } from "../utils";
 
 export function EditorDialogs() {
@@ -101,6 +107,24 @@ export function EditorDialogs() {
         typeOptions={
           newProfileKeyPath
             ? fetchTypeOptions({ path: newProfileKeyPath, selectedTab, configurations, schemaValidations, pendingChanges, renames, deletions })
+            : []
+        }
+        allPropertyKeys={
+          newProfileKeyPath
+            ? fetchAllPropertyKeys({ path: newProfileKeyPath, selectedTab, configurations, schemaValidations, pendingChanges, renames })
+            : []
+        }
+        existingPropertyKeys={
+          newProfileKeyPath
+            ? fetchExistingPropertyKeys({
+                path: newProfileKeyPath,
+                selectedTab,
+                configurations,
+                schemaValidations,
+                pendingChanges,
+                renames,
+                deletions,
+              })
             : []
         }
         propertyDescriptions={

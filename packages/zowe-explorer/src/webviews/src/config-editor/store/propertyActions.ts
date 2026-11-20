@@ -21,7 +21,7 @@ import {
     getNestedProperty,
     stringifyValueByType,
 } from "../utils";
-import { getPropertyTypeForAddProfile } from "../utils/propertyUtils";
+import { getPropertyTypeForAddProfile, validateProfilePropertyKey } from "../utils/propertyUtils";
 import { getProfileType } from "../utils/profileUtils";
 import { isProfileDefault } from "../utils/profileHelpers";
 
@@ -217,6 +217,20 @@ export function createPropertyActions(state: EditorRuntime) {
 
     const handleAddNewProfileKey = () => {
         if (!newProfileKey.trim() || !newProfileKeyPath) return;
+
+        const validation = validateProfilePropertyKey({
+            propertyKey: newProfileKey,
+            path: newProfileKeyPath,
+            selectedTab: selectedTab!,
+            configurations,
+            schemaValidations,
+            pendingChanges,
+            renames,
+            deletions,
+            isEditingExisting: state.focusValueInput,
+        });
+
+        if (!validation.isValid) return;
 
         const configPath = configurations[selectedTab!]!.configPath;
         const path = [...newProfileKeyPath, newProfileKey.trim()];

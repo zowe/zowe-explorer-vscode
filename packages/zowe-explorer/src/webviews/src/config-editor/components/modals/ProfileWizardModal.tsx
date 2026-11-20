@@ -87,6 +87,23 @@ export function ProfileWizardModal() {
   const propertyDescriptions = getWizardPropertyDescriptions();
   const isProfileNameTakenValue = !wizardProfileNameValidation.isValid;
 
+  const trimmedWizardKey = wizardNewPropertyKey.trim();
+  const isKeyDuplicate = Boolean(trimmedWizardKey && wizardProperties.some((prop) => prop.key === trimmedWizardKey));
+  const isKeyUnrecognized = Boolean(
+    trimmedWizardKey && !isKeyDuplicate && propertyOptions && propertyOptions.length > 0 && !propertyOptions.includes(trimmedWizardKey)
+  );
+
+  let wizardKeyError: string | undefined;
+  let wizardKeyWarning: string | undefined;
+  if (isKeyDuplicate) {
+    wizardKeyError = l10n.t("Property key already exists");
+  } else if (isKeyUnrecognized) {
+    wizardKeyWarning = l10n.t("Property is not defined in the schema for this profile");
+  }
+
+  const isAddPropertyDisabled =
+    !trimmedWizardKey || Boolean(wizardKeyError) || (isAuthOrderProperty(trimmedWizardKey) && !isValidAuthOrder(wizardNewPropertyValue));
+
   const canPropertyBeSecureForWizard = useCallback(
     (displayKey: string, profileType: string): boolean => {
       if (!displayKey) return false;
@@ -378,14 +395,14 @@ export function ProfileWizardModal() {
                     onBlur={() => setTimeout(() => onShowKeyDropdownChange(false), 100)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
-                        onAddProperty();
+                        if (!isAddPropertyDisabled) {
+                          onAddProperty();
+                        }
                       } else if (e.key === "Escape") {
                         onCancel();
                       }
                     }}
-                    className={`modal-input wizard-input ${
-                      wizardNewPropertyKey.trim() && wizardProperties.some((prop) => prop.key === wizardNewPropertyKey.trim()) ? "error" : ""
-                    }`}
+                    className={`modal-input wizard-input ${wizardKeyError ? "error" : wizardKeyWarning ? "warning" : ""}`}
                     placeholder={l10n.t("Property key")}
                     style={{ paddingRight: "2rem" }}
                   />
@@ -406,9 +423,15 @@ export function ProfileWizardModal() {
                     </button>
                   )}
                 </div>
-                {wizardNewPropertyKey.trim() && wizardProperties.some((prop) => prop.key === wizardNewPropertyKey.trim()) && (
+                {wizardKeyError && (
                   <div className="wizard-error" id="property-key-exists-error">
-                    {l10n.t("Property key already exists")}
+                    {wizardKeyError}
+                  </div>
+                )}
+                {wizardKeyWarning && (
+                  <div className="wizard-warning" id="property-key-schema-warning">
+                    <span className="codicon codicon-warning" style={{ flexShrink: 0 }} />
+                    <span>{wizardKeyWarning}</span>
                   </div>
                 )}
                 {wizardShowKeyDropdown && (
@@ -449,7 +472,9 @@ export function ProfileWizardModal() {
                         onChange={(e) => onNewPropertyValueChange((e.target as HTMLInputElement).value)}
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
-                            onAddProperty();
+                            if (!isAddPropertyDisabled) {
+                              onAddProperty();
+                            }
                           } else if (e.key === "Escape") {
                             onCancel();
                           }
@@ -466,7 +491,9 @@ export function ProfileWizardModal() {
                         onChange={(e: any) => onNewPropertyValueChange(e.target!.value as string)}
                         onKeyDown={(e: any) => {
                           if (e.key === "Enter") {
-                            onAddProperty();
+                            if (!isAddPropertyDisabled) {
+                              onAddProperty();
+                            }
                           } else if (e.key === "Escape") {
                             onCancel();
                           }
@@ -487,7 +514,9 @@ export function ProfileWizardModal() {
                         onChange={(e) => onNewPropertyValueChange((e.target as HTMLInputElement).value)}
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
-                            onAddProperty();
+                            if (!isAddPropertyDisabled) {
+                              onAddProperty();
+                            }
                           } else if (e.key === "Escape") {
                             onCancel();
                           }
@@ -506,7 +535,9 @@ export function ProfileWizardModal() {
                         onChange={onNewPropertyValueChange}
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
-                            onAddProperty();
+                            if (!isAddPropertyDisabled) {
+                              onAddProperty();
+                            }
                           } else if (e.key === "Escape") {
                             onCancel();
                           }
@@ -582,16 +613,7 @@ export function ProfileWizardModal() {
                   ) : null}
                 </div>
               </div>
-              <VscodeButton
-                id="add-property-button"
-                onClick={onAddProperty}
-                disabled={
-                  !wizardNewPropertyKey.trim() ||
-                  wizardProperties.some((prop) => prop.key === wizardNewPropertyKey.trim()) ||
-                  (isAuthOrderProperty(wizardNewPropertyKey.trim()) && !isValidAuthOrder(wizardNewPropertyValue))
-                }
-                className="wizard-add-property-button"
-              >
+              <VscodeButton id="add-property-button" onClick={onAddProperty} disabled={isAddPropertyDisabled} className="wizard-add-property-button">
                 {l10n.t("Add Property")}
               </VscodeButton>
             </div>

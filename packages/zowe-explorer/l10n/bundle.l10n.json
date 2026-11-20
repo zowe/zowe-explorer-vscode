@@ -1997,6 +1997,7 @@
   "Prompting the user to choose a member from the filtered list": "Prompting the user to choose a member from the filtered list",
   "Prompting the user to choose a recent member for editing": "Prompting the user to choose a recent member for editing",
   "Properties": "Properties",
+  "Property is not defined in the schema for this profile": "Property is not defined in the schema for this profile",
   "Property key": "Property key",
   "Property key already exists": "Property key already exists",
   "Property value": "Property value",
