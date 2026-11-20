@@ -549,11 +549,45 @@ export class ProfilesCache {
         const profile: imperative.IProfile = {};
         if (profAttrs != null) {
             const mergedArgs = mProfileInfo.mergeArgsForProfile(profAttrs, { getSecureVals: true });
+            let envVarConfig: Pick<imperative.Config, "envVarManaged" | "layers"> | undefined;
             for (const arg of mergedArgs.knownArgs) {
                 profile[arg.argName] = arg.argValue;
+                const isParsedCredential =
+                    (arg.argName === "user" || arg.argName === "password") &&
+                    typeof arg.argValue !== "string" &&
+                    arg.argLoc?.locType === imperative.ProfLocType.TEAM_CONFIG;
+                if (isParsedCredential) {
+                    if (envVarConfig == null) {
+                        // Both getters return a fresh copy on every read, so read them once per profile
+                        const teamConfig = mProfileInfo.getTeamConfig();
+                        envVarConfig = { envVarManaged: teamConfig?.envVarManaged ?? [], layers: teamConfig?.layers ?? [] };
+                    }
+                    profile[arg.argName] = this.getEnvVarText(arg, envVarConfig) ?? arg.argValue;
+                }
             }
         }
         return profile;
+    }
+
+    /**
+     * Imperative replaces `$VAR` and `${VAR}` in team config values and then parses the result as JSON,
+     * so a user or password env var such as `12345`, `1e5` or `true` arrives as a number or a boolean.
+     * `String()` can't undo that for values like `1e5` or `1.50`, so rebuild the text from the original config value.
+     *
+     * @returns the env var text, or `undefined` if no env var in the argument's config layer supplied the value
+     */
+    private getEnvVarText(arg: imperative.IProfArgAttrs, envVarConfig: Pick<imperative.Config, "envVarManaged" | "layers">): string | undefined {
+        // The same property path can hold an env var in more than one layer, so match the layer the value came from
+        const layer = envVarConfig.layers.find((configLayer) => arg.argLoc.osLoc?.includes(configLayer.path));
+        const entry =
+            layer &&
+            envVarConfig.envVarManaged.find(
+                (managed) => managed.propPath === arg.argLoc.jsonLoc && managed.global === layer.global && managed.user === layer.user
+            );
+        // Same two passes and patterns as Imperative's ConfigEnvironmentVariables, which isn't exported
+        return entry?.originalValue
+            .replace(/\$(\w+)/g, (text, name: string) => process.env[name] || text)
+            .replace(/\$\{([^}]+)\}/g, (text, name: string) => process.env[name] || text);
     }
 
     // create an array that includes registered types from apiRegister.registeredApiTypes()
@@ -611,14 +645,14 @@ export class ProfilesCache {
 
     public checkForEnvVarAndUpdate(): void {
         for (const profile of this.allProfiles) {
-            if (profile.profile.user?.startsWith("$")) {
+            if (typeof profile.profile.user === "string" && profile.profile.user.startsWith("$")) {
                 const userEnvVar = profile.profile.user.match(/^\$(\w+)$/)?.[1];
                 if (!userEnvVar || !process.env[userEnvVar]) {
                     continue;
                 }
                 profile.profile.user = process.env[userEnvVar];
             }
-            if (profile.profile.password?.startsWith("$")) {
+            if (typeof profile.profile.password === "string" && profile.profile.password.startsWith("$")) {
                 const passwordEnvVar = profile.profile.password.match(/^\$(\w+)$/)?.[1];
                 if (!passwordEnvVar || !process.env[passwordEnvVar]) {
                     continue;
