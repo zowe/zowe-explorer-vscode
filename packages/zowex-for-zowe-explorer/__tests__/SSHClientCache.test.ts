@@ -449,11 +449,43 @@ describe("SshClientCache", () => {
         it("should deploy a new server if the current one is outdated and there is no explicit setting for autoUpdate", async () => {
             // autoUpdate is assumed true
             vi.mocked(ZSshUtils.checkIfOutdated).mockReturnValueOnce(true);
+            vi.mocked(ZSshClient.create).mockResolvedValueOnce({ dispose: vi.fn(), serverInfo: { version: "0.6.1" } } as unknown as ZSshClient);
             await cache.connect(mockProfile);
+            expect(ZSshUtils.checkIfOutdated).toHaveBeenCalledWith("0.6.1");
             expect(ZSshUtils.lacksWriteAccess).toHaveBeenCalled();
             expect(deployWithProgress).toHaveBeenCalled();
             expect(ZSshClient.create).toHaveBeenCalledTimes(2); // Initial try + post-deploy try
         });
+
+        it("deploys using directory write access from the ready message without a separate SSH check", async () => {
+            vi.mocked(ZSshUtils.checkIfOutdated).mockReturnValueOnce(true);
+            vi.mocked(ZSshClient.create).mockResolvedValueOnce({
+                dispose: vi.fn(),
+                serverInfo: { version: "1.0.0", dirWritable: true },
+            } as unknown as ZSshClient);
+
+            await cache.connect(mockProfile);
+
+            expect(ZSshUtils.lacksWriteAccess).not.toHaveBeenCalled();
+            expect(ZSshUtils.checkIfOutdated).toHaveBeenCalledWith("1.0.0");
+            expect(deployWithProgress).toHaveBeenCalledOnce();
+            expect(ZSshClient.create).toHaveBeenCalledTimes(2);
+        });
+
+        it("skips deployment when the ready message reports a read-only directory without a separate SSH check", async () => {
+            vi.mocked(ZSshUtils.checkIfOutdated).mockReturnValueOnce(true);
+            vi.mocked(ZSshClient.create).mockResolvedValueOnce({
+                dispose: vi.fn(),
+                serverInfo: { version: "1.0.0", dirWritable: false },
+            } as unknown as ZSshClient);
+
+            await cache.connect(mockProfile);
+
+            expect(ZSshUtils.lacksWriteAccess).not.toHaveBeenCalled();
+            expect(deployWithProgress).not.toHaveBeenCalled();
+            expect(ZSshClient.create).toHaveBeenCalledOnce();
+        });
+
         it("should deploy a new server if the current one is outdated and autoUpdate is explicitly true", async () => {
             const autoUpdateTrueProfile = { ...mockProfile, profile: { ...mockProfile.profile, autoUpdate: true } };
 

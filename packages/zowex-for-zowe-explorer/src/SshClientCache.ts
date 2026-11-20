@@ -179,9 +179,10 @@ export class SshClientCache extends vscode.Disposable {
                     requests: replayRequests,
                     useNativeSsh,
                 });
-                imperative.Logger.getAppLogger().debug(`Server version: ${newClient.serverVersion}`);
+                const serverVersion = newClient.serverInfo?.version;
+                imperative.Logger.getAppLogger().debug(`Server version: ${serverVersion}`);
                 serverNotFound = false;
-                if (ZSshUtils.checkIfOutdated(newClient.serverVersion)) {
+                if (ZSshUtils.checkIfOutdated(serverVersion)) {
                     // assume autoUpdate is allowed unless the SSH profile says otherwise
                     if (profile.profile?.autoUpdate === false) {
                         imperative.Logger.getAppLogger().warn(`Profile has autoUpdate set to false, skipping update for ${profile.name}`);
@@ -225,7 +226,9 @@ export class SshClientCache extends vscode.Disposable {
                     }
 
                     if (serverShouldDeploy) {
-                        if (await ZSshUtils.lacksWriteAccess(sessionHandle, serverPath)) {
+                        const dirWritable = newClient?.serverInfo?.dirWritable;
+                        const lacksWriteAccess = dirWritable == null ? await ZSshUtils.lacksWriteAccess(sessionHandle, serverPath) : !dirWritable;
+                        if (lacksWriteAccess) {
                             if (serverNotFound) {
                                 // the user has no usable instance of the zo server so we should notify them
                                 const errMsg = vscode.l10n.t(SshClientCache.WRITE_ACCESS_TO_SERVER_PATH_ERR, serverPath);
