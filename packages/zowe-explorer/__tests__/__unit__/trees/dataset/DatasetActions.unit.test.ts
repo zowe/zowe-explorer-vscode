@@ -2193,6 +2193,46 @@ describe("Dataset Actions Unit Tests - Function pasteDataSet", () => {
         await expect(DatasetActions.pasteDataSet(blockMocks.testDatasetTree, memberNode)).resolves.not.toThrow();
     });
 
+    it("shows an error and keeps the clipboard when members are pasted onto a session node", async () => {
+        createGlobalMocks();
+        const blockMocks = createBlockMocks();
+        const copiedMembers = JSON.stringify([
+            {
+                dataSetName: "HLQ.SOURCE.PDS",
+                memberName: "TEST",
+                profileName: blockMocks.imperativeProfile.name,
+                contextValue: Constants.DS_MEMBER_CONTEXT,
+            },
+        ]);
+        clipboard.writeText(copiedMembers);
+        // Run the progress callback so a member copy, if it starts, reaches the prompt and the API
+        mocked(vscode.window.withProgress).mockImplementation((_options, callback) => {
+            const progress = { report: vi.fn() };
+            const token = { isCancellationRequested: false, onCancellationRequested: vi.fn() };
+            return callback(progress, token);
+        });
+        const inputBoxSpy = vi.spyOn(Gui, "showInputBox").mockResolvedValue("TEST");
+        const replaceSpy = vi.spyOn(DatasetActions, "determineReplacement").mockResolvedValue("notFound");
+        const copySpy = vi
+            .spyOn(blockMocks.mvsApi, "copyDataSetMember")
+            .mockClear()
+            .mockResolvedValue({ success: true, commandResponse: "", apiResponse: {} });
+        const refreshSpy = vi.spyOn(blockMocks.testDatasetTree, "refreshElement").mockClear();
+
+        try {
+            await DatasetActions.pasteDataSet(blockMocks.testDatasetTree, blockMocks.datasetSessionNode);
+
+            expect(Gui.errorMessage).toHaveBeenCalledWith("This action is only supported for partitioned data sets.");
+            expect(inputBoxSpy).not.toHaveBeenCalled();
+            expect(copySpy).not.toHaveBeenCalled();
+            expect(refreshSpy).not.toHaveBeenCalled();
+            expect(await vscode.env.clipboard.readText()).toBe(copiedMembers);
+        } finally {
+            inputBoxSpy.mockRestore();
+            replaceSpy.mockRestore();
+        }
+    });
+
     it("Testing copyDatasetMembers() succesfully runs on cross profile", async () => {
         createGlobalMocks();
         const blockMocks = createBlockMocks();
