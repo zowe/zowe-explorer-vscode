@@ -11,17 +11,19 @@
 
 import * as fs from "fs";
 import * as path from "path";
-import { ProfileCredentials, ProfileInfo } from "@zowe/imperative";
+import { ProfileCredentials, ProfileInfo, type Config, type IConfigLayer } from "@zowe/imperative";
+import { ConfigEnvironmentVariables } from "@zowe/imperative/lib/config/src/ConfigEnvironmentVariables";
 import { FileManagement, ProfilesCache, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
 import { Profiles } from "../configuration/Profiles";
 import type { ChangeEntry, ConfigParseError, FlattenedProfilesMap, LayerModifications, NestedProfilesMap } from "./ConfigTypes";
-import { schemaValidation } from "./ConfigSchemaHelpers";
+import type { schemaValidation as SchemaValidation } from "./ConfigSchemaHelpers";
 
 export type { ChangeEntry, LayerModifications } from "./ConfigTypes";
 
 type ArrayField = "changes" | "deletions" | "defaultsChanges" | "defaultsDeleteKeys";
 
 export class ConfigUtils {
+    private static readonly vaultedStrings = new WeakMap<Config, Set<string>>();
     /**
      * Strips JSONC-style line comments, block comments, and trailing commas from source,
      * respecting quoted string boundaries so that URL-like sequences inside string values
@@ -118,6 +120,46 @@ export class ConfigUtils {
         (config as unknown as { mEnvVarManaged: unknown[] }).mEnvVarManaged = [];
     }
 
+    /** Keep environment references out of the vault while saving the final, editable layer. */
+    public static async saveConfig(config: Config): Promise<void> {
+        const editableConfig = config as unknown as { mEnvVarManaged: Config["envVarManaged"] };
+        const previousTracking = editableConfig.mEnvVarManaged;
+        editableConfig.mEnvVarManaged = [];
+        try {
+            const layer = config.api.layers.get();
+            const vaultedStrings = this.vaultedStrings.get(config) ?? new Set<string>();
+            for (const sourceLayer of config.layers) {
+                for (const value of Object.values(config.api.secure.securePropsForLayer(sourceLayer.path) ?? {})) {
+                    if (typeof value === "string") vaultedStrings.add(value);
+                }
+            }
+            this.vaultedStrings.set(config, vaultedStrings);
+            for (const propertyPath of config.api.secure.secureFields()) {
+                const segments = propertyPath.split(".");
+                const key = segments.pop();
+                const parent = segments
+                    .slice(1)
+                    .reduce<Record<string, unknown>>((value, segment) => value?.[segment] as Record<string, unknown>, layer.properties.profiles);
+                if (parent && typeof parent[key] === "string" && vaultedStrings.has(parent[key])) {
+                    delete parent[key];
+                }
+            }
+            const environmentApi = ConfigEnvironmentVariables as unknown as {
+                replaceEnvironmentVariablesInConfigLayer(
+                    profiles: IConfigLayer["properties"]["profiles"],
+                    config: Config,
+                    layer: IConfigLayer,
+                    path: string
+                ): void;
+            };
+            environmentApi.replaceEnvironmentVariablesInConfigLayer(layer.properties.profiles, config, layer, "profiles");
+            await config.save();
+        } finally {
+            // Failed saves and rollbacks must also leave the draft editable.
+            editableConfig.mEnvVarManaged = previousTracking;
+        }
+    }
+
     /**
      * Creates a ProfileInfo instance for Zowe and loads profiles from disk.
      * @returns ProfileInfo after readProfilesFromDisk
@@ -169,7 +211,7 @@ export class ConfigUtils {
      * @param profiles - The profiles object to process
      * @param schemaValidation - Optional schema validation to filter out invalid profile types
      */
-    public static processProfilesRecursively(profiles: NestedProfilesMap | undefined | null, schemaValidation?: schemaValidation): void {
+    public static processProfilesRecursively(profiles: NestedProfilesMap | undefined | null, schemaValidation?: SchemaValidation): void {
         if (!profiles || typeof profiles !== "object") {
             return;
         }

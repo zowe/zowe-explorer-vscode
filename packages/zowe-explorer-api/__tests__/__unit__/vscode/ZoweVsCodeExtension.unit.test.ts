@@ -178,6 +178,7 @@ describe("ZoweVsCodeExtension", () => {
                 },
                 configLayer,
                 testCache,
+                testProfInfo,
             };
         }
 
@@ -402,6 +403,76 @@ describe("ZoweVsCodeExtension", () => {
             expect(updateBaseProfileFileLogoutSpy).toHaveBeenCalledWith(blockMocks.baseProfile);
         });
 
+        describe("SSO logout with explicit base profiles", () => {
+            beforeEach(() => {
+                Object.assign(blockMocks.baseProfile.profile, blockMocks.updProfile);
+                Object.assign(blockMocks.serviceProfile.profile, blockMocks.updProfile);
+                blockMocks.configLayer.properties.profiles.base.properties = { ...blockMocks.baseProfile.profile };
+                blockMocks.configLayer.properties.defaults.base = "base";
+                blockMocks.configLayer.properties.autoStore = true;
+                vi.spyOn(blockMocks.testProfInfo, "isSecured").mockReturnValue(false);
+            });
+
+            it("logs out an explicit base profile without a default base or registered service API", async () => {
+                blockMocks.configLayer.properties.defaults = {};
+                vi.spyOn(blockMocks.testRegister, "getCommonApi").mockImplementation(() => {
+                    throw new Error("No service API is registered for base profiles");
+                });
+                const logoutSpy = vi.spyOn(Logout, "apimlLogout").mockResolvedValue(undefined);
+
+                await expect(
+                    ZoweVsCodeExtension.ssoLogout({
+                        serviceProfile: blockMocks.baseProfile,
+                        zeRegister: blockMocks.testRegister,
+                        zeProfiles: blockMocks.testCache,
+                    })
+                ).resolves.toBe(true);
+
+                expect(logoutSpy.mock.calls[0][0].ISession).toMatchObject(blockMocks.updProfile);
+                expect(blockMocks.configLayer.properties.profiles.base.properties.tokenValue).toBeUndefined();
+                expect(blockMocks.configLayer.properties.profiles.base.properties.tokenType).toBeUndefined();
+                expect(blockMocks.testCache.loadNamedProfile("base").profile.tokenValue).toBeUndefined();
+            });
+
+            it("uses a named nested base profile's token instead of its parent's or the default base token", async () => {
+                const selectedProfile: imperative.IProfileLoaded = {
+                    ...blockMocks.baseProfile,
+                    name: "lpar.apiml",
+                    profile: { ...blockMocks.baseProfile.profile, host: "selected", tokenValue: "selectedToken" },
+                };
+                blockMocks.baseProfile.profile.tokenValue = "defaultToken";
+                blockMocks.configLayer.properties.profiles.base.properties.tokenValue = "defaultToken";
+                blockMocks.configLayer.properties.profiles.lpar = {
+                    properties: { ...blockMocks.baseProfile.profile, host: "parent", tokenValue: "parentToken" },
+                    profiles: {
+                        apiml: {
+                            type: "base",
+                            properties: { ...selectedProfile.profile },
+                        },
+                    },
+                };
+                blockMocks.testCache.allProfiles.push(selectedProfile);
+                const logoutSpy = vi.spyOn(Logout, "apimlLogout").mockResolvedValue(undefined);
+
+                await expect(
+                    ZoweVsCodeExtension.ssoLogout({
+                        serviceProfile: "lpar.apiml",
+                        zeRegister: blockMocks.testRegister,
+                        zeProfiles: blockMocks.testCache,
+                        preferBaseToken: true,
+                    })
+                ).resolves.toBe(true);
+
+                expect(logoutSpy.mock.calls[0][0].ISession).toMatchObject({ hostname: "selected", tokenValue: "selectedToken" });
+                expect(blockMocks.configLayer.properties.profiles.lpar.profiles.apiml.properties.tokenValue).toBeUndefined();
+                expect(blockMocks.configLayer.properties.profiles.lpar.profiles.apiml.properties.tokenType).toBeUndefined();
+                expect(blockMocks.configLayer.properties.profiles.lpar.properties.tokenValue).toBe("parentToken");
+                expect(blockMocks.configLayer.properties.profiles.base.properties.tokenValue).toBe("defaultToken");
+                expect(blockMocks.testCache.loadNamedProfile("lpar.apiml").profile.tokenValue).toBeUndefined();
+                expect(blockMocks.testCache.loadNamedProfile("base").profile.tokenValue).toBe("defaultToken");
+            });
+        });
+
         it("calls promptCertificate if 'Certificate' was selected in quick pick", async () => {
             vi.spyOn(blockMocks.testCache, "fetchBaseProfile").mockResolvedValue(blockMocks.baseProfile);
             const updateBaseProfileFileLoginSpy = vi.spyOn(blockMocks.testCache, "updateBaseProfileFileLogin");
@@ -414,9 +485,10 @@ describe("ZoweVsCodeExtension", () => {
             });
 
             // Assume user provides proper certificate and keyfile
-            const promptCertMock = vi.spyOn(ZoweVsCodeExtension as any, "promptCertificate").mockImplementation((opts: any) => {
-                opts.session.cert = "cert";
-                opts.session.certKey = "certKey";
+            const promptCertMock = vi.spyOn(ZoweVsCodeExtension.profilesCache as any, "promptCertificate").mockResolvedValue({
+                cert: "cert",
+                certKey: "certKey",
+                action: "login",
             });
             const quickPickMock = vi.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[1]);
             await ZoweVsCodeExtension.ssoLogin({ serviceProfile: "service" });
@@ -437,7 +509,9 @@ describe("ZoweVsCodeExtension", () => {
             // case 1: User selects "user/password" for login quick pick
             const quickPickMock = vi.spyOn(Gui, "showQuickPick").mockImplementation((items) => items[1]);
 
-            const promptCertMock = vi.spyOn(ZoweVsCodeExtension as any, "promptCertificate").mockRejectedValueOnce(new Error("invalid certificate"));
+            const promptCertMock = vi
+                .spyOn(ZoweVsCodeExtension.profilesCache as any, "promptCertificate")
+                .mockRejectedValueOnce(new Error("invalid certificate"));
             await expect(ZoweVsCodeExtension.ssoLogin({ serviceProfile: "service" })).resolves.toBe(false);
             expect(promptCertMock).toHaveBeenCalled();
             expect(quickPickMock).toHaveBeenCalled();
@@ -615,6 +689,121 @@ describe("ZoweVsCodeExtension", () => {
             expect(didLogin).toBe(false);
             await expect(fetchBaseProfileSpy.mock.results[0].value).resolves.toBeUndefined();
         });
+
+        it("calls promptCertificate without showing a quick pick if allowedLoginMethod=apiml-cert-pem", async () => {
+            vi.spyOn(blockMocks.testCache, "fetchBaseProfile").mockResolvedValue(blockMocks.baseProfile);
+            const serviceProfileWithAllowedLogin = {
+                name: "service",
+                profile: {
+                    host: "example",
+                    allowedLoginMethod: imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_CERT_PEM,
+                },
+                type: "zosmf",
+                message: "",
+                failNotFound: true,
+            };
+            ZoweVsCodeExtension.profilesCache.allProfiles = [
+                serviceProfileWithAllowedLogin,
+                { ...serviceProfileWithAllowedLogin, name: "base", type: "base" },
+            ];
+
+            const updateBaseProfileFileLoginSpy = vi.spyOn(blockMocks.testCache, "updateBaseProfileFileLogin");
+
+            let sessionCopy;
+            const loginSpy = vi.spyOn(Login, "apimlLogin").mockImplementation((session: imperative.Session) => {
+                sessionCopy = Object.assign(Object.create(Object.getPrototypeOf(session)), session);
+                return Promise.resolve("tokenValue");
+            });
+
+            // Assume user provides proper certificate and keyfile
+            const promptCertMock = vi.spyOn(ZoweVsCodeExtension.profilesCache as any, "promptCertificate").mockResolvedValue({
+                cert: "cert",
+                certKey: "certKey",
+                action: "login",
+            });
+            const quickPickMock = vi.spyOn(Gui, "showQuickPick");
+            await ZoweVsCodeExtension.ssoLogin({ serviceProfile: serviceProfileWithAllowedLogin });
+
+            expect(sessionCopy.ISession.type).toBe(imperative.SessConstants.AUTH_TYPE_CERT_PEM);
+            expect(loginSpy).toHaveBeenCalledWith(sessionCopy);
+            expect(promptCertMock).toHaveBeenCalled();
+            expect(quickPickMock).not.toHaveBeenCalled();
+            expect(updateBaseProfileFileLoginSpy).toHaveBeenCalledWith(blockMocks.baseProfile, blockMocks.updProfile, false);
+            promptCertMock.mockRestore();
+        });
+
+        it("returns false for allowedLoginMethod = apiml-cert-pem if the certificate wizard returns no response", async () => {
+            vi.spyOn(blockMocks.testCache, "fetchBaseProfile").mockResolvedValue(blockMocks.baseProfile);
+            const serviceProfileWithAllowedLogin = {
+                name: "service",
+                profile: {
+                    host: "example",
+                    allowedLoginMethod: imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_CERT_PEM,
+                },
+                type: "zosmf",
+                message: "",
+                failNotFound: true,
+            };
+            ZoweVsCodeExtension.profilesCache.allProfiles = [
+                serviceProfileWithAllowedLogin,
+                { ...serviceProfileWithAllowedLogin, name: "base", type: "base" },
+            ];
+
+            const updateBaseProfileFileLoginSpy = vi.spyOn(blockMocks.testCache, "updateBaseProfileFileLogin");
+
+            const loginSpy = vi.spyOn(Login, "apimlLogin");
+
+            // user cancelled the cert wizard
+            const promptCertMock = vi.spyOn(ZoweVsCodeExtension.profilesCache as any, "promptCertificate").mockResolvedValue(undefined);
+            const quickPickMock = vi.spyOn(Gui, "showQuickPick");
+            const ssoLoginReturn = await ZoweVsCodeExtension.ssoLogin({ serviceProfile: serviceProfileWithAllowedLogin });
+
+            expect(loginSpy).not.toHaveBeenCalled();
+            expect(promptCertMock).toHaveBeenCalled();
+            expect(quickPickMock).not.toHaveBeenCalled();
+            expect(updateBaseProfileFileLoginSpy).not.toHaveBeenCalled();
+            expect(ssoLoginReturn).toBe(false);
+            promptCertMock.mockRestore();
+        });
+
+        it("prompts for username and password without showing a quick pick if allowedLoginMethod=apiml-basic", async () => {
+            vi.spyOn(blockMocks.testCache, "fetchBaseProfile").mockResolvedValue(blockMocks.baseProfile);
+            const serviceProfileWithAllowedLogin = {
+                name: "service",
+                profile: {
+                    host: "example",
+                    allowedLoginMethod: imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_BASIC,
+                },
+                type: "zosmf",
+                message: "",
+                failNotFound: true,
+            };
+            ZoweVsCodeExtension.profilesCache.allProfiles = [
+                serviceProfileWithAllowedLogin,
+                { ...serviceProfileWithAllowedLogin, name: "base", type: "base" },
+            ];
+
+            const updateBaseProfileFileLoginSpy = vi.spyOn(blockMocks.testCache, "updateBaseProfileFileLogin");
+            const promptUserPassSpy = vi.spyOn(ZoweVsCodeExtension as any, "promptUserPass").mockResolvedValue(["abc", "def"]);
+            let sessionCopy;
+            const loginSpy = vi.spyOn(Login, "apimlLogin").mockImplementation((session: imperative.Session) => {
+                sessionCopy = Object.assign(Object.create(Object.getPrototypeOf(session)), session);
+                return Promise.resolve("tokenValue");
+            });
+
+            // Assume user provides proper certificate and keyfile
+            const promptCertMock = vi.spyOn(ZoweVsCodeExtension.profilesCache as any, "promptCertificate");
+            const quickPickMock = vi.spyOn(Gui, "showQuickPick");
+            await ZoweVsCodeExtension.ssoLogin({ serviceProfile: serviceProfileWithAllowedLogin });
+
+            expect(sessionCopy.ISession.type).toBe(imperative.SessConstants.AUTH_TYPE_TOKEN);
+            expect(loginSpy).toHaveBeenCalledWith(sessionCopy);
+            expect(promptCertMock).not.toHaveBeenCalled();
+            expect(promptUserPassSpy).toHaveBeenCalled();
+            expect(quickPickMock).not.toHaveBeenCalled();
+            expect(updateBaseProfileFileLoginSpy).toHaveBeenCalledWith(blockMocks.baseProfile, blockMocks.updProfile, false);
+            promptCertMock.mockRestore();
+        });
     });
     describe("onProfileUpdated", () => {
         it("returns event defined on API register", () => {
@@ -692,7 +881,7 @@ describe("ZoweVsCodeExtension", () => {
                 updateCachedProfile: vi.fn(),
             });
             const showInputBoxSpy = vi.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
-            const saveCredentialsSpy = vi.spyOn(ZoweVsCodeExtension as any, "saveCredentials");
+            const promptToSaveSpy = vi.spyOn(ZoweVsCodeExtension, "shouldSaveInPlainTextPrompt");
             const addCredsToSessionSpy = vi.spyOn(imperative.AuthOrder, "addCredsToSession");
 
             const profileLoaded: imperative.IProfileLoaded = await ZoweVsCodeExtension.updateCredentials(
@@ -702,7 +891,7 @@ describe("ZoweVsCodeExtension", () => {
             expect(profileLoaded.profile?.user).toBe("fakeUser");
             expect(profileLoaded.profile?.password).toBe("fakePassword");
             expect(showInputBoxSpy).toHaveBeenCalledTimes(2);
-            expect(saveCredentialsSpy).toHaveBeenCalledTimes(0);
+            expect(promptToSaveSpy).toHaveBeenCalledTimes(0);
             expect(mockUpdateProperty).toHaveBeenCalledTimes(2);
             expect(addCredsToSessionSpy).toHaveBeenCalledTimes(1);
             expect(addCredsToSessionSpy.mock.calls[0][0]).toEqual(profileLoaded.profile);
@@ -730,7 +919,7 @@ describe("ZoweVsCodeExtension", () => {
                 updateCachedProfile: vi.fn(),
             });
             const showInputBoxSpy = vi.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
-            const saveCredentialsSpy = vi.spyOn(ZoweVsCodeExtension as any, "saveCredentials");
+            const promptToSaveSpy = vi.spyOn(ZoweVsCodeExtension, "shouldSaveInPlainTextPrompt");
             const addCredsToSessionSpy = vi.spyOn(imperative.AuthOrder, "addCredsToSession");
 
             const profileLoaded: imperative.IProfileLoaded = await ZoweVsCodeExtension.updateCredentials(
@@ -743,7 +932,7 @@ describe("ZoweVsCodeExtension", () => {
             expect(profileLoaded.profile?.user).toBe("fakeUser");
             expect(profileLoaded.profile?.password).toBe("fakePassword");
             expect(showInputBoxSpy).toHaveBeenCalledTimes(2);
-            expect(saveCredentialsSpy).toHaveBeenCalledTimes(0);
+            expect(promptToSaveSpy).toHaveBeenCalledTimes(0);
             expect(mockUpdateProperty).toHaveBeenCalledTimes(2);
 
             expect(addCredsToSessionSpy).toHaveBeenCalledTimes(1);
@@ -773,7 +962,7 @@ describe("ZoweVsCodeExtension", () => {
             });
             const showInputBoxSpy = vi.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
             vi.spyOn(Gui, "showMessage").mockResolvedValueOnce("yes");
-            const saveCredentialsSpy = vi.spyOn(ZoweVsCodeExtension as any, "saveCredentials");
+            const promptToSaveSpy = vi.spyOn(ZoweVsCodeExtension, "shouldSaveInPlainTextPrompt");
             const addCredsToSessionSpy = vi.spyOn(imperative.AuthOrder, "addCredsToSession");
 
             const profileLoaded: imperative.IProfileLoaded = await ZoweVsCodeExtension.updateCredentials(
@@ -783,7 +972,7 @@ describe("ZoweVsCodeExtension", () => {
             expect(profileLoaded.profile?.user).toBe("fakeUser");
             expect(profileLoaded.profile?.password).toBe("fakePassword");
             expect(showInputBoxSpy).toHaveBeenCalledTimes(2);
-            expect(saveCredentialsSpy).toHaveBeenCalledTimes(1);
+            expect(promptToSaveSpy).toHaveBeenCalledTimes(1);
             expect(mockUpdateProperty).toHaveBeenCalledTimes(2);
             expect(addCredsToSessionSpy).toHaveBeenCalledTimes(1);
             expect(addCredsToSessionSpy.mock.calls[0][0]).toEqual(profileLoaded.profile);
@@ -812,7 +1001,7 @@ describe("ZoweVsCodeExtension", () => {
             });
             const showInputBoxSpy = vi.spyOn(Gui, "showInputBox").mockResolvedValueOnce("fakeUser").mockResolvedValueOnce("fakePassword");
             vi.spyOn(Gui, "showMessage").mockResolvedValueOnce(undefined);
-            const saveCredentialsSpy = vi.spyOn(ZoweVsCodeExtension as any, "saveCredentials");
+            const promptToSaveSpy = vi.spyOn(ZoweVsCodeExtension, "shouldSaveInPlainTextPrompt");
             const profileLoaded: imperative.IProfileLoaded = await ZoweVsCodeExtension.updateCredentials(
                 promptCredsOptions,
                 undefined as unknown as Types.IApiRegisterClient
@@ -820,7 +1009,7 @@ describe("ZoweVsCodeExtension", () => {
             expect(profileLoaded.profile?.user).toBe("fakeUser");
             expect(profileLoaded.profile?.password).toBe("fakePassword");
             expect(showInputBoxSpy).toHaveBeenCalledTimes(2);
-            expect(saveCredentialsSpy).toHaveBeenCalledTimes(1);
+            expect(promptToSaveSpy).toHaveBeenCalledTimes(1);
             expect(mockUpdateProperty).toHaveBeenCalledTimes(0);
         });
 
@@ -959,32 +1148,6 @@ describe("ZoweVsCodeExtension", () => {
         });
     });
 
-    describe("promptCertificate", () => {
-        it("should set up options related to certificates", async () => {
-            const options: PromptCredentialsOptions.CertificateOptions = {
-                session: {
-                    cert: undefined,
-                    certKey: undefined,
-                },
-                openDialogOptions: {},
-                profile: {
-                    profile: {
-                        cert: "/test/cert/path",
-                        certKey: "/test/key/path",
-                    },
-                } as any,
-            };
-
-            vi.spyOn(vscode.commands, "executeCommand").mockResolvedValue({
-                cert: options.profile?.profile?.cert,
-                certKey: options.profile?.profile?.certKey,
-            });
-
-            await (ZoweVsCodeExtension as any).promptCertificate(options);
-            expect(options.session.cert).toEqual("/test/cert/path");
-            expect(options.session.certKey).toEqual("/test/key/path");
-        });
-    });
     describe("Direct connect token authentication methods", () => {
         let blockMocks: ReturnType<typeof createBlockMocks>;
         const expectedSession = new imperative.Session({

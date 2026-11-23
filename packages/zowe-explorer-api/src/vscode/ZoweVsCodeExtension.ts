@@ -137,7 +137,7 @@ export class ZoweVsCodeExtension {
             let shouldSave = true;
             const autoStoreValue = (await this.profilesCache.getProfileInfo()).getTeamConfig().properties.autoStore;
             if (!setSecure && autoStoreValue) {
-                shouldSave = await ZoweVsCodeExtension.saveCredentials(loadProfile);
+                shouldSave = await ZoweVsCodeExtension.shouldSaveInPlainTextPrompt(loadProfile);
             }
 
             if (shouldSave) {
@@ -186,6 +186,10 @@ export class ZoweVsCodeExtension {
         const cache: ProfilesCache = opts.zeProfiles ?? ZoweVsCodeExtension.profilesCache;
         const serviceProfile = await this.getServiceProfile(opts);
         const baseProfile = await cache.fetchBaseProfile(serviceProfile.name);
+        const allowedLoginMethod: string = cache.getAllowedLoginMethod(serviceProfile);
+        imperative.Logger.getAppLogger().debug(
+            `ssoLogin called for profile ${serviceProfile.name} (type: ${serviceProfile.type}), allowedLoginMethod=${allowedLoginMethod}`
+        );
         if (baseProfile == null) {
             Gui.errorMessage(
                 `Login failed: No base or parent profile found to store SSO token for profile "${serviceProfile.name}". ` +
@@ -196,9 +200,15 @@ export class ZoweVsCodeExtension {
         }
         const primaryProfile = opts.preferBaseToken ? baseProfile : serviceProfile;
         const secondaryProfile = opts.preferBaseToken ? serviceProfile : baseProfile;
-        const tokenType =
-            primaryProfile.profile.tokenType ??
-            secondaryProfile.profile.tokenType ??
+        let tokenType: string | undefined =
+            allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_BASIC ||
+            allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_CERT_PEM
+                ? imperative.SessConstants.TOKEN_TYPE_APIML
+                : undefined;
+
+        tokenType =
+            (tokenType || primaryProfile?.profile?.tokenType) ??
+            secondaryProfile?.profile?.tokenType ??
             opts.defaultTokenType ??
             imperative.SessConstants.TOKEN_TYPE_APIML;
         const updSession = new imperative.Session({
@@ -217,10 +227,23 @@ export class ZoweVsCodeExtension {
             { label: "$(account) User and Password", description: "Log in with basic authentication" },
             { label: "$(note) Certificate", description: "Log in with PEM format certificate file" },
         ];
-        const response = await Gui.showQuickPick(qpItems, {
-            placeHolder: "Select an authentication method for obtaining token",
-            title: `[${baseProfile.name}] Log in to Authentication Service`,
-        });
+        let response: vscode.QuickPickItem | undefined = undefined;
+        if (allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_PROMPT) {
+            response = await Gui.showQuickPick(qpItems, {
+                placeHolder: "Select an authentication method for obtaining token",
+                title: `[${baseProfile.name}] Log in to Authentication Service`,
+            });
+        } else if (
+            allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_APIML_CERT_PEM ||
+            allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_CERT_PEM
+        ) {
+            // use certificate auth
+            response = qpItems[1];
+        } else {
+            // assume basic auth
+            response = qpItems[0];
+        }
+
         if (response === qpItems[0]) {
             const creds = await ZoweVsCodeExtension.promptUserPass({ session: updSession.ISession, rePrompt: true });
             if (!creds) {
@@ -235,7 +258,21 @@ export class ZoweVsCodeExtension {
             imperative.AuthOrder.putNewAuthsFirstInSess(updSession.ISession, [imperative.SessConstants.AUTH_TYPE_BASIC], { onlyTheseAuths: true });
         } else if (response === qpItems[1]) {
             try {
-                await ZoweVsCodeExtension.promptCertificate({ profile: serviceProfile, session: updSession.ISession, rePrompt: true });
+                const certResponse = await cache.promptCertificate({
+                    profile: serviceProfile,
+                    rePrompt: true,
+                    saveButtonText: vscode.l10n.t(`Save and Log In`),
+                    showLoginButton: true,
+                });
+                if (certResponse) {
+                    updSession.ISession.cert = certResponse.cert;
+                    updSession.ISession.certKey = certResponse.certKey;
+                } else {
+                    imperative.Logger.getAppLogger().warn(
+                        `promptCertificate returned no response. The certificate will not be updated on the session.`
+                    );
+                    return false;
+                }
             } catch (err) {
                 return false;
             }
@@ -295,7 +332,9 @@ export class ZoweVsCodeExtension {
     }
 
     /**
-     * Trigger a direct connection login process, not via API ML
+     * Trigger a direct connection login process.
+     *
+     * Do not call this for `zosmf` type profiles, because that will trigger an APIML login.
      *
      * @param {imperative.IProfileLoaded} [serviceProfile] Instance of profile to be used for obtaining token
      * @param {Types.IApiRegisterClient} [zeRegister] Instance of `IApiRegisterClient`
@@ -343,15 +382,16 @@ export class ZoweVsCodeExtension {
     }
 
     /**
-     * Trigger a logout operation with the merged contents between the service profile and the base profile.
-     *  If the connection details (host:port) do not match (service vs base), the token will be removed from the service profile.
-     *  If there is no API registered for the profile type, this method defaults the logout behavior to that of the APIML.
+     * Log out using a service profile and its resolved base profile, or an explicit base profile.
+     * Base profiles use API ML directly; service profiles use the registered logout implementation when provided.
+     * Removes the stored token after successful revocation.
      * @param {BaseProfileAuthOptions} opts Object defining options for base profile authentication
      */
     public static async ssoLogout(opts: BaseProfileAuthOptions): Promise<boolean> {
         const cache: ProfilesCache = opts.zeProfiles ?? ZoweVsCodeExtension.profilesCache;
         const serviceProfile = await this.getServiceProfile(opts);
-        const baseProfile = await cache.fetchBaseProfile(serviceProfile.name);
+        const isBaseProfile = serviceProfile.type === "base";
+        const baseProfile = isBaseProfile ? serviceProfile : await cache.fetchBaseProfile(serviceProfile.name);
         if (!baseProfile) {
             Gui.errorMessage(
                 `Logout failed: No base or parent profile found to remove SSO token for profile "${serviceProfile.name}". ` +
@@ -374,7 +414,8 @@ export class ZoweVsCodeExtension {
             tokenType,
             tokenValue: primaryProfile.profile.tokenValue ?? secondaryProfile.profile.tokenValue,
         });
-        await (opts.zeRegister?.getCommonApi(serviceProfile).logout ?? Logout.apimlLogout)(updSession);
+        const commonApi = isBaseProfile ? undefined : opts.zeRegister?.getCommonApi(serviceProfile);
+        await (commonApi?.logout ?? Logout.apimlLogout)(updSession);
 
         // If active profile is nested (e.g. lpar.zosmf), then update service profile since base profile may be typeless
         const connOk =
@@ -675,7 +716,7 @@ export class ZoweVsCodeExtension {
         return retP;
     }
 
-    private static async saveCredentials(profile: imperative.IProfileLoaded): Promise<boolean> {
+    public static async shouldSaveInPlainTextPrompt(profile: imperative.IProfileLoaded): Promise<boolean> {
         let save = false;
         const saveButton = "Save Credentials";
         const message = [
@@ -700,7 +741,7 @@ export class ZoweVsCodeExtension {
                 : undefined;
             newUser = await Gui.showInputBox({
                 placeHolder: "User Name",
-                prompt: "Enter the user name for the connection." + (options.rePrompt ? "" : " Leave blank to not store."),
+                prompt: "Enter the user name for the connection." + (options.rePrompt ? "" : " Leave blank to cancel."),
                 ignoreFocusOut: true,
                 value: newUser,
                 ...(options.userInputBoxOptions ?? {}),
@@ -723,7 +764,7 @@ export class ZoweVsCodeExtension {
         if (!newPass || options.rePrompt) {
             newPass = await Gui.showInputBox({
                 placeHolder: "Password",
-                prompt: "Enter the password for the connection." + (options.rePrompt ? "" : " Leave blank to not store."),
+                prompt: "Enter the password for the connection." + (options.rePrompt ? "" : " Leave blank to cancel."),
                 password: true,
                 ignoreFocusOut: true,
                 value: newPass,

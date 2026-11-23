@@ -85,7 +85,7 @@ export interface IZoweTree<T> extends vscode.TreeDataProvider<T>, Partial<vscode
     /**
      * Reloads persisted session names from storage after external updates (e.g. profile rename).
      */
-    reloadSessionsFromPersistence(): void;
+    reloadSessionsFromPersistence?(): void;
 
     /**
      * Add a new session to the container

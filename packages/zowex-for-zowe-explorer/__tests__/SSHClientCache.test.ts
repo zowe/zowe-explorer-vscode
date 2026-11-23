@@ -267,7 +267,6 @@ describe("SshClientCache", () => {
 
             await cache.connect(mockProfile);
 
-            expect(Gui.setStatusBarMessage).toHaveBeenCalledWith(expect.stringContaining("Starting Zowe Remote SSH server"));
             expect(disposeSpy).toHaveBeenCalled();
         });
 
@@ -744,7 +743,7 @@ describe("SshClientCache", () => {
             await (cache as any).reloadClient(mockProfile);
 
             expect(Gui.setStatusBarMessage).toHaveBeenCalledWith(
-                expect.stringContaining("Restarting Zowe Remote SSH server"),
+                expect.stringContaining("$(sync~spin)"),
                 expect.anything() // the reconnectPromise thenable — VS Code auto-disposes when it settles
             );
         });
@@ -759,7 +758,7 @@ describe("SshClientCache", () => {
             // The spinner is shown immediately (before the await), so it is always created.
             // VS Code auto-dismisses it when the hideAfterTimeout promise rejects; dispose() is
             // only called explicitly on the success path.
-            expect(Gui.setStatusBarMessage).toHaveBeenCalledWith(expect.stringContaining("Restarting Zowe Remote SSH server"), expect.anything());
+            expect(Gui.setStatusBarMessage).toHaveBeenCalledWith(expect.stringContaining("$(sync~spin)"), expect.anything());
             expect(disposeSpy).not.toHaveBeenCalled();
         });
 

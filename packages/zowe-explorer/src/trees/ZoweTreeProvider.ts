@@ -13,6 +13,7 @@ import * as vscode from "vscode";
 import { IZoweTreeNode, imperative, Types, IZoweTree, PersistenceSchemaEnum, Validation, AuthHandler } from "@zowe/zowe-explorer-api";
 import { ZowePersistentFilters } from "../tools/ZowePersistentFilters";
 import { ZoweLogger } from "../tools/ZoweLogger";
+import { ReadOnlyManagement } from "../management/ReadOnlyManagement";
 import { Profiles } from "../configuration/Profiles";
 import { SharedContext } from "./shared/SharedContext";
 import { Constants, JwtCheckResult } from "../configuration/Constants";
@@ -49,7 +50,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
      */
     public getTreeItem(element: IZoweTreeNode): vscode.TreeItem | Thenable<vscode.TreeItem> {
         ZoweLogger.trace("ZoweTreeProvider.getTreeItem called.");
-        return element;
+        return ReadOnlyManagement.getTreeItem(element);
     }
 
     public getParent(element: T): vscode.ProviderResult<T> {
@@ -243,6 +244,10 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
             treeProvider.removeSession(node.getLabel() as string);
             treeProvider.refresh();
         }
+        const profile = node.getProfile?.();
+        if (profile) {
+            ZoweExplorerApiRegister.getInstance().onProfileHiddenEmitter.fire(profile);
+        }
     }
 
     public async editSession(node: IZoweTreeNode): Promise<void> {
@@ -301,7 +306,13 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
 
         let jwtCheckResult: JwtCheckResult;
         const sessTypeFromProf = AuthHandler.sessTypeFromProfile(profile);
-        if (sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_TOKEN || sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_BEARER) {
+        const usingDirectAuth =
+            profile.profile.allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_BASIC ||
+            profile.profile.allowedLoginMethod === imperative.SessConstants.ALLOWED_LOGIN_METHOD_DIRECT_CERT_PEM;
+        if (
+            !usingDirectAuth &&
+            (sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_TOKEN || sessTypeFromProf === imperative.SessConstants.AUTH_TYPE_BEARER)
+        ) {
             jwtCheckResult = await ZoweTreeProvider.checkJwtForProfile(profileName);
         } else {
             jwtCheckResult = JwtCheckResult.TokenUnusedOrUnsupported;
@@ -311,6 +322,7 @@ export class ZoweTreeProvider<T extends IZoweTreeNode> {
             // Mark profile as inactive if user dismissed "token expired/login" prompt or login failed
             profileStatus.status = "inactive";
             Profiles.getInstance().validProfile = Validation.ValidationType.INVALID;
+            ZoweExplorerApiRegister.getInstance().onProfileInvalidatedEmitter.fire(profile);
         }
         if (profileStatus.status === "inactive") {
             if (

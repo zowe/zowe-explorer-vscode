@@ -10,8 +10,8 @@
  */
 
 import { ConfigEditorProfileOperations } from "../../../../src/utils/ConfigEditorProfileOperations";
-import { ConfigMoveAPI, IConfigLayer } from "../../../../src/webviews/src/config-editor/types";
-import { vi, Mock, type MockInstance } from "vitest";
+import type { ConfigMoveAPI } from "../../../../src/webviews/src/config-editor/types";
+import { afterEach, beforeEach, describe, expect, it, vi, type Mock, type MockInstance } from "vitest";
 import * as vscode from "vscode";
 import { ConfigUtils } from "../../../../src/utils/ConfigUtils";
 import { ConfigEditorPathUtils } from "../../../../src/utils/ConfigEditorPathUtils";
@@ -112,176 +112,16 @@ describe("ConfigEditorProfileOperations", () => {
     });
 
     describe("createNestedProfileStructure", () => {
-        let mockConfigMoveAPI: ConfigMoveAPI;
-        let mockLayerActive: () => IConfigLayer;
-
-        beforeEach(() => {
-            mockConfigMoveAPI = {
-                get: vi.fn() as any,
-                set: vi.fn() as any,
-                delete: vi.fn() as any,
+        it("rejects a missing source before changing the configuration", () => {
+            const configMoveAPI: ConfigMoveAPI = {
+                get: vi.fn().mockReturnValue(null),
+                set: vi.fn(),
+                delete: vi.fn(),
             };
-            mockLayerActive = vi.fn().mockReturnValue({
-                properties: {
-                    profiles: {},
-                },
-            }) as any;
-        });
-
-        it("should create nested profile structure", () => {
-            const originalProfile = { host: "localhost", port: 8080 };
-            (mockConfigMoveAPI.get as any).mockReturnValue(originalProfile);
-
-            profileOperations.createNestedProfileStructure(
-                mockConfigMoveAPI,
-                mockLayerActive,
-                "profiles.parent",
-                "profiles.parent.profiles.child",
-                "parent",
-                "parent.child"
-            );
-
-            expect(mockConfigMoveAPI.set).toHaveBeenCalledWith("profiles.parent", {
-                host: "localhost",
-                port: 8080,
-                profiles: {
-                    child: originalProfile,
-                },
-            });
-            expect(mockConfigMoveAPI.set).toHaveBeenCalledWith("profiles.parent.profiles.child", {
-                host: "localhost",
-                port: 8080,
-            });
-        });
-
-        it("should throw error when source profile not found", () => {
-            (mockConfigMoveAPI.get as any).mockReturnValue(null);
-
-            expect(() => {
-                profileOperations.createNestedProfileStructure(
-                    mockConfigMoveAPI,
-                    mockLayerActive,
-                    "profiles.nonexistent",
-                    "profiles.nonexistent.profiles.child",
-                    "nonexistent",
-                    "nonexistent.child"
-                );
-            }).toThrow("Source profile not found at path: profiles.nonexistent");
-        });
-
-        it("should handle profile with existing profiles property", () => {
-            const originalProfile = { host: "localhost", profiles: { existing: {} } };
-            (mockConfigMoveAPI.get as any).mockReturnValue(originalProfile);
-
-            profileOperations.createNestedProfileStructure(
-                mockConfigMoveAPI,
-                mockLayerActive,
-                "profiles.parent",
-                "profiles.parent.profiles.child",
-                "parent",
-                "parent.child"
-            );
-
-            expect(mockConfigMoveAPI.set).toHaveBeenCalledWith("profiles.parent", {
-                host: "localhost",
-                profiles: {
-                    child: originalProfile,
-                },
-            });
-            expect(mockConfigMoveAPI.set).toHaveBeenCalledWith("profiles.parent.profiles.child", {
-                host: "localhost",
-            });
-        });
-
-        it("should move secure properties from parent to child", () => {
-            const originalProfile = { host: "localhost", secure: ["password", "token"] };
-            (mockConfigMoveAPI.get as any)
-                .mockReturnValueOnce(originalProfile) // First call for original profile
-                .mockReturnValueOnce(originalProfile) // Second call for secure properties
-                .mockReturnValueOnce({ host: "localhost" }) // Third call for child profile
-                .mockReturnValueOnce({ host: "localhost", secure: ["password", "token"] }); // Fourth call for parent profile
-
-            profileOperations.createNestedProfileStructure(
-                mockConfigMoveAPI,
-                mockLayerActive,
-                "profiles.parent",
-                "profiles.parent.profiles.child",
-                "parent",
-                "parent.child"
-            );
-
-            expect(mockConfigMoveAPI.set).toHaveBeenCalledWith("profiles.parent.profiles.child.secure", ["password", "token"]);
-            expect(mockConfigMoveAPI.set).toHaveBeenCalledWith("profiles.parent", {
-                host: "localhost",
-                profiles: {
-                    child: originalProfile,
-                },
-                secure: ["password", "token"],
-            });
-        });
-
-        it("should handle secure properties when child profile is null", () => {
-            const originalProfile = { host: "localhost", secure: ["password"] };
-            (mockConfigMoveAPI.get as any)
-                .mockReturnValueOnce(originalProfile) // First call for original profile
-                .mockReturnValueOnce(originalProfile) // Second call for secure properties
-                .mockReturnValueOnce(null); // Third call for child profile returns null
-
-            profileOperations.createNestedProfileStructure(
-                mockConfigMoveAPI,
-                mockLayerActive,
-                "profiles.parent",
-                "profiles.parent.profiles.child",
-                "parent",
-                "parent.child"
-            );
-
-            // Should not call set for child secure properties when child is null
-            expect(mockConfigMoveAPI.set).not.toHaveBeenCalledWith("profiles.parent.profiles.child.secure", expect.anything());
-        });
-
-        it("should handle secure properties when parent profile has no secure property", () => {
-            const originalProfile = { host: "localhost" };
-            (mockConfigMoveAPI.get as any)
-                .mockReturnValueOnce(originalProfile) // First call for original profile
-                .mockReturnValueOnce(originalProfile) // Second call for secure properties
-                .mockReturnValueOnce({ host: "localhost" }) // Third call for child profile
-                .mockReturnValueOnce({ host: "localhost" }); // Fourth call for parent profile (no secure)
-
-            profileOperations.createNestedProfileStructure(
-                mockConfigMoveAPI,
-                mockLayerActive,
-                "profiles.parent",
-                "profiles.parent.profiles.child",
-                "parent",
-                "parent.child"
-            );
-
-            // When there are no secure properties, the secure properties movement should not be called
-            expect(mockConfigMoveAPI.set).not.toHaveBeenCalledWith("profiles.parent.profiles.child.secure", expect.anything());
-        });
-
-        it("should handle errors in secure properties movement gracefully", () => {
-            const originalProfile = { host: "localhost", secure: ["password"] };
-            (mockConfigMoveAPI.get as any)
-                .mockReturnValueOnce(originalProfile) // First call for original profile
-                .mockImplementationOnce(() => {
-                    throw new Error("Secure properties error");
-                }); // Second call throws error
-
-            // Should not throw error even if secure properties movement fails
-            expect(() => {
-                profileOperations.createNestedProfileStructure(
-                    mockConfigMoveAPI,
-                    mockLayerActive,
-                    "profiles.parent",
-                    "profiles.parent.profiles.child",
-                    "parent",
-                    "parent.child"
-                );
-            }).not.toThrow();
-
-            expect(warn).toHaveBeenCalledWith("Failed to move secure properties for nested profile creation: Error: Secure properties error");
+            expect(() =>
+                profileOperations.createNestedProfileStructure(configMoveAPI, "profiles.missing", "profiles.missing.profiles.child")
+            ).toThrow("Source profile not found at path: profiles.missing");
+            expect(configMoveAPI.set).not.toHaveBeenCalled();
         });
     });
 
@@ -819,19 +659,16 @@ describe("ConfigEditorProfileOperations", () => {
             expect(memory.save).not.toHaveBeenCalled();
         });
 
-        it("creates a nested profile with secure metadata at the child", () => {
+        it.each(["base.nested", "base.group.nested"])("preserves the complete source subtree at %s", (target) => {
             const memory = setup();
-            delete memory.config.layers[0].properties.profiles.base.profiles;
-            delete memory.config.layers[0].properties.defaults.zosmf;
-            apply(memory, "base", "base.nested");
+            const original = structuredClone(memory.config.layers[0].properties.profiles.base);
+            apply(memory, "base", target);
             const properties = memory.config.layers[0].properties;
+            expect(properties.profiles.base).not.toHaveProperty("properties");
             expect(properties.profiles.base).not.toHaveProperty("secure");
-            expect(findProfile(properties.profiles, "base.nested")).toMatchObject({
-                type: "base",
-                properties: { host: "original", password: "synthetic" },
-                secure: ["password"],
-            });
-            expect(properties.defaults.base).toBe("base.nested");
+            expect(properties.profiles.base).not.toHaveProperty("type");
+            expect(findProfile(properties.profiles, target)).toEqual(original);
+            expect(properties.defaults).toEqual({ base: target, zosmf: `${target}.child`, ssh: "unrelated" });
             expect(memory.save).not.toHaveBeenCalled();
         });
 
@@ -898,10 +735,6 @@ describe("ConfigEditorProfileOperations", () => {
     });
 
     describe("simulateProfileRenames", () => {
-        beforeEach(() => {
-            (ConfigEditorPathUtils.constructNestedProfilePath as Mock).mockImplementation((key: string) => `profiles.${key}`);
-        });
-
         it("should return early when renames array is empty", () => {
             const prepareSpy = vi.spyOn(profileOperations, "prepareRenamesForProcessing");
             profileOperations.simulateProfileRenames([], {} as any);
@@ -967,9 +800,10 @@ describe("ConfigEditorProfileOperations", () => {
 
             profileOperations.simulateProfileRenames(renames, teamConfig as any);
 
+            expect(teamConfig.set).toHaveBeenCalledWith("profiles.tso", {}, { parseString: true });
             expect(teamConfig.set).toHaveBeenCalledWith(
-                "profiles.tso",
-                expect.objectContaining({ profiles: { asdf: expect.objectContaining({ type: "tso" }) } }),
+                "profiles.tso.profiles.asdf",
+                { type: "tso", properties: { host: "test.host.com" } },
                 { parseString: true }
             );
         });

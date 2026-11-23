@@ -182,11 +182,9 @@ export function clearCutProfileDefaults(
 ): PendingDefaultsMap {
     const sourceDefaults = { ...defaults[clipboard.configPath] };
     let changed = false;
-    const values = [
-        ...Object.entries(sourceDefaults).map(([key, entry]) => [key, entry.value]),
-        ...Object.entries(savedDefaults).map(([key, value]) => [key, String(value)]),
-    ];
-    for (const [type, value] of values) {
+    const types = new Set([...Object.keys(savedDefaults), ...Object.keys(sourceDefaults)]);
+    for (const type of types) {
+        const value = sourceDefaults[type]?.value ?? String(savedDefaults[type]);
         if ((value === clipboard.sourceKey || value.startsWith(clipboard.sourceKey + ".")) && sourceDefaults[type]?.value !== "") {
             sourceDefaults[type] = { value: "", path: [type] };
             changed = true;

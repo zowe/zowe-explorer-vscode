@@ -10,7 +10,7 @@
  */
 
 import type { Config, IConfigLayer as ImperativeConfigLayer, ProfileInfo } from "@zowe/imperative";
-import { ConfigMoveAPI, IConfigLayer } from "../webviews/src/config-editor/types";
+import type { ConfigMoveAPI } from "../webviews/src/config-editor/types";
 import { updateDefaultsAfterRename } from "../webviews/src/config-editor/utils/moveUtils";
 import { getEffectiveProfileKeys, resolveProfileDestination, resolveProfileKey } from "../webviews/src/config-editor/utils/profileConflicts";
 import { ConfigUtils } from "./ConfigUtils";
@@ -107,62 +107,16 @@ export class ConfigEditorProfileOperations {
     /**
      * Creates a nested profile structure when renaming a profile to create a parent-child relationship
      */
-    createNestedProfileStructure(
-        configMoveAPI: ConfigMoveAPI,
-        layerActive: () => IConfigLayer,
-        originalPath: string,
-        newPath: string,
-        originalKey: string,
-        newKey: string
-    ): void {
+    createNestedProfileStructure(configMoveAPI: ConfigMoveAPI, originalPath: string, newPath: string): void {
         const originalProfile = configMoveAPI.get(originalPath);
         if (!originalProfile) {
             throw new Error(`Source profile not found at path: ${originalPath}`);
         }
 
-        const childProfileName = newKey.substring(originalKey.length + 1);
-
-        const newParentProfile = {
-            ...originalProfile,
-            profiles: {
-                [childProfileName]: originalProfile,
-            },
-        };
-
-        const childProfile = { ...originalProfile };
-        delete childProfile.profiles;
-        configMoveAPI.set(originalPath, newParentProfile);
-        const childPath = `${originalPath}.profiles.${childProfileName}`;
-        configMoveAPI.set(childPath, childProfile);
-
-        this.moveSecurePropertiesForNestedProfile(configMoveAPI, originalPath, childPath);
-    }
-
-    /**
-     * Moves secure properties for nested profile creation
-     */
-    private moveSecurePropertiesForNestedProfile(configMoveAPI: ConfigMoveAPI, parentPath: string, childPath: string): void {
-        try {
-            const originalProfile = configMoveAPI.get(parentPath);
-            const secureProperties = originalProfile?.secure || [];
-
-            if (secureProperties.length > 0) {
-                const childProfile = configMoveAPI.get(childPath);
-                // The child normally inherits this metadata from the copied profile. Setting an
-                // existing array through the SDK appends the supplied value instead of replacing it.
-                if (childProfile && !childProfile.secure?.length) {
-                    configMoveAPI.set(`${childPath}.secure`, secureProperties);
-                }
-
-                const parentProfile = configMoveAPI.get(parentPath);
-                if (parentProfile && parentProfile.secure) {
-                    delete parentProfile.secure;
-                    configMoveAPI.set(parentPath, parentProfile);
-                }
-            }
-        } catch (error) {
-            console.warn(`Failed to move secure properties for nested profile creation: ${error}`);
-        }
+        // The vacated path becomes a new parent. Keep the complete source subtree,
+        // including credentials and their secure declarations, only at its destination.
+        configMoveAPI.set(originalPath, {});
+        configMoveAPI.set(newPath, originalProfile);
     }
 
     /**
@@ -285,7 +239,7 @@ export class ConfigEditorProfileOperations {
         }
 
         if (this.isNestedProfileCreation(rename.originalKey, rename.newKey)) {
-            this.createNestedProfileStructureDirectly(teamConfig, originalPath, newPath, rename.originalKey, rename.newKey);
+            this.createNestedProfileStructureDirectly(teamConfig, originalPath, newPath);
         } else {
             this.moveProfileDirectly(teamConfig, originalPath, newPath);
         }
@@ -323,20 +277,9 @@ export class ConfigEditorProfileOperations {
         };
     }
 
-    private createNestedProfileStructureDirectly(
-        teamConfig: Config,
-        originalPath: string,
-        newPath: string,
-        originalKey: string,
-        newKey: string
-    ): void {
+    private createNestedProfileStructureDirectly(teamConfig: Config, originalPath: string, newPath: string): void {
         const configAdapter = this.createTeamConfigAdapter(teamConfig);
-        const layerActive = (): { properties: { profiles: NestedProfilesMap } } => ({
-            properties: {
-                profiles: teamConfig.api.layers.get().properties.profiles as NestedProfilesMap,
-            },
-        });
-        this.createNestedProfileStructure(configAdapter, layerActive, originalPath, newPath, originalKey, newKey);
+        this.createNestedProfileStructure(configAdapter, originalPath, newPath);
     }
 
     private findNestedProfile(key: string, profilesObj: NestedProfilesMap | ProfileTreeNode | null | undefined): ProfileTreeNode | null {

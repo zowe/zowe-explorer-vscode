@@ -93,7 +93,7 @@ export class ConfigChangeHandlers {
         }
 
         if (!isSimulation) {
-            await configToUse.save();
+            await ConfigUtils.saveConfig(configToUse);
         }
     }
 
@@ -145,7 +145,7 @@ export class ConfigChangeHandlers {
 
         // Only save if not in simulation mode
         if (!isSimulation) {
-            await configToUse.save();
+            await ConfigUtils.saveConfig(configToUse);
         }
     }
 
@@ -159,7 +159,7 @@ export class ConfigChangeHandlers {
                 this.activateLayerIfNeeded(teamConfig, change.configPath);
                 teamConfig.set("autoStore", change.value, { parseString: true });
                 if (!isSimulation) {
-                    await teamConfig.save();
+                    await ConfigUtils.saveConfig(teamConfig);
                 }
             }
         }

@@ -9,7 +9,7 @@
  *
  */
 
-import { vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { Configuration } from "../../../../src/webviews/src/config-editor/types";
 import { createEditorConfig, createEditorLayer } from "../../../__mocks__/mockCreators/configEditor";
 import { ConfigEditorProfileOperations } from "../../../../src/utils/ConfigEditorProfileOperations";
@@ -187,6 +187,51 @@ describe("editorStore", () => {
             expect(memory.config.layers[0].properties.profiles).not.toHaveProperty("other");
             expect(memory.save).not.toHaveBeenCalled();
         }
+    });
+
+    it.each(["preview", "stage"])("preserves credentials and descendants when nesting under a reused name during %s", async (mode) => {
+        const { store, team } = makeEditor();
+        team.properties.profiles.base.secure = ["password"];
+        team.properties.profiles.base.profiles = { child: { type: "zosmf", properties: { port: 443 } } };
+        team.properties.defaults.zosmf = "base.child";
+        const loadedProfile = { ...structuredClone(team.properties.profiles.base), properties: { host: "original", password: "synthetic" } };
+
+        expect(store.getState().handleRenameProfile("base", "moved")).toBe(true);
+        store.setState({ wizardProfileName: "base", wizardSelectedType: "ssh", wizardProperties: [] });
+        store.getState().handleWizardCreateProfile();
+        expect(store.getState().handleRenameProfile("moved", "base.moved", true)).toBe(true);
+
+        const draft = store.getState().formatPendingChanges();
+        const memory = createEditorConfig([
+            createEditorLayer({ properties: { ...structuredClone(team.properties), profiles: { base: loadedProfile } } }),
+        ]);
+        const originalProfile = structuredClone(loadedProfile);
+        const operations = new ConfigEditorProfileOperations();
+        if (mode === "preview") operations.simulateProfileRenames(draft.renames, memory.config);
+        else operations.stageProfileRenames(draft.renames, memory.profileInfo);
+        await ConfigChangeHandlers.stageChanges(draft as unknown as LayerChangesPayload, memory.config);
+
+        expect(memory.config.layers[0].properties.profiles.base).toEqual({ type: "ssh", profiles: { moved: originalProfile } });
+        expect(memory.config.layers[0].properties.defaults).toEqual({ base: "base.moved", zosmf: "base.moved.child" });
+        expect(memory.save).not.toHaveBeenCalled();
+    });
+
+    it.each([
+        ["base", "other", "base", "other"],
+        ["base.child", "other", "base", "other"],
+        ["base", "other", "other", undefined],
+        ["base", undefined, "base", undefined],
+    ] as const)("uses the effective default after changing %s to %s and deleting %s", async (savedDefault, pendingDefault, deleted, expected) => {
+        const { store, team } = makeEditor();
+        team.properties.profiles.base.profiles = { child: { type: "base" } };
+        team.properties.profiles.other = { type: "base" };
+        team.properties.defaults.base = savedDefault;
+        if (pendingDefault !== undefined) store.getState().handleDefaultsChange("base", pendingDefault);
+        store.getState().confirmDeleteProfile(deleted);
+
+        const memory = createEditorConfig([createEditorLayer({ properties: structuredClone(team.properties) })]);
+        await ConfigChangeHandlers.stageChanges(store.getState().formatPendingChanges() as unknown as LayerChangesPayload, memory.config);
+        expect(memory.config.layers[0].properties.defaults.base).toBe(expected);
     });
 
     it("moves a new profile independently after reusing a saved profile's old name", () => {

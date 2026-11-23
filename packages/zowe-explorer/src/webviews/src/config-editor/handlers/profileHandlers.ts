@@ -187,6 +187,8 @@ export const handleDeleteProfile = (profileKey: string, props: ProfileHandlerCon
         let hasChanges = false;
 
         Object.entries(defaults).forEach(([profileType, defaultProfileName]) => {
+            // Pending defaults override saved defaults and were checked above.
+            if (updatedDefaults[profileType] !== undefined) return;
             const defaultProfileNameStr = String(defaultProfileName);
 
             if (profilesToCheck.includes(defaultProfileNameStr) || profilesToCheck.some((p) => defaultProfileNameStr.startsWith(p + "."))) {
