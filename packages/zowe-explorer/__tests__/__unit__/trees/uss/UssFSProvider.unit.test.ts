@@ -1241,6 +1241,24 @@ describe("UssFSProvider", () => {
             existsMock.mockRestore();
             lookupMock.mockRestore();
         });
+        it("throws FileNotFound when the host responds with a 404 for a path that does not exist", async () => {
+            const existsMock = vi.spyOn(UssFSProvider.instance, "exists").mockReturnValueOnce(false);
+            const listFilesMock = vi
+                .spyOn(UssFSProvider.instance, "listFiles")
+                .mockRejectedValueOnce(new imperative.ImperativeError({ msg: "Path name not found", errorCode: "404" }));
+
+            await expect(
+                (UssFSProvider.instance as any).fetchEntries(testUris.file, {
+                    isRoot: false,
+                    slashAfterProfilePos: testUris.file.path.indexOf("/", 1),
+                    profile: testProfile,
+                    profileName: testProfile.name,
+                })
+            ).rejects.toMatchObject({ code: "FileNotFound" });
+
+            existsMock.mockRestore();
+            listFilesMock.mockRestore();
+        });
 
         describe("file", () => {
             it("existing URI", async () => {

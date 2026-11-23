@@ -372,7 +372,16 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
 
         let resp: IZosFilesResponse;
         if (!entryExists) {
-            resp = await this.listFiles(uriInfo.profile, uri);
+            try {
+                resp = await this.listFiles(uriInfo.profile, uri);
+            } catch (err) {
+                // A path that does not exist on the host must surface as "FileNotFound" so that VS Code
+                // can proceed with creating it (e.g. `mkdirp` stats the path before calling `createDirectory`).
+                if (Number(err?.errorCode) === imperative.RestConstants.HTTP_STATUS_404 || err?.message?.includes("HTTP(S) status 404")) {
+                    throw vscode.FileSystemError.FileNotFound(uri);
+                }
+                throw err;
+            }
             if (!resp.success) {
                 throw vscode.FileSystemError.FileNotFound(uri);
             }
@@ -1208,6 +1217,7 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
      * @param uri The URI that represents a new directory path
      */
     public async createDirectory(uri: vscode.Uri): Promise<void> {
+        ZoweLogger.trace(`[UssFSProvider] createDirectory called with ${uri.toString()}`);
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         if (uriInfo.isRoot) {
             this.createLocalDirectory(uri);
