@@ -11,13 +11,14 @@ Feature: Context menu actions on profile tree items
     When the user switches to tree view mode
     And the user opens the context menu on tree profile "nested"
     Then the tree profile context menu offers these options
-      | option    | state    |
-      | Cut       | enabled  |
-      | Copy      | enabled  |
-      | Paste     | disabled |
-      | Duplicate | enabled  |
-      | Rename    | enabled  |
-      | Delete    | enabled  |
+      | option         | state    |
+      | Set as Default | enabled  |
+      | Cut            | enabled  |
+      | Copy           | enabled  |
+      | Paste          | disabled |
+      | Duplicate      | enabled  |
+      | Rename         | enabled  |
+      | Delete         | enabled  |
     When the user dismisses the tree profile context menu
     Then there are no pending changes in the Config Editor
 
@@ -32,6 +33,7 @@ Feature: Context menu actions on profile tree items
     When the user opens the context menu on tree profile "zosmf2"
     Then the tree profile context menu offers these options
       | option              | state   |
+      | Set as Default      | enabled |
       | Cut                 | enabled |
       | Copy                | enabled |
       | Paste as Child      | enabled |
@@ -132,13 +134,14 @@ Feature: Context menu actions on profile tree items
     And no defaults in "Global Team" point to the subtree "nested"
     When the user opens the context menu on tree profile "clipboard-target"
     Then the tree profile context menu offers these options
-      | option    | state    |
-      | Cut       | enabled  |
-      | Copy      | enabled  |
-      | Paste     | disabled |
-      | Duplicate | enabled  |
-      | Rename    | enabled  |
-      | Delete    | enabled  |
+      | option         | state    |
+      | Set as Default | enabled  |
+      | Cut            | enabled  |
+      | Copy           | enabled  |
+      | Paste          | disabled |
+      | Duplicate      | enabled  |
+      | Rename         | enabled  |
+      | Delete         | enabled  |
     When the user dismisses the tree profile context menu
     And the user selects the "Global Team" configuration tab
     Then tree profile "nested" is absent
