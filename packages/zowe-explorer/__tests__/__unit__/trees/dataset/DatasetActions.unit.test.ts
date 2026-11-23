@@ -9077,7 +9077,10 @@ describe("Dataset Actions Unit Tests - read-only data sets", () => {
                     const copyCrossLparSpy = mockMvsApi("copyDataSetCrossLpar");
                     const determineReplacementSpy = vi.spyOn(DatasetActions, "determineReplacement");
 
-                    await DatasetActions.copyPartitionedDatasets(pdsClipboard("ssh", "IBMUSER.SOURCE", "HELLO", "PRODJOB"), blockMocks.datasetSessionNode);
+                    await DatasetActions.copyPartitionedDatasets(
+                        pdsClipboard("ssh", "IBMUSER.SOURCE", "HELLO", "PRODJOB"),
+                        blockMocks.datasetSessionNode
+                    );
 
                     expect(errorMessageSpy).toHaveBeenCalledWith("IBMUSER.JCL(PRODJOB) is read-only.");
                     expect(determineReplacementSpy).not.toHaveBeenCalled();
@@ -9090,7 +9093,10 @@ describe("Dataset Actions Unit Tests - read-only data sets", () => {
                     const writeFileSpy = vi.spyOn(DatasetFSProvider.instance, "writeFile");
                     const determineReplacementSpy = vi.spyOn(DatasetActions, "determineReplacement");
 
-                    await DatasetActions.copyPartitionedDatasets(pdsClipboard("ssh", "IBMUSER.SOURCE", "HELLO", "PRODJOB"), blockMocks.datasetSessionNode);
+                    await DatasetActions.copyPartitionedDatasets(
+                        pdsClipboard("ssh", "IBMUSER.SOURCE", "HELLO", "PRODJOB"),
+                        blockMocks.datasetSessionNode
+                    );
 
                     expect(errorMessageSpy).toHaveBeenCalledWith("IBMUSER.JCL(PRODJOB) is read-only.");
                     expect(determineReplacementSpy).not.toHaveBeenCalled();
@@ -9102,10 +9108,18 @@ describe("Dataset Actions Unit Tests - read-only data sets", () => {
                     const copyCrossLparSpy = mockMvsApi("copyDataSetCrossLpar");
                     vi.spyOn(DatasetActions, "determineReplacement").mockResolvedValue("replace");
 
-                    await DatasetActions.copyPartitionedDatasets(pdsClipboard("ssh", "IBMUSER.SOURCE", "HELLO", "WORLD"), blockMocks.datasetSessionNode);
+                    await DatasetActions.copyPartitionedDatasets(
+                        pdsClipboard("ssh", "IBMUSER.SOURCE", "HELLO", "WORLD"),
+                        blockMocks.datasetSessionNode
+                    );
 
                     expect(errorMessageSpy).not.toHaveBeenCalledWith(expect.stringContaining("is read-only."));
-                    expect(copyCrossLparSpy).toHaveBeenCalledWith("IBMUSER.JCL", undefined, expect.objectContaining({ replace: true }), expect.anything());
+                    expect(copyCrossLparSpy).toHaveBeenCalledWith(
+                        "IBMUSER.JCL",
+                        undefined,
+                        expect.objectContaining({ replace: true }),
+                        expect.anything()
+                    );
                 });
             });
         });
