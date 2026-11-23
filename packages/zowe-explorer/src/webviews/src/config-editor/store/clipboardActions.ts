@@ -17,6 +17,7 @@ import {
     clearCutProfileDefaults,
     collectClipboardProfiles,
     getUniqueProfileKey,
+    hasCredentialsInClipboardProfiles,
     removeCutProfileChanges,
     stripCredentialsFromClipboardProfiles,
 } from "../utils/profileClipboard";
@@ -64,8 +65,9 @@ export function createClipboardActions(state: EditorRuntime) {
             deletions: state.deletions,
         });
     };
+    const propertySchema = config ? state.schemaValidations[config.configPath]?.propertySchema : undefined;
     const stripCredentials = (profiles: NonNullable<typeof profileClipboard>["profiles"]) =>
-        stripCredentialsFromClipboardProfiles(profiles, config ? state.schemaValidations[config.configPath]?.propertySchema : undefined);
+        stripCredentialsFromClipboardProfiles(profiles, propertySchema);
     const uniqueKey = (proposedKey: string) => getUniqueProfileKey(proposedKey, profileKeys);
     const addProfiles = (profiles: NonNullable<typeof profileClipboard>["profiles"], sourceKey: string, destinationKey: string) => {
         const changes = buildClipboardChanges(profiles, sourceKey, destinationKey);
@@ -73,9 +75,18 @@ export function createClipboardActions(state: EditorRuntime) {
         onProfileSelect(destinationKey);
     };
 
-    const copyProfile = (profileKey: string, isCut: boolean) => {
+    /**
+     * Copy a profile to the clipboard. A cut is a move, so it always keeps secure values.
+     * For a copy, `includeSecure` decides whether they are carried over; when it is omitted and the
+     * profile holds secure values, the user is asked first and nothing is copied until they answer.
+     */
+    const copyProfile = (profileKey: string, isCut: boolean, includeSecure?: boolean) => {
         if (!config) return;
         const collected = collectProfiles(profileKey);
+        if (!isCut && includeSecure === undefined && hasCredentialsInClipboardProfiles(collected, propertySchema)) {
+            state.setPendingClipboardPrompt({ action: "copy", profileKey });
+            return;
+        }
         setProfileClipboard({
             type: isCut ? "cut" : "copy",
             sourceKey: profileKey,
@@ -87,15 +98,29 @@ export function createClipboardActions(state: EditorRuntime) {
                     : undefined;
             })(),
             configPath: config.configPath,
-            // Cut is a move, so credentials travel with it; copy must not carry them over.
-            profiles: isCut ? collected : stripCredentials(collected),
+            profiles: isCut || includeSecure ? collected : stripCredentials(collected),
         });
     };
 
-    const duplicateProfile = (profileKey: string) => {
+    /** Duplicate a profile; `includeSecure` works as in {@link copyProfile}. */
+    const duplicateProfile = (profileKey: string, includeSecure?: boolean) => {
         if (!config) return;
+        const collected = collectProfiles(profileKey);
+        if (includeSecure === undefined && hasCredentialsInClipboardProfiles(collected, propertySchema)) {
+            state.setPendingClipboardPrompt({ action: "duplicate", profileKey });
+            return;
+        }
         const destinationKey = uniqueKey(profileKey + "_copy");
-        addProfiles(stripCredentials(collectProfiles(profileKey)), profileKey, destinationKey);
+        addProfiles(includeSecure ? collected : stripCredentials(collected), profileKey, destinationKey);
+    };
+
+    /** Apply the user's answer from the secure-values prompt to the copy or duplicate that opened it. */
+    const resolveClipboardPrompt = (includeSecure: boolean) => {
+        const prompt = state.pendingClipboardPrompt;
+        state.setPendingClipboardPrompt(null);
+        if (!prompt) return;
+        if (prompt.action === "copy") copyProfile(prompt.profileKey, false, includeSecure);
+        else duplicateProfile(prompt.profileKey, includeSecure);
     };
 
     const pasteProfile = (targetProfileKey: string | null) => {
@@ -141,5 +166,5 @@ export function createClipboardActions(state: EditorRuntime) {
         }
     };
 
-    return { profileClipboard, copyProfile, duplicateProfile, pasteProfile };
+    return { profileClipboard, copyProfile, duplicateProfile, pasteProfile, resolveClipboardPrompt };
 }

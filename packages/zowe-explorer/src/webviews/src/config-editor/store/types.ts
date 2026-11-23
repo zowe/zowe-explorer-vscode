@@ -65,6 +65,8 @@ export interface HistoryState {
 
 export interface ClipboardState {
     profileClipboard: ProfileClipboard | null;
+    /** Set while the user is being asked whether a copy or duplicate should carry secure values. */
+    pendingClipboardPrompt: { action: "copy" | "duplicate"; profileKey: string } | null;
 }
 
 export interface LifecycleState {

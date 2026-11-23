@@ -63,6 +63,7 @@ export function createEditorData(): EditorData {
 
         // Clipboard
         profileClipboard: null,
+        pendingClipboardPrompt: null,
 
         // Lifecycle
         isSaving: false,

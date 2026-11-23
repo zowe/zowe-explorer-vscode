@@ -87,7 +87,7 @@ describe("clipboardActions credential guard", () => {
     describe("duplicateProfile", () => {
         it("creates the copy without user, password or token fields for an rse profile", () => {
             const { store } = makeEditor();
-            store.getState().duplicateProfile("rseProf");
+            store.getState().duplicateProfile("rseProf", false);
 
             expect(store.getState().selectedProfileKey).toBe("rseProf_copy");
             expect(draftProps(store, "rseProf_copy")).toEqual({ host: "example.com", port: 6800, encoding: "IBM-1047" });
@@ -98,7 +98,7 @@ describe("clipboardActions credential guard", () => {
 
         it("strips credentials from descendant profiles", () => {
             const { store } = makeEditor();
-            store.getState().duplicateProfile("rseProf");
+            store.getState().duplicateProfile("rseProf", false);
 
             expect(draftProps(store, "rseProf_copy.child")).toEqual({ host: "child.example.com" });
             expect(hasCredential(store, "rseProf_copy.child")).toBe(false);
@@ -110,7 +110,7 @@ describe("clipboardActions credential guard", () => {
             store.getState().handleChange("profiles.rseProf.properties.tokenType", "jwtToken");
             store.getState().handleChange("profiles.rseProf.properties.tokenExpiration", "2030-01-01");
             store.getState().handleChange("profiles.rseProf.properties.host", "edited.example.com");
-            store.getState().duplicateProfile("rseProf");
+            store.getState().duplicateProfile("rseProf", false);
 
             expect(draftProps(store, "rseProf_copy")).toMatchObject({ host: "edited.example.com" });
             expect(hasCredential(store, "rseProf_copy")).toBe(false);
@@ -123,32 +123,32 @@ describe("clipboardActions credential guard", () => {
                     "profiles.rseProf.properties.customSecret": { value: "s3cret", path: ["customSecret"], profile: "rseProf", secure: true },
                 },
             });
-            store.getState().duplicateProfile("rseProf");
+            store.getState().duplicateProfile("rseProf", false);
 
             expect(draftKeys(store, "rseProf_copy").some((key) => key.endsWith(".customSecret"))).toBe(false);
         });
 
         it("drops a schema-secure property even when it is stored as plain text outside the secure array", () => {
             const { store } = makeEditor();
-            store.getState().duplicateProfile("sshProf");
+            store.getState().duplicateProfile("sshProf", false);
 
             expect(draftProps(store, "sshProf_copy")).toEqual({ host: "ssh.example.com" });
         });
 
         it("falls back to the fixed credential list when no schema is loaded", () => {
             const { store } = makeEditor({ withSchema: false });
-            store.getState().duplicateProfile("rseProf");
+            store.getState().duplicateProfile("rseProf", false);
             expect(hasCredential(store, "rseProf_copy")).toBe(false);
             expect(draftProps(store, "rseProf_copy")).toEqual({ host: "example.com", port: 6800, encoding: "IBM-1047" });
 
             // keyPassphrase is only known through the schema, so without it the value is kept.
-            store.getState().duplicateProfile("sshProf");
+            store.getState().duplicateProfile("sshProf", false);
             expect(draftProps(store, "sshProf_copy")).toMatchObject({ keyPassphrase: "plain" });
         });
 
         it("drops fixed-list credentials from an untyped profile", () => {
             const { store } = makeEditor();
-            store.getState().duplicateProfile("plain");
+            store.getState().duplicateProfile("plain", false);
 
             expect(draftProps(store, "plain_copy")).toEqual({ host: "untyped" });
         });
@@ -163,7 +163,7 @@ describe("clipboardActions credential guard", () => {
         it("leaves the source profile and its secure list untouched", () => {
             const { store, config } = makeEditor();
             const before = structuredClone(config.properties.profiles.rseProf);
-            store.getState().duplicateProfile("rseProf");
+            store.getState().duplicateProfile("rseProf", false);
 
             expect(config.properties.profiles.rseProf).toEqual(before);
             expect(draftKeys(store, "rseProf")).toEqual([]);
@@ -171,8 +171,8 @@ describe("clipboardActions credential guard", () => {
 
         it("picks a unique name when duplicating repeatedly", () => {
             const { store } = makeEditor();
-            store.getState().duplicateProfile("rseProf");
-            store.getState().duplicateProfile("rseProf");
+            store.getState().duplicateProfile("rseProf", false);
+            store.getState().duplicateProfile("rseProf", false);
 
             expect(draftKeys(store, "rseProf_copy").length).toBeGreaterThan(0);
             expect(draftKeys(store, "rseProf_copy_1").length).toBeGreaterThan(0);
@@ -182,7 +182,7 @@ describe("clipboardActions credential guard", () => {
         it("does nothing when no configuration is selected", () => {
             const { store } = makeEditor();
             store.setState({ selectedTab: null });
-            store.getState().duplicateProfile("rseProf");
+            store.getState().duplicateProfile("rseProf", false);
 
             expect(store.getState().pendingChanges).toEqual({});
         });
@@ -191,7 +191,7 @@ describe("clipboardActions credential guard", () => {
     describe("copyProfile", () => {
         it("stores a credential-free snapshot when copying", () => {
             const { store } = makeEditor();
-            store.getState().copyProfile("rseProf", false);
+            store.getState().copyProfile("rseProf", false, false);
 
             const clipboard = store.getState().profileClipboard;
             expect(clipboard.type).toBe("copy");
@@ -204,7 +204,7 @@ describe("clipboardActions credential guard", () => {
 
         it("pastes a copied rse profile as a child without credentials", () => {
             const { store } = makeEditor();
-            store.getState().copyProfile("rseProf", false);
+            store.getState().copyProfile("rseProf", false, false);
             store.getState().pasteProfile("group");
 
             expect(store.getState().selectedProfileKey).toBe("group.rseProf");
@@ -216,7 +216,7 @@ describe("clipboardActions credential guard", () => {
 
         it("pastes a copied rse profile at the root level without credentials", () => {
             const { store } = makeEditor();
-            store.getState().copyProfile("rseProf", false);
+            store.getState().copyProfile("rseProf", false, false);
             store.getState().pasteProfile(null);
 
             expect(store.getState().selectedProfileKey).toBe("rseProf_1");
@@ -226,7 +226,7 @@ describe("clipboardActions credential guard", () => {
 
         it("uses the schema when copying a plain-text schema-secure property", () => {
             const { store } = makeEditor();
-            store.getState().copyProfile("sshProf", false);
+            store.getState().copyProfile("sshProf", false, false);
 
             expect(store.getState().profileClipboard?.profiles.sshProf.properties).toEqual({ host: "ssh.example.com" });
         });
@@ -240,6 +240,110 @@ describe("clipboardActions credential guard", () => {
             expect(profile.secure).toEqual(expect.arrayContaining(["user", "password", "tokenValue"]));
             expect(Object.keys(profile.properties)).toEqual(expect.arrayContaining(["user", "password", "tokenValue"]));
             expect(Object.keys(profile.secureSources ?? {})).toEqual(expect.arrayContaining(["user", "password", "tokenValue"]));
+        });
+    });
+
+    describe("secure values prompt", () => {
+        it("asks instead of duplicating when the profile has secure values", () => {
+            const { store } = makeEditor();
+            store.getState().duplicateProfile("rseProf");
+
+            expect(store.getState().pendingClipboardPrompt).toEqual({ action: "duplicate", profileKey: "rseProf" });
+            expect(draftKeys(store, "rseProf_copy")).toEqual([]);
+        });
+
+        it("asks instead of copying when the profile has secure values", () => {
+            const { store } = makeEditor();
+            store.getState().copyProfile("rseProf", false);
+
+            expect(store.getState().pendingClipboardPrompt).toEqual({ action: "copy", profileKey: "rseProf" });
+            expect(store.getState().profileClipboard).toBeNull();
+        });
+
+        it("duplicates without secure values when the user declines them", () => {
+            const { store } = makeEditor();
+            store.getState().duplicateProfile("rseProf");
+            store.getState().resolveClipboardPrompt(false);
+
+            expect(store.getState().pendingClipboardPrompt).toBeNull();
+            expect(hasCredential(store, "rseProf_copy")).toBe(false);
+            expect(hasCredential(store, "rseProf_copy.child")).toBe(false);
+        });
+
+        it("duplicates with secure values when the user accepts them", () => {
+            const { store } = makeEditor();
+            store.getState().duplicateProfile("rseProf");
+            store.getState().resolveClipboardPrompt(true);
+
+            expect(store.getState().pendingClipboardPrompt).toBeNull();
+            expect(draftKeys(store, "rseProf_copy").some((key) => key.endsWith(".password"))).toBe(true);
+            expect(draftKeys(store, "rseProf_copy.child").some((key) => key.endsWith(".password"))).toBe(true);
+            expect(store.getState().selectedProfileKey).toBe("rseProf_copy");
+        });
+
+        it("copies with secure values when the user accepts them, and pastes them", () => {
+            const { store } = makeEditor();
+            store.getState().copyProfile("rseProf", false);
+            store.getState().resolveClipboardPrompt(true);
+
+            expect(store.getState().profileClipboard?.type).toBe("copy");
+            expect(Object.keys(store.getState().profileClipboard.profiles.rseProf.properties)).toEqual(expect.arrayContaining(["user", "password"]));
+            store.getState().pasteProfile("group");
+            expect(draftKeys(store, "group.rseProf").some((key) => key.endsWith(".password"))).toBe(true);
+        });
+
+        it("copies without secure values when the user declines them", () => {
+            const { store } = makeEditor();
+            store.getState().copyProfile("rseProf", false);
+            store.getState().resolveClipboardPrompt(false);
+
+            expect(store.getState().profileClipboard.profiles.rseProf.properties).toEqual({ host: "example.com", port: 6800, encoding: "IBM-1047" });
+        });
+
+        it("does nothing when the prompt is cancelled", () => {
+            const { store } = makeEditor();
+            store.getState().duplicateProfile("rseProf");
+            store.getState().setPendingClipboardPrompt(null);
+
+            expect(store.getState().pendingClipboardPrompt).toBeNull();
+            expect(store.getState().pendingChanges).toEqual({});
+            expect(store.getState().profileClipboard).toBeNull();
+        });
+
+        it("does nothing when resolving without an open prompt", () => {
+            const { store } = makeEditor();
+            store.getState().resolveClipboardPrompt(true);
+
+            expect(store.getState().pendingChanges).toEqual({});
+            expect(store.getState().profileClipboard).toBeNull();
+        });
+
+        it("does not ask when the profile has no secure values", () => {
+            const { store } = makeEditor();
+            store.getState().duplicateProfile("tsoProf");
+            store.getState().copyProfile("tsoProf", false);
+
+            expect(store.getState().pendingClipboardPrompt).toBeNull();
+            expect(draftProps(store, "tsoProf_copy")).toEqual({ account: "ACCT" });
+            expect(store.getState().profileClipboard?.type).toBe("copy");
+        });
+
+        it("does not ask when cutting, because a cut moves the profile with its secure values", () => {
+            const { store } = makeEditor();
+            store.getState().copyProfile("rseProf", true);
+
+            expect(store.getState().pendingClipboardPrompt).toBeNull();
+            expect(store.getState().profileClipboard?.type).toBe("cut");
+        });
+
+        it("asks when only a descendant has secure values", () => {
+            const { store } = makeEditor();
+            store.getState().duplicateProfile("group");
+            expect(store.getState().pendingClipboardPrompt).toBeNull();
+
+            store.getState().handleChange("profiles.rseProf.profiles.child.properties.host", "x");
+            store.getState().duplicateProfile("rseProf.child");
+            expect(store.getState().pendingClipboardPrompt).toEqual({ action: "duplicate", profileKey: "rseProf.child" });
         });
     });
 

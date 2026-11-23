@@ -142,6 +142,22 @@ export const DUPLICATE_EXCLUDED_PROPERTIES = [
     "privateKey",
 ];
 
+/** Property names treated as credentials for one profile: the fixed list, the profile's secure array, and the schema's secure flags. */
+function getCredentialPropertyNames(profile: ProfileClipboard["profiles"][string], propertySchema: ProfileSchemaMap): Set<string> {
+    const schemaSecure = Object.entries((profile.type && propertySchema[profile.type]) || {})
+        .filter(([, entry]) => entry?.secure === true)
+        .map(([propertyKey]) => propertyKey);
+    return new Set([...DUPLICATE_EXCLUDED_PROPERTIES, ...schemaSecure, ...profile.secure]);
+}
+
+/** True when any profile in the snapshot holds a value that {@link stripCredentialsFromClipboardProfiles} would remove. */
+export function hasCredentialsInClipboardProfiles(profiles: ProfileClipboard["profiles"], propertySchema: ProfileSchemaMap = {}): boolean {
+    return Object.values(profiles).some((profile) => {
+        const present = new Set([...Object.keys(profile.properties), ...profile.secure, ...Object.keys(profile.secureSources ?? {})]);
+        return [...getCredentialPropertyNames(profile, propertySchema)].some((propertyKey) => present.has(propertyKey));
+    });
+}
+
 /**
  * Drop credentials from every profile in a clipboard snapshot, for copy and duplicate.
  * A property is dropped if it is in the fixed credential list, flagged secure on the profile,
@@ -153,11 +169,7 @@ export function stripCredentialsFromClipboardProfiles(
 ): ProfileClipboard["profiles"] {
     const result = structuredClone(profiles);
     for (const profile of Object.values(result)) {
-        const schemaSecure = Object.entries((profile.type && propertySchema[profile.type]) || {})
-            .filter(([, entry]) => entry?.secure === true)
-            .map(([propertyKey]) => propertyKey);
-        const excluded = new Set([...DUPLICATE_EXCLUDED_PROPERTIES, ...schemaSecure, ...profile.secure]);
-        for (const propertyKey of excluded) {
+        for (const propertyKey of getCredentialPropertyNames(profile, propertySchema)) {
             delete profile.properties[propertyKey];
             if (profile.secureSources) delete profile.secureSources[propertyKey];
         }

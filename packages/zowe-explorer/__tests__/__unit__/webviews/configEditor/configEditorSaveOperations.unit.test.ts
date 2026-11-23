@@ -233,7 +233,7 @@ describe("ConfigEditorSaveOperations", () => {
         const { store, config, saved, commit, configs } = setup();
         config.set("profiles.base.profiles.leaf.secure", ["password", "tokenValue"]);
         configs[0].properties.profiles.base.profiles.leaf.secure = ["password", "tokenValue"];
-        store.getState().copyProfile("base", false);
+        store.getState().copyProfile("base", false, false);
         expect(JSON.stringify(store.getState().profileClipboard)).not.toContain("synthetic-credential");
         store.getState().handleTabChange(1);
         store.getState().pasteProfile(null);

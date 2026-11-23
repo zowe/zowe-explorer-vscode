@@ -15,6 +15,7 @@ import {
     collectClipboardProfiles,
     getUniqueProfileKey,
     removeCutProfileChanges,
+    hasCredentialsInClipboardProfiles,
     stripCredentialsFromClipboardProfiles,
 } from "../../../../src/webviews/src/config-editor/utils/profileClipboard";
 import type { Configuration, PendingChangesMap, ProfileClipboard } from "../../../../src/webviews/src/config-editor/types";
@@ -150,6 +151,23 @@ describe("profileClipboard", () => {
         const stripped = stripCredentialsFromClipboardProfiles(profiles);
         expect(stripped.zosmfProf.properties).toEqual({ host: "h" });
         expect(stripped.sshProf.properties).toEqual({ host: "h" });
+    });
+
+    it("detects whether a snapshot holds values that would be stripped", () => {
+        const base = { type: "ssh", properties: { host: "h" }, secure: [] as string[], customFields: {}, secureSources: {} };
+        const make = (overrides: Partial<typeof base>): ProfileClipboard["profiles"] => ({ p: { profileKey: "p", ...base, ...overrides } });
+        expect(hasCredentialsInClipboardProfiles(make({}))).toBe(false);
+        expect(hasCredentialsInClipboardProfiles(make({ properties: { host: "h", certFile: "/c.pem" } }))).toBe(true);
+        expect(hasCredentialsInClipboardProfiles(make({ properties: { host: "h", custom: "x" }, secure: ["custom"] }))).toBe(true);
+        // A secure-array entry whose value lives in the vault is still a secure value.
+        expect(hasCredentialsInClipboardProfiles(make({ secure: ["password"] }))).toBe(true);
+        // keyPassphrase is only a credential when the schema says so.
+        const withPassphrase = make({ properties: { host: "h", keyPassphrase: "p" } });
+        expect(hasCredentialsInClipboardProfiles(withPassphrase)).toBe(false);
+        expect(hasCredentialsInClipboardProfiles(withPassphrase, { ssh: { keyPassphrase: { secure: true } } })).toBe(true);
+        // Any profile in the subtree counts.
+        const nested = { ...make({}), "p.child": { profileKey: "p.child", ...base, properties: { user: "u" } } };
+        expect(hasCredentialsInClipboardProfiles(nested)).toBe(true);
     });
 
     it("finds the first free numeric suffix", () => {
