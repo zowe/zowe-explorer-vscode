@@ -33,6 +33,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Updated Zowe SDKs to `8.43.0` for technical currency. [#4556](https://github.com/zowe/zowe-explorer-vscode/pull/4556)
 - Fixed incorrect profile validation results for profiles that use certificates or set the `authOrder` property. [#4617](https://github.com/zowe/zowe-explorer-vscode/pull/4617)
 - Fixed job submission from favorited data set searches. Sequential data sets can be submitted, and the job ID link, Open Job, and polling now use the correct profile. [#4352](https://github.com/zowe/zowe-explorer-vscode/issues/4352)
+- Fixed the editor's Make Read-Only and Make Writable commands so the Favorites folder no longer interrupts the operation and matching Favorites entries refresh. [#2297](https://github.com/zowe/zowe-explorer-vscode/issues/2297)
 
 ## `3.6.1`
 
