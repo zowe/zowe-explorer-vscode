@@ -1435,6 +1435,7 @@
   "Inherited from": "Inherited from",
   "Inherited from {0}": "Inherited from {0}",
   "Inherited property": "Inherited property",
+  "Inherited property, change from the parent": "Inherited property, change from the parent",
   "Initial Records": "Initial Records",
   "Initialized logger for Zowe Explorer": "Initialized logger for Zowe Explorer",
   "Initializing profiles with USS favorites.": "Initializing profiles with USS favorites.",

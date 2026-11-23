@@ -12,7 +12,7 @@
 import { getRelevantPropertySchemas, collectSchemaPropertyKeys, collectSchemaPropertyDescriptions } from "./schemaProperties";
 import { extractProfileKeyFromPath, flattenProfiles } from "./configUtils";
 import { getProfileType } from "./profileUtils";
-import { SchemaContext, FullConfigContext, RenamesMap, DeletionsMap, SchemaValidationsMap } from "../types";
+import { SchemaContext, FullConfigContext, RenamesMap, DeletionsMap, SchemaValidationsMap, MergedPropertiesMap } from "../types";
 
 interface PropertyTypeFromSchemaParams {
     propertyKey: string;
@@ -178,21 +178,45 @@ export function fetchExistingPropertyKeys(params: FullConfigContext & { path: st
     return Array.from(existingProperties);
 }
 
+export function fetchInheritedPropertyKeys(params: { mergedProperties?: MergedPropertiesMap | null; existingProperties?: string[] }): string[] {
+    const { mergedProperties, existingProperties = [] } = params;
+    if (!mergedProperties) return [];
+
+    const existingSet = new Set(existingProperties);
+    const inheritedKeys: string[] = [];
+
+    Object.keys(mergedProperties).forEach((key) => {
+        if (key !== "type" && key !== "name" && !existingSet.has(key)) {
+            inheritedKeys.push(key);
+        }
+    });
+
+    return inheritedKeys;
+}
+
 interface FetchTypeOptionsParams extends FullConfigContext {
     path: string[];
     schemaValidations: SchemaValidationsMap;
+    mergedProperties?: MergedPropertiesMap | null;
 }
 
 export function fetchTypeOptions(params: FetchTypeOptionsParams): string[] {
     const allPropertyKeys = fetchAllPropertyKeys(params);
     const existingProperties = new Set(fetchExistingPropertyKeys(params));
-    return allPropertyKeys.filter((key) => !existingProperties.has(key));
+    const inheritedProperties = new Set(
+        fetchInheritedPropertyKeys({
+            mergedProperties: params.mergedProperties,
+            existingProperties: Array.from(existingProperties),
+        })
+    );
+    return allPropertyKeys.filter((key) => !existingProperties.has(key) && !inheritedProperties.has(key));
 }
 
 export interface ValidateProfilePropertyKeyParams extends FullConfigContext {
     path: string[];
     propertyKey: string;
     isEditingExisting?: boolean;
+    mergedProperties?: MergedPropertiesMap | null;
 }
 
 export interface PropertyKeyValidationResult {
@@ -202,7 +226,7 @@ export interface PropertyKeyValidationResult {
 }
 
 export function validateProfilePropertyKey(params: ValidateProfilePropertyKeyParams): PropertyKeyValidationResult {
-    const { propertyKey, isEditingExisting = false } = params;
+    const { propertyKey, isEditingExisting = false, mergedProperties } = params;
     const trimmedKey = propertyKey.trim();
 
     if (!trimmedKey) {
@@ -217,6 +241,20 @@ export function validateProfilePropertyKey(params: ValidateProfilePropertyKeyPar
         return {
             isValid: false,
             error: "Property key already exists",
+        };
+    }
+
+    const inheritedProperties = fetchInheritedPropertyKeys({
+        mergedProperties,
+        existingProperties,
+    });
+    if (inheritedProperties.includes(trimmedKey)) {
+        if (isEditingExisting) {
+            return { isValid: true };
+        }
+        return {
+            isValid: false,
+            error: "Inherited property, change from the parent",
         };
     }
 

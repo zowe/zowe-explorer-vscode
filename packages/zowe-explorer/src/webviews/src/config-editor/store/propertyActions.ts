@@ -228,6 +228,7 @@ export function createPropertyActions(state: EditorRuntime) {
             renames,
             deletions,
             isEditingExisting: state.focusValueInput,
+            mergedProperties: state.mergedProperties,
         });
 
         if (!validation.isValid) return;

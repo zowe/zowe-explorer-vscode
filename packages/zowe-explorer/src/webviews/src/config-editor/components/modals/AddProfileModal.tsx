@@ -14,6 +14,7 @@ interface AddProfileModalProps {
   typeOptions: string[];
   allPropertyKeys?: string[];
   existingPropertyKeys?: string[];
+  inheritedPropertyKeys?: string[];
   propertyDescriptions: { [key: string]: string };
   isSecure: boolean;
   secureValuesAllowed: boolean;
@@ -38,6 +39,7 @@ export function AddProfileModal({
   typeOptions,
   allPropertyKeys = [],
   existingPropertyKeys = [],
+  inheritedPropertyKeys = [],
   propertyDescriptions,
   isSecure,
   secureValuesAllowed,
@@ -64,9 +66,11 @@ export function AddProfileModal({
       if (!focusValueInput) {
         keyValidationError = l10n.t("Property key already exists");
       }
-    } else if (typeOptions.includes(trimmedKey)) {
-      keyValidationError = undefined;
-    } else if (allPropertyKeys.length > 0) {
+    } else if (inheritedPropertyKeys.includes(trimmedKey)) {
+      if (!focusValueInput) {
+        keyValidationError = l10n.t("Inherited property, change from the parent");
+      }
+    } else if (allPropertyKeys.length > 0 && !allPropertyKeys.includes(trimmedKey)) {
       keyValidationWarning = l10n.t("Property is not defined in the schema for this profile");
     }
   }

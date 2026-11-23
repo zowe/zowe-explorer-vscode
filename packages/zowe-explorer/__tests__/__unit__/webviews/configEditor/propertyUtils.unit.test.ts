@@ -15,6 +15,7 @@ import {
     getPropertyDescriptions,
     fetchAllPropertyKeys,
     fetchExistingPropertyKeys,
+    fetchInheritedPropertyKeys,
     fetchTypeOptions,
     validateProfilePropertyKey,
     isFileProperty,
@@ -292,6 +293,30 @@ describe("propertyUtils", () => {
         });
     });
 
+    describe("fetchInheritedPropertyKeys", () => {
+        it("returns [] when mergedProperties is not provided", () => {
+            expect(fetchInheritedPropertyKeys({})).toEqual([]);
+        });
+
+        it("returns inherited properties excluding type, name, and existing local properties", () => {
+            const result = fetchInheritedPropertyKeys({
+                mergedProperties: {
+                    type: { value: "zowe" },
+                    name: { value: "p1" },
+                    host: { value: "inherited-host" },
+                    port: { value: 443 },
+                    user: { value: "user1" },
+                },
+                existingProperties: ["host"],
+            });
+            expect(result).not.toContain("type");
+            expect(result).not.toContain("name");
+            expect(result).not.toContain("host");
+            expect(result).toContain("port");
+            expect(result).toContain("user");
+        });
+    });
+
     describe("fetchAllPropertyKeys", () => {
         it("returns [] when selectedTab is null", () => {
             const result = fetchAllPropertyKeys({
@@ -402,6 +427,24 @@ describe("propertyUtils", () => {
             });
             expect(result.isValid).toBe(false);
             expect(result.error).toBe("Property key already exists");
+        });
+
+        it("returns isValid: false with 'Inherited property, change from the parent' when property is inherited in mergedProperties", () => {
+            const result = validateProfilePropertyKey({
+                propertyKey: "host",
+                path: ["profiles", "p1", "properties"],
+                selectedTab: 0,
+                configurations: configs,
+                schemaValidations: schema,
+                pendingChanges: {},
+                renames: {},
+                deletions: {},
+                mergedProperties: {
+                    host: { value: "inherited-host" },
+                },
+            });
+            expect(result.isValid).toBe(false);
+            expect(result.error).toBe("Inherited property, change from the parent");
         });
 
         it("returns isValid: true when isEditingExisting is true for an existing key", () => {
