@@ -177,6 +177,7 @@ describe("AttributeView unit tests - read-only files", () => {
 
     beforeEach(() => {
         vi.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation((() => undefined) as any);
+        vi.spyOn(UssFSProvider.instance, "createLocalDirectory").mockImplementation((() => undefined) as any);
         node = new ZoweUSSNode({
             label: "profile",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
