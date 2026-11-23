@@ -22,6 +22,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
+- Fixed use of optional chaining in code to address inconsistent null checks. [#XXXX](https://github.com/zowe/zowe-explorer-vscode/pull/XXXX) 
 - Fixed PDS member favorites being restored as directories for extender type profiles. [#4632](https://github.com/zowe/zowe-explorer-vscode/pull/4632)
 - Fixed SSO logout for base profiles without requiring a registered service API. [#4137](https://github.com/zowe/zowe-explorer-vscode/issues/4137)
 - Fixed an issue where searching data set contents with an FTP profile failed with the error `c.searchDataSets is not a function`. Zowe Explorer now shows a message when a search starts for a profile type that does not support it. [#4511](https://github.com/zowe/zowe-explorer-vscode/issues/4511)
