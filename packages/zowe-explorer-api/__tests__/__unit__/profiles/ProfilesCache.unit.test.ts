@@ -567,6 +567,138 @@ describe("ProfilesCache", () => {
             await profCache.refresh();
             expect((profCache as any).allTypes).toEqual(["ssh", "base"]);
         });
+
+        describe("credentials from environment variables", () => {
+            const projectConfig = path.join("project", "zowe.config.json");
+            const globalConfig = path.join("home", ".zowe", "zowe.config.json");
+            const layers = [
+                { path: projectConfig, exists: true, global: false, user: false, properties: {} },
+                { path: globalConfig, exists: true, global: true, user: false, properties: {} },
+            ] as imperative.IConfigLayer[];
+
+            afterEach(() => {
+                vi.unstubAllEnvs();
+            });
+
+            function teamConfigArg(argName: string, argValue: unknown, osLoc = projectConfig): imperative.IProfArgAttrs {
+                return {
+                    argName,
+                    dataType: "string",
+                    argValue: argValue as imperative.IProfArgValue,
+                    argLoc: { locType: imperative.ProfLocType.TEAM_CONFIG, jsonLoc: `profiles.lpar.properties.${argName}`, osLoc: [osLoc] },
+                };
+            }
+
+            function envVarEntry(argName: string, originalValue: string, replacementValue: unknown, global = false) {
+                return {
+                    global,
+                    user: false,
+                    propPath: `profiles.lpar.properties.${argName}`,
+                    originalValue,
+                    replacementValue: replacementValue as string,
+                };
+            }
+
+            // Imperative swaps `$VAR` and `${VAR}` for the env var's text and then runs that text through JSON.parse,
+            // so these mocks return what Imperative 8.41.0 hands back for one zosmf profile.
+            async function refreshWith(knownArgs: imperative.IProfArgAttrs[], envVarManaged: imperative.Config["envVarManaged"]) {
+                const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
+                const profInfo = createProfInfoMock([{ name: "lpar", type: "zosmf", profile: {} }]);
+                const teamConfig = Object.assign(profInfo.getTeamConfig(), { layers, envVarManaged });
+                profInfo.getTeamConfig = () => teamConfig;
+                profInfo.mergeArgsForProfile = () => ({ knownArgs, missingArgs: [] });
+                vi.spyOn(profCache, "getProfileInfo").mockResolvedValue(profInfo);
+                await profCache.refresh(fakeApiRegister as unknown as Types.IApiRegisterClient);
+                return profCache.allProfiles[0].profile;
+            }
+
+            it.each([
+                ["12345", 12345],
+                ["1e5", 100000],
+                ["1.50", 1.5],
+                ["true", true],
+                ["null", null],
+                ["12345678901234567890", 12345678901234567000],
+            ])("should keep the env var text %s for user and password when Imperative parses it as JSON", async (envText, parsed) => {
+                vi.stubEnv("HQ_TEST_USER", envText);
+                vi.stubEnv("HQ_TEST_PASSWORD", envText);
+                const profile = await refreshWith(
+                    [teamConfigArg("host", "example.com"), teamConfigArg("user", parsed), teamConfigArg("password", parsed)],
+                    [envVarEntry("user", "$HQ_TEST_USER", parsed), envVarEntry("password", "${HQ_TEST_PASSWORD}", parsed)]
+                );
+                expect(profile.user).toBe(envText);
+                expect(profile.password).toBe(envText);
+                expect(profile.host).toBe("example.com");
+            });
+
+            it("should rebuild values that mix env vars with other text", async () => {
+                vi.stubEnv("HQ_TEST_PART", "777");
+                const profile = await refreshWith(
+                    [teamConfigArg("user", 1777), teamConfigArg("password", 777777)],
+                    [envVarEntry("user", "1${HQ_TEST_PART}", 1777), envVarEntry("password", "$HQ_TEST_PART$HQ_TEST_PART", 777777)]
+                );
+                expect(profile.user).toBe("1777");
+                expect(profile.password).toBe("777777");
+            });
+
+            it("should leave credentials that Imperative already returns as strings unchanged", async () => {
+                vi.stubEnv("HQ_TEST_USER", "0123");
+                vi.stubEnv("HQ_TEST_PASSWORD", "abc123");
+                const profile = await refreshWith(
+                    [teamConfigArg("user", "0123"), teamConfigArg("password", "abc123")],
+                    [envVarEntry("user", "$HQ_TEST_USER", "0123"), envVarEntry("password", "$HQ_TEST_PASSWORD", "abc123")]
+                );
+                expect(profile.user).toBe("0123");
+                expect(profile.password).toBe("abc123");
+            });
+
+            it("should read the env var from the layer that supplied the value when two layers use the same path", async () => {
+                vi.stubEnv("HQ_TEST_PROJECT", "1e5");
+                vi.stubEnv("HQ_TEST_GLOBAL", "777");
+                // The global entry comes first, so matching on the property path alone would pick the wrong one.
+                const envVarManaged = [envVarEntry("password", "$HQ_TEST_GLOBAL", 777, true), envVarEntry("password", "$HQ_TEST_PROJECT", 100000)];
+                const fromProject = await refreshWith([teamConfigArg("password", 100000, projectConfig)], envVarManaged);
+                const fromGlobal = await refreshWith([teamConfigArg("password", 777, globalConfig)], envVarManaged);
+                expect(fromProject.password).toBe("1e5");
+                expect(fromGlobal.password).toBe("777");
+            });
+
+            it("should keep a non-string credential and not throw when no env var supplied it", async () => {
+                const profile = await refreshWith([teamConfigArg("user", 12345), teamConfigArg("password", true)], []);
+                expect(profile.user).toBe(12345);
+                expect(profile.password).toBe(true);
+            });
+
+            it("should keep Imperative's parsed value for properties other than user and password", async () => {
+                vi.stubEnv("HQ_TEST_PORT", "443");
+                const profile = await refreshWith([teamConfigArg("port", 443)], [envVarEntry("port", "$HQ_TEST_PORT", 443)]);
+                expect(profile.port).toBe(443);
+            });
+        });
+    });
+
+    describe("checkForEnvVarAndUpdate", () => {
+        afterEach(() => {
+            vi.unstubAllEnvs();
+        });
+
+        it("should not throw when user or password is not a string", () => {
+            const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
+            profCache.allProfiles = [{ name: "lpar", type: "zosmf", message: "", failNotFound: false, profile: { user: 12345, password: true } }];
+            expect(() => profCache.checkForEnvVarAndUpdate()).not.toThrow();
+            expect(profCache.allProfiles[0].profile).toEqual({ user: 12345, password: true });
+        });
+
+        it("should still replace a user and password that are left as $VAR text", () => {
+            vi.stubEnv("HQ_TEST_USER", "ibmuser");
+            vi.stubEnv("HQ_TEST_PASSWORD", "secret");
+            const profCache = new ProfilesCache(fakeLogger as unknown as imperative.Logger);
+            profCache.allProfiles = [
+                { name: "lpar", type: "zosmf", message: "", failNotFound: false, profile: { user: "$HQ_TEST_USER", password: "$HQ_TEST_PASSWORD" } },
+            ];
+            profCache.checkForEnvVarAndUpdate();
+            expect(profCache.allProfiles[0].profile).toEqual({ user: "ibmuser", password: "secret" });
+        });
     });
 
     describe("validateAndParseUrl", () => {
