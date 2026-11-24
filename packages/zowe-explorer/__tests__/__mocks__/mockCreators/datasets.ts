@@ -39,6 +39,25 @@ export function createDatasetFavoritesNode() {
     return datasetNode;
 }
 
+export function createDatasetFavoriteSearchNode(profile: imperative.IProfileLoaded, pattern: string) {
+    const profileNode = new ZoweDatasetNode({
+        label: profile.name,
+        collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+        parentNode: createDatasetFavoritesNode(),
+        profile,
+    });
+    profileNode.contextValue = Constants.FAV_PROFILE_CONTEXT;
+    const searchNode = new ZoweDatasetNode({
+        label: pattern,
+        collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+        parentNode: profileNode,
+        profile,
+        contextOverride: Constants.DS_SESSION_CONTEXT + Constants.FAV_SUFFIX,
+    });
+    searchNode.pattern = pattern;
+    return searchNode;
+}
+
 export function createDatasetTree(sessionNode: ZoweDatasetNode, treeView: any, favoritesNode?: ZoweDatasetNode): any {
     vi.spyOn(ZowePersistentFilters.prototype as any, "initialize").mockReturnValueOnce(undefined);
     const testDatasetTree = new DatasetTree();

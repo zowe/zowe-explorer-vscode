@@ -8,6 +8,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ### New features and enhancements
 
+- Added support for deleting VSAM data sets. [#4556](https://github.com/zowe/zowe-explorer-vscode/pull/4556)
+
 ### Bug fixes
 
 ## `3.6.1`

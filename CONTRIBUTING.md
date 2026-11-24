@@ -19,4 +19,10 @@ The following information is critical to working with the code, running/writing/
 
 The following guidelines apply specifically to the extension:
 
-None at this time.
+### Pull request feedback: three-strike rule
+
+Contributors are expected to respond to review feedback on their pull requests. If a contributor does not respond, maintainers will send three reminders, one per week. If the contributor still has not responded within one week after the third reminder, the pull request will be closed.
+
+### AI assistance for good first issues
+
+Issues labeled `good first issue` are intended to help new contributors learn the codebase and gain development experience. AI should not be used to completely implement these issues. AI may be used for guidance, explanations, or feedback, but contributors should develop the implementation themselves.
