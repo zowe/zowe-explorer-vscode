@@ -1,0 +1,100 @@
+name: Zowe SDK Compatibility
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: sdk-compatibility-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  comment:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+    steps:
+      # Never check out or execute PR code: this workflow has write permission on fork PRs.
+      - name: Check SDK updates and comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const issue = { ...context.repo, issue_number: pr.number };
+            const marker = '<!-- zowe-sdk-compatibility -->';
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              ...context.repo, pull_number: pr.number, per_page: 100
+            });
+            const readManifest = async (revision, path) => {
+              try {
+                const { data } = await github.rest.repos.getContent({
+                  owner: revision.repo.owner.login,
+                  repo: revision.repo.name,
+                  ref: revision.sha,
+                  path
+                });
+                return JSON.parse(Buffer.from(data.content, 'base64').toString('utf8'));
+              } catch (error) {
+                if (error.status === 404) return {};
+                throw error;
+              }
+            };
+            // Compare the major/minor floor of pinned, caret, and tilde versions used by this repo.
+            const version = (value) => typeof value === 'string'
+              ? value.match(/^[~^]?(\d+)\.(\d+)\.(\d+)(?:-[\da-zA-Z.-]+)?(?:\+[\da-zA-Z.-]+)?$/)
+              : null;
+            const changes = new Set();
+            for (const file of files) {
+              if (file.status === 'removed' || !/^(?:packages\/.+\/)?package\.json$/.test(file.filename)) continue;
+              const [base, head] = await Promise.all([
+                readManifest(pr.base, file.previous_filename ?? file.filename),
+                readManifest(pr.head, file.filename)
+              ]);
+              for (const section of ['dependencies', 'devDependencies', 'optionalDependencies', 'peerDependencies']) {
+                for (const [name, after] of Object.entries(head[section] ?? {})) {
+                  if (!/^@zowe\/(?:[a-z0-9-]+-for-zowe-sdk|imperative)$/.test(name)) continue;
+                  const before = base[section]?.[name];
+                  const oldVersion = version(before);
+                  const newVersion = version(after);
+                  if (!oldVersion || !newVersion) continue;
+                  const major = Number(newVersion[1]) > Number(oldVersion[1]);
+                  const minor = newVersion[1] === oldVersion[1] && Number(newVersion[2]) > Number(oldVersion[2]);
+                  if (major || minor) changes.add(`| \`${name}\` | \`${before}\` | \`${after}\` |`);
+                }
+              }
+            }
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              ...issue, per_page: 100
+            });
+            const existing = comments.find(comment =>
+              comment.user.login === 'github-actions[bot]' && comment.body?.includes(marker)
+            );
+            if (changes.size === 0) {
+              if (existing) await github.rest.issues.deleteComment({ ...context.repo, comment_id: existing.id });
+              return;
+            }
+            const body = [
+              marker,
+              '### Zowe SDK compatibility review',
+              '',
+              'This PR raises a Zowe SDK or Imperative dependency by a minor or major version. Compatibility has **not** been verified by this workflow.',
+              '',
+              '| Dependency | Before | After |',
+              '| --- | --- | --- |',
+              ...[...changes].sort(),
+              '',
+              'Before merging, please:',
+              '- Review the [Zowe SDK release notes](https://github.com/zowe/zowe-cli/releases) for breaking or behavioral changes.',
+              '- Verify affected Zowe Explorer functionality and Explorer API/extender compatibility.',
+              '- Record compatibility testing/results in this PR and complete the dependency compatibility checkbox.'
+            ].join('\n');
+            if (existing) {
+              if (existing.body !== body) {
+                await github.rest.issues.updateComment({ ...context.repo, comment_id: existing.id, body });
+              }
+            } else {
+              await github.rest.issues.createComment({ ...issue, body });
+            }
