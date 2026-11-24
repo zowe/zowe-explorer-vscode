@@ -330,6 +330,7 @@
   "Cancel": "Cancel",
   "Cancelled selected jobs successfully.": "Cancelled selected jobs successfully.",
   "Cannot delete, item invalid.": "Cannot delete, item invalid.",
+  "Cannot download a resource with backtracking path segments.": "Cannot download a resource with backtracking path segments.",
   "Cannot download this type of data set.": "Cannot download this type of data set.",
   "Cannot download, item invalid.": "Cannot download, item invalid.",
   "Cannot drop a dataset member into a profile node.": "Cannot drop a dataset member into a profile node.",
@@ -575,6 +576,7 @@
   "Download": "Download",
   "Download Options": "Download Options",
   "Download data sets and USS files to the local filesystem": "Download data sets and USS files to the local filesystem",
+  "Download path must be inside the selected directory.": "Download path must be inside the selected directory.",
   "Download single spool operation not implemented by extender. Please contact the extension developer(s).": "Download single spool operation not implemented by extender. Please contact the extension developer(s).",
   "Downloaded: {0}/Download time": {
     "message": "Downloaded: {0}",
@@ -2022,6 +2024,7 @@
   "Refresh": "Refresh",
   "Refresh File Properties": "Refresh File Properties",
   "Regex": "Regex",
+  "Rejected backtracking in remote download names and prevented data set and USS download targets from escaping the selected directory.": "Rejected backtracking in remote download names and prevented data set and USS download targets from escaping the selected directory.",
   "Release Notes": "Release Notes",
   "Release notes": "Release notes",
   "Release notes for Zowe Explorer are now available in VS Code. Release notes are displayed when Zowe Explorer updates and can also be accessed from the command palette (Ctrl + Shift + P) by searching for Zowe Explorer: Display Release Notes. Disable automatic display of release notes when updating by unticking Display release notes after an update in this window or in the Zowe Explorer settings.": "Release notes for Zowe Explorer are now available in VS Code. Release notes are displayed when Zowe Explorer updates and can also be accessed from the command palette (Ctrl + Shift + P) by searching for Zowe Explorer: Display Release Notes. Disable automatic display of release notes when updating by unticking Display release notes after an update in this window or in the Zowe Explorer settings.",
