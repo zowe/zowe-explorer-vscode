@@ -22,7 +22,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
-- Improved validation of resource names and destination paths when downloading data sets, members, USS files, and USS directories. [#4636](https://github.com/zowe/zowe-explorer-vscode/pull/4636)
+- Improved validation of resource names and destination paths when downloading data sets, members, and z/OS UNIX files and directories. [#4636](https://github.com/zowe/zowe-explorer-vscode/pull/4636)
 - Fixed use of optional chaining in code to address inconsistent null checks. [#4635](https://github.com/zowe/zowe-explorer-vscode/pull/4635)
 - Fixed PDS member favorites being restored as directories for extender type profiles. [#4632](https://github.com/zowe/zowe-explorer-vscode/pull/4632)
 - Fixed SSO logout for base profiles without requiring a registered service API. [#4137](https://github.com/zowe/zowe-explorer-vscode/issues/4137)
