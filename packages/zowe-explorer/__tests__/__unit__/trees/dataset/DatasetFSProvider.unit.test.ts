@@ -148,6 +148,39 @@ describe("DatasetFSProvider", () => {
             DatasetFSProvider.instance.createDirectory(testUris.pds);
             expect(fakeSessionEntry.entries.has("USER.DATA.PDS")).toBe(true);
         });
+
+        it("throws an error when attempting to create a directory inside a PDS", () => {
+            const fakePdsEntry = new PdsEntry("USER.DATA.PDS");
+            vi.spyOn(DatasetFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakePdsEntry);
+            expect(() => DatasetFSProvider.instance.createDirectory(testUris.pdsMember)).toThrow(
+                "Folders cannot be created inside a Partitioned Data Set."
+            );
+            expect(fakePdsEntry.entries.size).toBe(0);
+        });
+    });
+
+    describe("_getInfoFromUri", () => {
+        it("returns '/' as the path for a root (session) URI", () => {
+            vi.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({
+                profile: testProfile,
+                isRoot: true,
+                slashAfterProfilePos: -1,
+                profileName: "sestest",
+            });
+            const info = (DatasetFSProvider.instance as any)._getInfoFromUri(testUris.session);
+            expect(info.path).toBe("/");
+        });
+
+        it("returns the path after the profile name for a non-root URI", () => {
+            vi.spyOn(FsAbstractUtils, "getInfoForUri").mockReturnValue({
+                profile: testProfile,
+                isRoot: false,
+                slashAfterProfilePos: 8,
+                profileName: "sestest",
+            });
+            const info = (DatasetFSProvider.instance as any)._getInfoFromUri(testUris.pds);
+            expect(info.path).toBe("/USER.DATA.PDS");
+        });
     });
 
     describe("createEntry", () => {

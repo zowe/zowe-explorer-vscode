@@ -324,6 +324,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
         const setEncodingForFile = vi.spyOn((BaseProvider as any).prototype, "setEncodingForFile").mockReturnValue(undefined);
         const fetchEncodingForUri = vi.spyOn(UssFSProvider.instance, "fetchEncodingForUri").mockResolvedValue(undefined as any);
         const createDirectorySpy = vi.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation((() => undefined) as any);
+        const createLocalDirectorySpy = vi.spyOn(UssFSProvider.instance, "createLocalDirectory").mockImplementation((() => undefined) as any);
         const getEncodingForFileSpy = vi.spyOn(UssFSProvider.instance, "getEncodingForFile").mockReturnValue({ kind: "binary" });
 
         return {
@@ -337,6 +338,7 @@ describe("Shared utils unit tests - function promptForEncoding", () => {
             setEncodingForFile,
             fetchEncodingForUri,
             createDirectorySpy,
+            createLocalDirectorySpy,
             getEncodingForFileSpy,
         };
     }

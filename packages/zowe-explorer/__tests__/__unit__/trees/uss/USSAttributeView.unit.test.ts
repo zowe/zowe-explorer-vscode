@@ -30,6 +30,7 @@ describe("AttributeView unit tests", () => {
     const context = { extensionPath: "some/fake/ext/path" } as unknown as vscode.ExtensionContext;
     const treeProvider = { refreshElement: vi.fn(), refresh: vi.fn() } as unknown as IZoweTree<IZoweUSSTreeNode>;
     const createDirMock = vi.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation((() => undefined) as any);
+    const createLocalDirMock = vi.spyOn(UssFSProvider.instance, "createLocalDirectory").mockImplementation((() => undefined) as any);
     const node = new ZoweUSSNode({
         label: "example_node",
         collapsibleState: vscode.TreeItemCollapsibleState.None,
@@ -56,6 +57,7 @@ describe("AttributeView unit tests", () => {
 
     afterAll(() => {
         createDirMock.mockRestore();
+        createLocalDirMock.mockRestore();
         onUpdateMocked[Symbol.dispose]();
     });
 
@@ -175,6 +177,7 @@ describe("AttributeView unit tests - read-only files", () => {
 
     beforeEach(() => {
         vi.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation((() => undefined) as any);
+        vi.spyOn(UssFSProvider.instance, "createLocalDirectory").mockImplementation((() => undefined) as any);
         node = new ZoweUSSNode({
             label: "profile",
             collapsibleState: vscode.TreeItemCollapsibleState.None,

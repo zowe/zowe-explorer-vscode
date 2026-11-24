@@ -122,7 +122,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 path: path.posix.join("/", sessionLabel, this.fullPath),
             });
             if (isSession) {
-                UssFSProvider.instance.createDirectory(this.resourceUri);
+                UssFSProvider.instance.createLocalDirectory(this.resourceUri);
                 const toolTipList: string[] = [];
                 toolTipList.push(`${vscode.l10n.t("Profile: ")}${opts.label}`);
                 toolTipList.push(`${vscode.l10n.t("Profile Type: ")}${opts.profile.type}`);
@@ -345,7 +345,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 // Create an entry for the USS folder if it doesn't exist.
                 if (!UssFSProvider.instance.exists(ussNode.resourceUri)) {
                     UssFSProvider.instance.createParentDirectories(ussNode.resourceUri);
-                    UssFSProvider.instance.createDirectory(ussNode.resourceUri);
+                    UssFSProvider.instance.createLocalDirectory(ussNode.resourceUri);
                     createdUris.push(ussNode.resourceUri);
                 }
             } else {

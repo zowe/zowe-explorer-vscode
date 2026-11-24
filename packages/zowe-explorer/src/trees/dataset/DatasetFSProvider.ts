@@ -630,6 +630,9 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
     public createDirectory(uri: vscode.Uri): void {
         const basename = path.posix.basename(uri.path);
         const parent = this.lookupParentDirectory(uri, false);
+        if (FsDatasetsUtils.isPdsEntry(parent)) {
+            throw vscode.FileSystemError.Unavailable(vscode.l10n.t("Folders cannot be created inside a Partitioned Data Set."));
+        }
         if (parent.entries.has(basename)) {
             return;
         }
@@ -1113,7 +1116,7 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
         const uriInfo = FsAbstractUtils.getInfoForUri(uri, Profiles.getInstance());
         return new DsEntryMetadata({
             profile: uriInfo.profile,
-            path: uri.path.substring(uriInfo.slashAfterProfilePos),
+            path: uriInfo.isRoot ? "/" : uri.path.substring(uriInfo.slashAfterProfilePos),
         });
     }
 

@@ -85,7 +85,7 @@ describe("UssFSProvider File System Notifications", () => {
             vi.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeSessionEntry);
             vi.spyOn(UssFSProvider.instance as any, "fireSoon");
 
-            UssFSProvider.instance.createDirectory(testUris.folder);
+            UssFSProvider.instance.createLocalDirectory(testUris.folder);
 
             expect(fakeSessionEntry.entries.has("folderName")).toBe(true);
         });
@@ -96,7 +96,7 @@ describe("UssFSProvider File System Notifications", () => {
             vi.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeSessionEntry);
             const fireSoonSpy = vi.spyOn(UssFSProvider.instance as any, "fireSoon");
 
-            UssFSProvider.instance.createDirectory(testUris.folder);
+            UssFSProvider.instance.createLocalDirectory(testUris.folder);
 
             expect(fireSoonSpy).not.toHaveBeenCalled();
         });
@@ -107,12 +107,26 @@ describe("UssFSProvider File System Notifications", () => {
             vi.spyOn(UssFSProvider.instance as any, "fireSoon");
 
             const beforeCreate = Date.now();
-            UssFSProvider.instance.createDirectory(testUris.folder);
+            UssFSProvider.instance.createLocalDirectory(testUris.folder);
             const afterCreate = Date.now();
 
             expect(fakeSessionEntry.mtime).toBeGreaterThanOrEqual(beforeCreate);
             expect(fakeSessionEntry.mtime).toBeLessThanOrEqual(afterCreate);
             expect(fakeSessionEntry.size).toBe(1);
+        });
+
+        it("should call ussApi.create when createDirectory is called", async () => {
+            const fakeSessionEntry = { ...testEntries.session, entries: new Map() };
+            vi.spyOn(UssFSProvider.instance as any, "lookupParentDirectory").mockReturnValue(fakeSessionEntry);
+            const createMock = vi.fn().mockResolvedValue({ success: true });
+            const getUssApiMock = vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue({
+                create: createMock,
+            } as any);
+
+            await UssFSProvider.instance.createDirectory(testUris.folder);
+
+            expect(createMock).toHaveBeenCalled();
+            getUssApiMock.mockRestore();
         });
     });
 

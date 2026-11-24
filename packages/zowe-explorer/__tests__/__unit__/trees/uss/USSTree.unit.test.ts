@@ -2057,7 +2057,7 @@ describe("USSTree Unit Tests - Function loadProfilesForFavorites", () => {
 
         vi.spyOn(UssFSProvider.instance, "exists").mockReturnValueOnce(false);
         const createParentDirsSpy = vi.spyOn(UssFSProvider.instance, "createParentDirectories").mockImplementation(() => {});
-        const createDirectorySpy = vi.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(() => {});
+        const createDirectorySpy = vi.spyOn(UssFSProvider.instance, "createLocalDirectory").mockImplementation(() => ({} as any));
         await globalMocks.testTree.loadProfilesForFavorites(blockMocks.log, favProfileNode);
         expect(createParentDirsSpy).toHaveBeenCalledWith(favDirNode.resourceUri);
         expect(createDirectorySpy).toHaveBeenCalledWith(favDirNode.resourceUri);
@@ -2788,8 +2788,8 @@ describe("USSTree.handleDrop - blocking behavior", () => {
             const readFileMock = vi.spyOn(UssFSProvider.instance, "readFile").mockResolvedValue(new Uint8Array([1, 2, 3]));
             const writeFileMock = vi.spyOn(UssFSProvider.instance, "writeFile").mockResolvedValue(undefined);
             const existsMock = vi.spyOn(UssFSProvider.instance, "exists").mockReturnValueOnce(false);
-
-            const createDirMock = vi.spyOn(UssFSProvider.instance as any, "createDirectory").mockResolvedValueOnce(undefined);
+            const createParentDirsMock = vi.spyOn(UssFSProvider.instance, "createParentDirectories").mockImplementation(() => {});
+            const createDirMock = vi.spyOn(UssFSProvider.instance as any, "createLocalDirectory").mockReturnValue({} as any);
             const createMock = vi.fn();
             const ussApiMock = vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue({
                 create: createMock,
@@ -2811,6 +2811,7 @@ describe("USSTree.handleDrop - blocking behavior", () => {
             expect(createMock).toHaveBeenCalledWith("/u/myuser/subfolder/usstest/file.txt", "file");
             expect(createDirMock).toHaveBeenCalledWith(newUri);
             expect(deleteMock).toHaveBeenCalledWith(ussDirNode.resourceUri, { recursive: true });
+            createParentDirsMock.mockRestore();
             createDirMock.mockRestore();
             deleteMock.mockRestore();
             existsMock.mockRestore();
