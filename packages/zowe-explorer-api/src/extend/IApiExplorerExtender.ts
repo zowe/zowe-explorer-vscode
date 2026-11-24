@@ -76,10 +76,11 @@ export interface IApiExplorerExtender {
     ssoLogin?(profile: string | imperative.IProfileLoaded): Promise<boolean>;
 
     /**
-     * Log out from the authentication service for the given profile. Behaves like the
-     * "Log out from Authentication Service" tree action: revokes the token and removes it
-     * from the base or service profile. When called through this interface (no tree node),
-     * active filters in Zowe Explorer's trees are not cleared.
+     * Log out from the authentication service for the given service or base profile.
+     * Service profiles use their registered auth API; base profiles use API ML directly.
+     * Revokes the token and removes it from the base or service profile.
+     * When called through this interface (no tree node), active filters in Zowe
+     * Explorer's trees are not cleared.
      * @version 3.7.0 or newer of Zowe Explorer
      * @param profile Name of the profile or the loaded profile to log out
      * @returns {Promise<boolean>} true if logout succeeded, false otherwise
