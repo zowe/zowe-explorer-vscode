@@ -212,7 +212,7 @@ export class ReadOnlyManagement {
      * Whether the read-only/writable context menu options apply to the given tree node
      */
     public static isEligibleNode(node: IZoweTreeNode): boolean {
-        if (!ReadOnlyManagement.isSupportedUri(node?.resourceUri) || node.contextValue == null) {
+        if (!ReadOnlyManagement.isSupportedUri(node.resourceUri) || node.contextValue == null) {
             return false;
         }
         return (
