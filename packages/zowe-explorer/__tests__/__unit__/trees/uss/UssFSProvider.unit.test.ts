@@ -3101,6 +3101,37 @@ describe("UssFSProvider", () => {
             handleErrorMock.mockRestore();
             fireSoonMock.mockRestore();
         });
+
+        it("rolls back the local entry, handles the error, and throws if the remote response is unsuccessful", async () => {
+            const root = (UssFSProvider.instance as any).root;
+            const sesEntry = new DirEntry("sestest");
+            sesEntry.metadata = {
+                profile: testProfile,
+                path: "/",
+            };
+            root.entries.set("sestest", sesEntry);
+            const oldSize: number = sesEntry.size;
+            const ensureAuthNotCancelledMock = vi.spyOn(AuthUtils, "ensureAuthNotCancelled").mockReturnValueOnce(undefined);
+            const waitForAuthFlowMock = vi.spyOn(AuthHandler, "waitForAuthFlow").mockResolvedValueOnce(undefined);
+            const getUssApiMock = vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue({
+                create: vi.fn().mockResolvedValue({ success: false, commandResponse: "", errorMessage: "Permission denied" }),
+            } as any);
+            const handleErrorMock = vi.spyOn(UssFSProvider.instance as any, "_handleError").mockImplementation((() => undefined) as any);
+            const fireSoonMock = vi.spyOn(UssFSProvider.instance as any, "fireSoon").mockImplementation((() => undefined) as any);
+
+            await expect(UssFSProvider.instance.createDirectory(testUris.folder)).rejects.toThrow("Permission denied");
+
+            expect(sesEntry.entries.has("aFolder")).toBe(false);
+            expect(sesEntry.size).toBe(oldSize);
+            expect(handleErrorMock).toHaveBeenCalled();
+            expect(fireSoonMock).not.toHaveBeenCalled();
+
+            ensureAuthNotCancelledMock.mockRestore();
+            waitForAuthFlowMock.mockRestore();
+            getUssApiMock.mockRestore();
+            handleErrorMock.mockRestore();
+            fireSoonMock.mockRestore();
+        });
     });
 
     describe("createParentDirectories", () => {

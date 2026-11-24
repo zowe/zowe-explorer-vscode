@@ -280,6 +280,25 @@ describe("USS Action Unit Tests - Function createUSSNode", () => {
         expect(refreshProviderMock).toHaveBeenCalled();
         createApiMock.mockRestore();
     });
+    it("caches the parent directories before creating a directory and fires a Created event", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("/u/myuser/");
+        globalMocks.mockShowInputBox.mockResolvedValueOnce("folderName");
+        vi.spyOn(SharedActions, "refreshProvider").mockImplementation((() => undefined) as any);
+        const createApiMock = vi.spyOn(blockMocks.ussApi, "create").mockImplementation((() => undefined) as any);
+        const createParentsSpy = vi.spyOn(UssFSProvider.instance, "createParentDirectories").mockImplementation((() => undefined) as any);
+        vi.spyOn(UssFSProvider.instance, "exists").mockReturnValue(false);
+        const fireSoonSpy = vi.spyOn(UssFSProvider.instance, "fireSoon").mockImplementation((() => undefined) as any);
+        blockMocks.ussNode.getParent().fullPath = "";
+
+        await USSActions.createUSSNode(blockMocks.ussNode.getParent(), blockMocks.testUSSTree, "directory");
+        expect(createParentsSpy).toHaveBeenCalled();
+        expect(createParentsSpy.mock.invocationCallOrder[0]).toBeLessThan(createApiMock.mock.invocationCallOrder[0]);
+        expect(fireSoonSpy).toHaveBeenCalledWith(expect.objectContaining({ type: vscode.FileChangeType.Created }));
+        createApiMock.mockRestore();
+    });
 
     it("returns early if a location was never provided", async () => {
         const globalMocks = createGlobalMocks();

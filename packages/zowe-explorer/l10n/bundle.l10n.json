@@ -834,6 +834,13 @@
       "Directory path"
     ]
   },
+  "Failed to create directory {0}: {1}/Directory pathError message": {
+    "message": "Failed to create directory {0}: {1}",
+    "comment": [
+      "Directory path",
+      "Error message"
+    ]
+  },
   "Failed to create {0}: {1}/Data set nameError message": {
     "message": "Failed to create {0}: {1}",
     "comment": [

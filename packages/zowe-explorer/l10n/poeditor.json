@@ -1221,6 +1221,7 @@
   "Failed to copy member {0}: {1}": "",
   "Failed to copy {0} to {1}": "",
   "Failed to create directory {0}": "",
+  "Failed to create directory {0}: {1}": "",
   "Failed to create {0}: {1}": "",
   "Failed to delete job {0}": "",
   "Failed to delete {0}": "",

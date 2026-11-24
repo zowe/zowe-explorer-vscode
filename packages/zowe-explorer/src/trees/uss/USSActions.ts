@@ -139,6 +139,9 @@ export class USSActions {
                 }
 
                 try {
+                    // Ensure the parent directory is cached before creating on the host, so that a pre-existing
+                    // (but not yet listed) parent path does not cause a local lookup failure after the host call succeeds.
+                    UssFSProvider.instance.createParentDirectories(uri);
                     if (!replace) {
                         await ussApi.create(filePath, nodeType);
                     }
@@ -146,7 +149,11 @@ export class USSActions {
                         const writeUri = replace ? uri.with({ query: "forceUpload=true" }) : uri;
                         await vscode.workspace.fs.writeFile(writeUri, new Uint8Array());
                     } else {
+                        const alreadyCached = UssFSProvider.instance.exists(uri);
                         UssFSProvider.instance.createLocalDirectory(uri);
+                        if (!alreadyCached) {
+                            UssFSProvider.instance.fireSoon({ type: vscode.FileChangeType.Created, uri: uri.with({ query: "" }) });
+                        }
                     }
                 } catch (error) {
                     // If we created a cache entry optimistically but subsequent operations failed,

@@ -1236,9 +1236,20 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         await AuthHandler.waitForAuthFlow(profile);
 
         try {
+            let response: IZosFilesResponse | undefined;
             await AuthUtils.retryRequest(entry.metadata.profile, async () => {
-                await ZoweExplorerApiRegister.getUssApi(profile).create(entry.metadata.path, "directory");
+                response = await ZoweExplorerApiRegister.getUssApi(profile).create(entry.metadata.path, "directory");
             });
+            // Treat an unsuccessful response the same as a rejected request
+            if (response?.success === false) {
+                throw vscode.FileSystemError.Unavailable(
+                    vscode.l10n.t({
+                        message: "Failed to create directory {0}: {1}",
+                        args: [entry.metadata.path, response.errorMessage ?? vscode.l10n.t("No error details given")],
+                        comment: ["Directory path", "Error message"],
+                    })
+                );
+            }
         } catch (err) {
             parent.entries.delete(basename);
             parent.size -= 1;
