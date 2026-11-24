@@ -1366,6 +1366,7 @@
   "Fixed tooltip for Unix System Services profiles to display relevant text. <a>#4019</a>": "Fixed tooltip for Unix System Services profiles to display relevant text. <a>#4019</a>",
   "Fixed tree item labels failing to update after renaming an MVS or USS file or folder. <a>#2656</a>": "Fixed tree item labels failing to update after renaming an MVS or USS file or folder. <a>#2656</a>",
   "Fixed unintended behavior in ProfileUtils.isProfileUsingBasicAuth. <a>#2664</a>": "Fixed unintended behavior in ProfileUtils.isProfileUsingBasicAuth. <a>#2664</a>",
+  "Fixed use of optional chaining in code to address inconsistent null checks. <a>#4635</a>": "Fixed use of optional chaining in code to address inconsistent null checks. <a>#4635</a>",
   "Fixed vNext-only issue where users are not able to create data sets. <a>#2783</a>.": "Fixed vNext-only issue where users are not able to create data sets. <a>#2783</a>.",
   "Fixed z/OS Console panel background colour to be in sync with the rest of the VS Code styling. <a>#3445</a>": "Fixed z/OS Console panel background colour to be in sync with the rest of the VS Code styling. <a>#3445</a>",
   "Fixed zowe.settings.version being added to settings.json in workspaces. <a>#2312</a>": "Fixed zowe.settings.version being added to settings.json in workspaces. <a>#2312</a>",
