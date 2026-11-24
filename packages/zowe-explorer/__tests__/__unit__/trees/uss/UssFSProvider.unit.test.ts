@@ -3102,6 +3102,34 @@ describe("UssFSProvider", () => {
             fireSoonMock.mockRestore();
         });
 
+        it("does not cache the directory if authentication fails before the remote request", async () => {
+            const root = (UssFSProvider.instance as any).root;
+            const sesEntry = new DirEntry("sestest");
+            sesEntry.metadata = {
+                profile: testProfile,
+                path: "/",
+            };
+            root.entries.set("sestest", sesEntry);
+            const oldSize: number = sesEntry.size;
+            const authError = new Error("Auth cancelled");
+            const ensureAuthNotCancelledMock = vi.spyOn(AuthUtils, "ensureAuthNotCancelled").mockImplementationOnce(() => {
+                throw authError;
+            });
+            const getUssApiMock = vi.spyOn(ZoweExplorerApiRegister, "getUssApi");
+            const fireSoonMock = vi.spyOn(UssFSProvider.instance as any, "fireSoon").mockImplementation((() => undefined) as any);
+
+            await expect(UssFSProvider.instance.createDirectory(testUris.folder)).rejects.toThrow("Auth cancelled");
+
+            expect(sesEntry.entries.has("aFolder")).toBe(false);
+            expect(sesEntry.size).toBe(oldSize);
+            expect(getUssApiMock).not.toHaveBeenCalled();
+            expect(fireSoonMock).not.toHaveBeenCalled();
+
+            ensureAuthNotCancelledMock.mockRestore();
+            getUssApiMock.mockRestore();
+            fireSoonMock.mockRestore();
+        });
+
         it("rolls back the local entry, handles the error, and throws if the remote response is unsuccessful", async () => {
             const root = (UssFSProvider.instance as any).root;
             const sesEntry = new DirEntry("sestest");

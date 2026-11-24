@@ -1230,10 +1230,17 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
             throw vscode.FileSystemError.FileExists(uri);
         }
 
-        const entry = this.createLocalDirectory(uri);
-        const profile = Profiles.getInstance().loadNamedProfile(entry.metadata.profile.name);
+        // Finish authentication before caching the entry so a cancelled or rejected auth flow leaves nothing to roll back
+        const profile = Profiles.getInstance().loadNamedProfile(uriInfo.profile.name);
         AuthUtils.ensureAuthNotCancelled(profile);
         await AuthHandler.waitForAuthFlow(profile);
+
+        // Auth may have yielded; another caller could have cached the entry in the meantime
+        if (parent.entries.has(basename)) {
+            throw vscode.FileSystemError.FileExists(uri);
+        }
+
+        const entry = this.createLocalDirectory(uri);
 
         try {
             let response: IZosFilesResponse | undefined;
