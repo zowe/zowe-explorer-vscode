@@ -214,5 +214,6 @@ export namespace Definitions {
         DISPLAY_RELEASE_NOTES_VERSION = "zowe.displayReleaseNotes",
         DS_DOWNLOAD_OPTIONS = "zowe.dsDownloadOptions",
         USS_DOWNLOAD_OPTIONS = "zowe.ussDownloadOptions",
+        PROFILE_VALIDATION_SETTINGS = "zowe.profileValidationSettings",
     }
 }
