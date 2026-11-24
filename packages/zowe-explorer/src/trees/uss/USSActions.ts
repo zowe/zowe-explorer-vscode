@@ -789,18 +789,20 @@ export class USSActions {
                 cancellable: false,
             },
             async () => {
-                const filePath = downloadOptions.generateDirectory
-                    ? path.join(downloadOptions.selectedPath.fsPath, SharedUtils.stripBacktrackPathSegments(node.fullPath))
-                    : path.join(downloadOptions.selectedPath.fsPath, path.basename(node.fullPath));
-
-                const options: zosfiles.IDownloadSingleOptions = {
-                    file: filePath,
-                    binary: downloadOptions.encoding?.kind === "binary",
-                    encoding: downloadOptions.encoding?.kind === "other" ? downloadOptions.encoding.codepage : profile.profile?.encoding,
-                    overwrite: downloadOptions.overwrite,
-                };
-
                 try {
+                    SharedUtils.validateDownloadName(node.fullPath);
+                    const filePath = downloadOptions.generateDirectory
+                        ? path.join(downloadOptions.selectedPath.fsPath, node.fullPath)
+                        : path.join(downloadOptions.selectedPath.fsPath, path.basename(node.fullPath));
+                    SharedUtils.validateDownloadPath(downloadOptions.selectedPath.fsPath, filePath);
+
+                    const options: zosfiles.IDownloadSingleOptions = {
+                        file: filePath,
+                        binary: downloadOptions.encoding?.kind === "binary",
+                        encoding: downloadOptions.encoding?.kind === "other" ? downloadOptions.encoding.codepage : profile.profile?.encoding,
+                        overwrite: downloadOptions.overwrite,
+                    };
+
                     const response = await ZoweExplorerApiRegister.getUssApi(profile).getContents(node.fullPath, options);
                     void SharedUtils.handleDownloadResponse(response, vscode.l10n.t("USS file"), filePath);
                 } catch (e) {
@@ -880,54 +882,56 @@ export class USSActions {
                 cancellable: true,
             },
             async (progress, token) => {
-                let realPercentComplete = 0;
-                const realTotalEntries = totalFileCount;
-                let numDownloaded = 0;
-                const task: imperative.ITaskWithStatus = {
-                    set percentComplete(value: number) {
-                        realPercentComplete = value;
-                        Gui.reportProgress(progress, realTotalEntries, numDownloaded++, "");
-                    },
-                    get percentComplete(): number {
-                        return realPercentComplete;
-                    },
-                    statusMessage: "",
-                    stageName: 0, // TaskStage.IN_PROGRESS
-                };
-
-                const directoryPath = downloadOptions.generateDirectory
-                    ? path.join(downloadOptions.selectedPath.fsPath, SharedUtils.stripBacktrackPathSegments(node.fullPath))
-                    : path.join(downloadOptions.selectedPath.fsPath, path.basename(node.fullPath));
-
-                const filterOpts = downloadOptions.dirOptions.chooseFilterOptions ? downloadOptions.dirFilterOptions : {};
-                const { includeHidden = false, ...listFilterOpts } = filterOpts;
-
-                const options: zosfiles.IDownloadOptions = {
-                    directory: directoryPath,
-                    overwrite: downloadOptions.overwrite,
-                    includeHidden: includeHidden,
-                    maxConcurrentRequests: profile.profile?.maxConcurrentRequests || 1,
-                    task,
-                    responseTimeout: profile.profile?.responseTimeout,
-                    abortDownload: () => token?.isCancellationRequested ?? false,
-                };
-
-                // only set encoding/binary if user chose a specific encoding (not auto detect)
-                if (downloadOptions.dirOptions.directoryEncoding && downloadOptions.dirOptions.directoryEncoding.kind !== "auto-detect") {
-                    options.binary = downloadOptions.dirOptions.directoryEncoding.kind === "binary";
-                    options.encoding =
-                        downloadOptions.dirOptions.directoryEncoding.kind === "other"
-                            ? downloadOptions.dirOptions.directoryEncoding.codepage
-                            : profile.profile?.encoding;
-                }
-
-                const listOptions: zosfiles.IUSSListOptions = {
-                    ...listFilterOpts,
-                    type: listFilterOpts.type ?? "f", // fallback to files only
-                    symlinks: !downloadOptions.dirOptions.followSymlinks,
-                };
-
                 try {
+                    SharedUtils.validateDownloadName(node.fullPath);
+                    let realPercentComplete = 0;
+                    const realTotalEntries = totalFileCount;
+                    let numDownloaded = 0;
+                    const task: imperative.ITaskWithStatus = {
+                        set percentComplete(value: number) {
+                            realPercentComplete = value;
+                            Gui.reportProgress(progress, realTotalEntries, numDownloaded++, "");
+                        },
+                        get percentComplete(): number {
+                            return realPercentComplete;
+                        },
+                        statusMessage: "",
+                        stageName: 0, // TaskStage.IN_PROGRESS
+                    };
+
+                    const directoryPath = downloadOptions.generateDirectory
+                        ? path.join(downloadOptions.selectedPath.fsPath, node.fullPath)
+                        : path.join(downloadOptions.selectedPath.fsPath, path.basename(node.fullPath));
+                    SharedUtils.validateDownloadPath(downloadOptions.selectedPath.fsPath, directoryPath);
+
+                    const filterOpts = downloadOptions.dirOptions.chooseFilterOptions ? downloadOptions.dirFilterOptions : {};
+                    const { includeHidden = false, ...listFilterOpts } = filterOpts;
+
+                    const options: zosfiles.IDownloadOptions = {
+                        directory: directoryPath,
+                        overwrite: downloadOptions.overwrite,
+                        includeHidden: includeHidden,
+                        maxConcurrentRequests: profile.profile?.maxConcurrentRequests || 1,
+                        task,
+                        responseTimeout: profile.profile?.responseTimeout,
+                        abortDownload: () => token?.isCancellationRequested ?? false,
+                    };
+
+                    // only set encoding/binary if user chose a specific encoding (not auto detect)
+                    if (downloadOptions.dirOptions.directoryEncoding && downloadOptions.dirOptions.directoryEncoding.kind !== "auto-detect") {
+                        options.binary = downloadOptions.dirOptions.directoryEncoding.kind === "binary";
+                        options.encoding =
+                            downloadOptions.dirOptions.directoryEncoding.kind === "other"
+                                ? downloadOptions.dirOptions.directoryEncoding.codepage
+                                : profile.profile?.encoding;
+                    }
+
+                    const listOptions: zosfiles.IUSSListOptions = {
+                        ...listFilterOpts,
+                        type: listFilterOpts.type ?? "f", // fallback to files only
+                        symlinks: !downloadOptions.dirOptions.followSymlinks,
+                    };
+
                     const response = await ussApi.downloadDirectory(node.fullPath, options, listOptions);
                     void SharedUtils.handleDownloadResponse(response, vscode.l10n.t("USS directory"), directoryPath, token?.isCancellationRequested);
                 } catch (e) {

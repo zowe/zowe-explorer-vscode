@@ -16,6 +16,9 @@
 import * as os from "os";
 import * as path from "path";
 
+// Exercise the SDK's path security checks rather than duplicating them in mocks.
+export const { IO } = await vi.importActual<typeof import("@zowe/imperative")>("@zowe/imperative");
+
 const log4js = require("log4js");
 
 export class EventProcessor {

@@ -6662,6 +6662,23 @@ describe("DatasetActions - downloading functions", () => {
             mockAuthErrorHandling[Symbol.dispose]();
         });
 
+        it.each(["../evil", "..\\evil", "MEMBER/..", ".."])("should reject unsafe names in the backend member listing: %s", async (member) => {
+            const pdsNode = new ZoweDatasetNode({
+                label: "TEST.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testMocks.datasetSessionNode,
+                profile: defaultTestProfile,
+            });
+            mocked(testMocks.mvsApi.allMembers).mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: { items: [{ member: "SAFE" }, { member }] },
+            });
+            const downloadSpy = vi.spyOn(testMocks.mvsApi, "downloadAllMembers");
+            await expect(DatasetActions.downloadAllMembers(pdsNode)).rejects.toThrow("backtracking path segments");
+            expect(downloadSpy).not.toHaveBeenCalled();
+        });
+
         it("should successfully download all members of a PDS", async () => {
             const pdsNode = new ZoweDatasetNode({
                 label: "TEST.PDS",
@@ -7146,34 +7163,14 @@ describe("DatasetActions - downloading functions", () => {
             expect(result.downloadedPath).toMatch(/Member1\.txt$/);
         });
 
-        it("should handle member with preserve case and generate directory options - member name with dot-dot", async () => {
-            const optionsWithCase = {
-                ...defaultDownloadOptions,
-                uppercaseNames: true,
-                generateDirectory: true,
-                overwrite: true,
-            };
+        it("should reject backtracking in a member name before downloading", async () => {
             const { memberNode } = createMemberNodes("TEST.PDS", "Memb\\..\\er1");
+            const getContentsSpy = vi.spyOn(testMocks.mvsApi, "getContents");
 
-            const getContentsSpy = vi.spyOn(testMocks.mvsApi, "getContents").mockResolvedValue({
-                success: true,
-                commandResponse: "",
-                apiResponse: { etag: "123" },
-            });
-
-            const result = await (DatasetActions as any).downloadSingleMember(memberNode, optionsWithCase, "txt");
-
-            expect(getContentsSpy).toHaveBeenCalledWith(
-                "TEST.PDS(Memb\\..\\er1)",
-                expect.objectContaining({
-                    file: expect.stringMatching(/Memb\\er1\.txt$/),
-                    binary: false,
-                    encoding: undefined,
-                    overwrite: true,
-                    responseTimeout: 30000,
-                })
-            );
-            expect(result.downloadedPath).toMatch(/Memb\\er1\.txt$/);
+            await expect(
+                DatasetActions["downloadSingleMember"](memberNode, { ...defaultDownloadOptions, generateDirectory: true }, "txt")
+            ).rejects.toThrow("backtracking path segments");
+            expect(getContentsSpy).not.toHaveBeenCalled();
         });
 
         it("should handle record codepage by setting record option", async () => {
@@ -7247,6 +7244,59 @@ describe("DatasetActions - downloading functions", () => {
             mockGetExtension[Symbol.dispose]();
             mockGetDirsFromDataSet[Symbol.dispose]();
         });
+
+        it("should stop before downloading when Imperative rejects target containment", async () => {
+            const containment = vi.spyOn(imperative.IO, "isSubPath").mockReturnValue(false);
+            try {
+                const pdsNode = new ZoweDatasetNode({
+                    label: "TEST.PDS",
+                    collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                    parentNode: testMocks.datasetSessionNode,
+                    profile: defaultTestProfile,
+                });
+                const node = new ZoweDatasetNode({
+                    label: "MEMBER",
+                    collapsibleState: vscode.TreeItemCollapsibleState.None,
+                    parentNode: pdsNode,
+                    profile: defaultTestProfile,
+                });
+                const getContentsSpy = vi.spyOn(testMocks.mvsApi, "getContents");
+                await expect(DatasetActions.downloadMember(node)).rejects.toThrow("inside the selected directory");
+                expect(containment).toHaveBeenCalled();
+                expect(getContentsSpy).not.toHaveBeenCalled();
+            } finally {
+                containment.mockRestore();
+            }
+        });
+
+        it.each(["../evil", "..\\evil", "MEMBER/..", "MEMBER\\..", ".."])(
+            "should reject member or parent backtracking before downloading: %s",
+            async (unsafeName) => {
+                const getContentsSpy = vi.spyOn(testMocks.mvsApi, "getContents");
+                for (const generateDirectory of [false, true]) {
+                    mockGetDataSetDownloadOptions.mock.mockResolvedValue({ ...defaultDownloadOptions, generateDirectory });
+                    for (const [datasetName, memberName] of [
+                        ["TEST.PDS", unsafeName],
+                        [unsafeName, "MEMBER"],
+                    ]) {
+                        const pdsNode = new ZoweDatasetNode({
+                            label: datasetName,
+                            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                            parentNode: testMocks.datasetSessionNode,
+                            profile: defaultTestProfile,
+                        });
+                        const memberNode = new ZoweDatasetNode({
+                            label: memberName,
+                            collapsibleState: vscode.TreeItemCollapsibleState.None,
+                            parentNode: pdsNode,
+                            profile: defaultTestProfile,
+                        });
+                        await expect(DatasetActions.downloadMember(memberNode)).rejects.toThrow("backtracking path segments");
+                    }
+                }
+                expect(getContentsSpy).not.toHaveBeenCalled();
+            }
+        );
 
         it("should show options and execute single-member progress/finish notifications", async () => {
             const pdsNode = new ZoweDatasetNode({
@@ -7984,6 +8034,30 @@ describe("DatasetActions - downloading functions", () => {
             mockGetExtension[Symbol.dispose]();
         });
 
+        it("should stop before downloading when Imperative rejects target containment", async () => {
+            const containment = vi.spyOn(imperative.IO, "isSubPath").mockReturnValue(false);
+            try {
+                const pdsNode = new ZoweDatasetNode({
+                    label: "TEST.PDS",
+                    collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                    parentNode: testMocks.datasetSessionNode,
+                    profile: defaultTestProfile,
+                });
+                const node = new ZoweDatasetNode({
+                    label: "MEMBER",
+                    collapsibleState: vscode.TreeItemCollapsibleState.None,
+                    parentNode: pdsNode,
+                    profile: defaultTestProfile,
+                });
+                const getContentsSpy = vi.spyOn(testMocks.mvsApi, "getContents");
+                await expect(DatasetActions.downloadDataSet(node)).rejects.toThrow("inside the selected directory");
+                expect(containment).toHaveBeenCalled();
+                expect(getContentsSpy).not.toHaveBeenCalled();
+            } finally {
+                containment.mockRestore();
+            }
+        });
+
         it("should successfully download a sequential dataset", async () => {
             const dsNode = new ZoweDatasetNode({
                 label: "TEST.DATASET.SEQ",
@@ -8067,50 +8141,25 @@ describe("DatasetActions - downloading functions", () => {
             );
         });
 
-        it("should successfully download a sequential dataset with directory generation enabled 2", async () => {
-            const dsNode = new ZoweDatasetNode({
-                label: "TEST.DATA\\..\\SET.SEQ",
-                collapsibleState: vscode.TreeItemCollapsibleState.None,
-                parentNode: testMocks.datasetSessionNode,
-                profile: defaultTestProfile,
-            });
+        it.each(["../evil", "..\\evil", "TEST/../evil", "TEST\\..\\evil", "TEST/..", "TEST\\..", ".."])(
+            "should reject a sequential data set with backtracking: %s",
+            async (datasetName) => {
+                const dsNode = new ZoweDatasetNode({
+                    label: datasetName,
+                    collapsibleState: vscode.TreeItemCollapsibleState.None,
+                    parentNode: testMocks.datasetSessionNode,
+                    profile: defaultTestProfile,
+                });
+                dsNode.getLabel = vi.fn().mockReturnValue(datasetName);
+                const getContentsSpy = vi.spyOn(testMocks.mvsApi, "getContents");
 
-            const optionsWithDirectory = {
-                overwrite: true,
-                generateDirectory: true,
-                uppercaseNames: false,
-                chooseEncoding: false,
-                overrideExtension: false,
-                encoding: undefined,
-                selectedPath: vscode.Uri.file("/test/path"),
-            };
-            mockGetDataSetDownloadOptions.mock.mockResolvedValue(optionsWithDirectory);
-
-            dsNode.getLabel = vi.fn().mockReturnValue("TEST.DATA\\..\\SET.SEQ");
-            dsNode.getProfile = vi.fn().mockReturnValue(defaultTestProfile);
-
-            const getContentsSpy = vi.spyOn(testMocks.mvsApi, "getContents").mockResolvedValue(undefined);
-            mockGetExtension.mock.mockReturnValue("txt");
-
-            await DatasetActions.downloadDataSet(dsNode);
-
-            expect(mockGetDataSetDownloadOptions.mock).toHaveBeenCalled();
-            expect(mockExecuteDownloadWithProgress.mock).toHaveBeenCalledWith("Downloading data set", expect.any(Function), "Data set", dsNode);
-
-            const downloadFn = mockExecuteDownloadWithProgress.mock.mock.calls[0][1];
-            await downloadFn();
-            expect(getContentsSpy).toHaveBeenCalledWith(
-                "TEST.DATA\\SET.SEQ",
-                expect.objectContaining({
-                    file: expect.stringMatching(/test[/\\]data\\set[/\\]seq\.txt$/),
-                    binary: false,
-                    record: false,
-                    encoding: undefined,
-                    overwrite: true,
-                    responseTimeout: 30000,
-                })
-            );
-        });
+                for (const generateDirectory of [false, true]) {
+                    mockGetDataSetDownloadOptions.mock.mockResolvedValue({ ...defaultDownloadOptions, generateDirectory });
+                    await expect(DatasetActions.downloadDataSet(dsNode)).rejects.toThrow("backtracking path segments");
+                }
+                expect(getContentsSpy).not.toHaveBeenCalled();
+            }
+        );
 
         it("should reject PDS datasets", async () => {
             const pdsNode = new ZoweDatasetNode({

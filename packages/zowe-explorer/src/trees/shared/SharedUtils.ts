@@ -50,8 +50,17 @@ export class SharedUtils {
         }
     }
 
-    public static stripBacktrackPathSegments(input: string): string {
-        return input.replace(/(?<=[\\/])\.{2}[\\/]/g, "");
+    public static validateDownloadName(input: string): void {
+        // Remote names may contain either separator, regardless of the local platform.
+        if (imperative.IO.containsBacktrack(input.replace(/\\/g, "/"))) {
+            throw new Error(vscode.l10n.t("Cannot download a resource with backtracking path segments."));
+        }
+    }
+
+    public static validateDownloadPath(selectedPath: string, targetPath: string): void {
+        if (!imperative.IO.isSubPath(selectedPath, targetPath)) {
+            throw new Error(vscode.l10n.t("Download path must be inside the selected directory."));
+        }
     }
 
     public static filterTreeByString(value: string, treeItems: vscode.QuickPickItem[]): vscode.QuickPickItem[] {
