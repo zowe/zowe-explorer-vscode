@@ -1599,7 +1599,6 @@
   "Fixed the \"Edit Profile\" operation to open the correct files when both global and project team configs are present. <a>#3125</a>": "",
   "Fixed the Secure Credentials Enabled setting to update the ~/.zowe/settings/imperative.json file upon change of the setting without overwriting preexisting data in the file.": "",
   "Fixed the allocate-like functionality by removing the inclusion of DS item in the filter history. <a>#2620</a>": "",
-  "Fixed the editor's Make Read-Only and Make Writable commands so the Favorites folder no longer interrupts the operation and matching Favorites entries refresh. <a>#2297</a>": "",
   "Fixed the loading of previously saved profiles in the tree views.": "",
   "Fixed the recent search job id filter. <a>#2562</a>": "",
   "Fixed the submit job confirmation dialog box failing to display when a job is submitted. <a>#4097</a>": "",
