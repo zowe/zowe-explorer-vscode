@@ -858,18 +858,16 @@ export class DatasetActions {
     }
 
     private static generateDirectoryPath(datasetName: string, selectedPath: vscode.Uri, generateDirectory: boolean, uppercaseNames: boolean): string {
+        SharedUtils.validateDownloadName(datasetName);
         if (!generateDirectory) {
             return selectedPath.fsPath;
         }
 
         const dirsFromDataset = zosfiles.ZosFilesUtils.getDirsFromDataSet(datasetName);
-        if (!dirsFromDataset) {
-            const fallbackDirs = datasetName.replace(/\./g, path.sep);
-            return uppercaseNames
-                ? path.join(selectedPath.fsPath, fallbackDirs.toUpperCase())
-                : path.join(selectedPath.fsPath, fallbackDirs.toLowerCase());
-        }
-        return uppercaseNames ? path.join(selectedPath.fsPath, dirsFromDataset.toUpperCase()) : path.join(selectedPath.fsPath, dirsFromDataset);
+        const directories = dirsFromDataset || datasetName.replace(/\./g, path.sep).toLowerCase();
+        const targetDirectory = path.join(selectedPath.fsPath, uppercaseNames ? directories.toUpperCase() : directories);
+        SharedUtils.validateDownloadPath(selectedPath.fsPath, targetDirectory);
+        return targetDirectory;
     }
 
     private static async executeDownloadWithProgress(
@@ -999,6 +997,12 @@ export class DatasetActions {
                 const extensionMap = DatasetActions.buildMemberExtensionMap(membersToDownload, uppercaseNames, extension);
 
                 const generatedFileDirectory = DatasetActions.generateDirectoryPath(datasetName, selectedPath, generateDirectory, uppercaseNames);
+                SharedUtils.validateDownloadName(extension);
+                for (const memberName of membersToDownload) {
+                    SharedUtils.validateDownloadName(memberName);
+                    const fileName = uppercaseNames ? memberName : memberName.toLowerCase();
+                    SharedUtils.validateDownloadPath(selectedPath.fsPath, path.join(generatedFileDirectory, `${fileName}.${extension}`));
+                }
 
                 const isRecordEncoding = encoding?.kind === "other" && encoding.codepage?.toLowerCase() === "record";
                 const downloadOptions: zosfiles.IDownloadOptions = {
@@ -1035,14 +1039,17 @@ export class DatasetActions {
         const parent = selectedNode.getParent() as IZoweDatasetTreeNode;
         const datasetName = parent.getLabel() as string;
         const memberName = selectedNode.getLabel() as string;
-        const sanitizedMemberName = SharedUtils.stripBacktrackPathSegments(memberName);
+        SharedUtils.validateDownloadName(datasetName);
+        SharedUtils.validateDownloadName(memberName);
+        SharedUtils.validateDownloadName(extension);
         const fullDatasetName = `${datasetName}(${memberName})`;
-        const fileName = uppercaseNames ? sanitizedMemberName : sanitizedMemberName.toLowerCase();
+        const fileName = uppercaseNames ? memberName : memberName.toLowerCase();
 
         const targetDirectory = generateDirectory
             ? DatasetActions.generateDirectoryPath(datasetName, selectedPath, generateDirectory, uppercaseNames)
             : selectedPath.fsPath;
         const filePath = path.join(targetDirectory, `${fileName}.${extension}`);
+        SharedUtils.validateDownloadPath(selectedPath.fsPath, filePath);
 
         const isRecordEncoding = encoding?.kind === "other" && encoding.codepage?.toLowerCase() === "record";
         const downloadOptions = {
@@ -1241,7 +1248,8 @@ export class DatasetActions {
         await DatasetActions.executeDownloadWithProgress(
             vscode.l10n.t("Downloading data set"),
             async () => {
-                const datasetName = SharedUtils.stripBacktrackPathSegments(node.getLabel() as string);
+                const datasetName = node.getLabel() as string;
+                SharedUtils.validateDownloadName(datasetName);
 
                 let fileName: string;
                 let targetDirectory: string;
@@ -1268,6 +1276,8 @@ export class DatasetActions {
                 }
 
                 const filePath = path.join(targetDirectory, `${fileName}.${extension}`);
+                SharedUtils.validateDownloadName(extension);
+                SharedUtils.validateDownloadPath(selectedPath.fsPath, filePath);
 
                 const isRecordEncoding = encoding?.kind === "other" && encoding.codepage?.toLowerCase() === "record";
                 const downloadOptions = {

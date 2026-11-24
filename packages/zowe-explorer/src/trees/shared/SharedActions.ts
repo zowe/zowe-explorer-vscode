@@ -431,8 +431,8 @@ export class SharedActions {
     private static findLoadedNodes(nodes: IZoweTreeNode[], uri: vscode.Uri): IZoweTreeNode[] {
         const found: IZoweTreeNode[] = [];
         for (const node of nodes) {
-            const nodeUri = node?.resourceUri;
-            // Nodes such as the Favorites section have no URI for the filesystem, so they are searched through
+            const nodeUri = node.resourceUri;
+            // Grouping nodes such as Favorites have no resource URI.
             if (nodeUri?.scheme === uri.scheme) {
                 if (nodeUri.path === uri.path) {
                     found.push(node);
@@ -471,9 +471,12 @@ export class SharedActions {
         }
         ReadOnlyManagement.setReadOnly(uri, readOnly);
 
-        // Refresh only the node of the tree that the active file is open from
+        // Refresh matching nodes in the profile tree and in Favorites.
         const tree = (uri.scheme as ZoweScheme) === ZoweScheme.DS ? SharedTreeProviders.ds : SharedTreeProviders.uss;
-        for (const node of SharedActions.findLoadedNodes(tree?.mSessionNodes ?? [], uri)) {
+        for (const node of SharedActions.findLoadedNodes(tree.mSessionNodes ?? [], uri)) {
+            tree.nodeDataChanged?.(node);
+        }
+        for (const node of SharedActions.findLoadedNodes(tree.mFavorites, uri)) {
             tree.nodeDataChanged?.(node);
         }
 
