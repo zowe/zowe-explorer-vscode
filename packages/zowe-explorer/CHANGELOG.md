@@ -32,6 +32,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Updated Zowe SDKs to `8.43.0` for technical currency. [#4556](https://github.com/zowe/zowe-explorer-vscode/pull/4556)
 - Fixed incorrect profile validation results for profiles that use certificates or set the `authOrder` property. [#4617](https://github.com/zowe/zowe-explorer-vscode/pull/4617)
 - Fixed job submission from favorited data set searches. Sequential data sets can be submitted, and the job ID link, Open Job, and polling now use the correct profile. [#4352](https://github.com/zowe/zowe-explorer-vscode/issues/4352)
+- Fixed an issue where pasting a data set member onto a profile node in the **Data Sets** view asked for a member name and then failed. Zowe Explorer now shows an error before the paste starts and keeps the copied member on the clipboard. [#3949](https://github.com/zowe/zowe-explorer-vscode/issues/3949)
 
 ## `3.6.1`
 
