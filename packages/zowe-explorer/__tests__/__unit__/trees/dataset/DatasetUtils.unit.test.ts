@@ -12,6 +12,29 @@
 import { Constants } from "../../../../src/configuration/Constants";
 import { DatasetUtils } from "../../../../src/trees/dataset/DatasetUtils";
 
+describe("Dataset utils unit tests - function getDataSetStats", () => {
+    it("preserves seconds from msec", () => {
+        const stats = DatasetUtils.getDataSetStats({
+            c4date: "2023-12-14",
+            m4date: "2023-12-15",
+            mtime: "14:30",
+            msec: "45",
+        });
+
+        expect(stats.modifiedDate).toEqual(new Date(2023, 11, 15, 14, 30, 45));
+    });
+
+    it("preserves seconds from mtime without msec", () => {
+        const stats = DatasetUtils.getDataSetStats({
+            c4date: "2023-12-14",
+            m4date: "2023-12-15",
+            mtime: "14:30:45",
+        });
+
+        expect(stats.modifiedDate).toEqual(new Date(2023, 11, 15, 14, 30, 45));
+    });
+});
+
 describe("Dataset utils unit tests - function getExtension", () => {
     it("returns the proper file extension", () => {
         const pairs = [

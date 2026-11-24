@@ -283,7 +283,7 @@ export class AuthHandler {
         // User cancelled during credential input
         AuthHandler.setAuthCancelled(profileName, true);
         if (params.throwErrorOnCancel) {
-            throw new AuthCancelledError(profileName, `User cancelled during ${usingCert ? "certificate" : "credential"} input`);
+            throw new AuthCancelledError(profileName, "User cancelled during credential input");
         }
         return false;
     }

@@ -61,6 +61,13 @@ export class ConfigRedactManagement {
         },
     ];
 
+    /**
+     * Accessibility: toast notifications do not take focus, so screen readers (e.g. VoiceOver) do not announce them
+     * until the user navigates to them. Result messages are shown as modal dialogs instead, which take focus
+     * and are announced automatically.
+     */
+    private static readonly modalOpts = { modal: true };
+
     public static async exportRedactedConfig(): Promise<void> {
         ZoweLogger.trace("ConfigRedactManagement.exportRedactedConfig called.");
         const opts = await ConfigRedactManagement.promptForOptions();
@@ -77,20 +84,31 @@ export class ConfigRedactManagement {
             const teamConfig = (await Profiles.getInstance().getProfileInfo()).getTeamConfig();
             const exportedFiles = teamConfig.api.redact.exportToDirectory(dir.fsPath, opts);
             if (exportedFiles.length === 0) {
-                Gui.infoMessage(vscode.l10n.t("No configuration files were found to export."));
+                await Gui.infoMessage(vscode.l10n.t("No configuration files were found to export."), {
+                    vsCodeOpts: ConfigRedactManagement.modalOpts,
+                });
                 return;
             }
-            const openFolder = await Gui.infoMessage(
+            // Keep the message to a single short line for screen readers; the export location is written to the log instead.
+            ZoweLogger.info(
                 vscode.l10n.t({
-                    message:
-                        "Exported {0} redacted configuration file(s) to {1}.\nAlways review the exported files before sharing them or " +
-                        "placing them anywhere external or sensitive.",
+                    message: "Exported {0} redacted configuration file(s) to {1}",
                     args: [exportedFiles.length, dir.fsPath],
                     comment: ["Number of files exported", "Export directory"],
-                }),
-                { items: [vscode.l10n.t("Open Folder")] }
+                })
             );
-            if (openFolder === vscode.l10n.t("Open Folder")) {
+            // An explicit close item replaces the default "Cancel" button, which is not meaningful for an informational message.
+            const openFolderItem: vscode.MessageItem = { title: vscode.l10n.t("Open Folder") };
+            const closeItem: vscode.MessageItem = { title: vscode.l10n.t("Close"), isCloseAffordance: true };
+            const selection = await Gui.infoMessage(
+                vscode.l10n.t({
+                    message: "Exported {0} redacted configuration file(s). Always review the exported files before sharing them.",
+                    args: [exportedFiles.length],
+                    comment: ["Number of files exported"],
+                }),
+                { items: [openFolderItem, closeItem], vsCodeOpts: ConfigRedactManagement.modalOpts }
+            );
+            if (selection?.title === openFolderItem.title) {
                 await vscode.env.openExternal(dir);
             }
         } catch (err) {
@@ -99,7 +117,8 @@ export class ConfigRedactManagement {
                     message: "Failed to export redacted configuration: {0}",
                     args: [errorMessage(err)],
                     comment: ["Error message"],
-                })
+                }),
+                { vsCodeOpts: ConfigRedactManagement.modalOpts }
             );
         }
     }

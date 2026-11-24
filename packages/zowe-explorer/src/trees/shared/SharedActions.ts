@@ -12,7 +12,18 @@
 import * as vscode from "vscode";
 import * as imperative from "@zowe/imperative";
 import * as path from "path";
-import { FileManagement, Gui, handleError, IZoweTree, IZoweTreeNode, IZoweUSSTreeNode, Types, ZoweVsCodeExtension } from "@zowe/zowe-explorer-api";
+import {
+    FileManagement,
+    FsAbstractUtils,
+    Gui,
+    handleError,
+    IZoweTree,
+    IZoweTreeNode,
+    IZoweUSSTreeNode,
+    Types,
+    ZoweScheme,
+    ZoweVsCodeExtension,
+} from "@zowe/zowe-explorer-api";
 import { Profiles } from "../../configuration/Profiles";
 import { Constants } from "../../configuration/Constants";
 import { SharedUtils } from "./SharedUtils";
@@ -26,6 +37,7 @@ import { SharedTreeProviders } from "./SharedTreeProviders";
 import { ZoweExplorerExtender } from "../../extending/ZoweExplorerExtender";
 import type { ZoweTreeProvider } from "../ZoweTreeProvider";
 import { ProfilesUtils } from "../../utils/ProfilesUtils";
+import { ReadOnlyManagement } from "../../management/ReadOnlyManagement";
 
 export class SharedActions {
     private static refreshInProgress = false;
@@ -414,5 +426,83 @@ export class SharedActions {
 
         const profileTypeConfigurations = Constants.PROFILES_CACHE.getConfigArray();
         ProfilesUtils.updateSchema(profileInfo, profileTypeConfigurations, updateProjectSchema);
+    }
+
+    private static findLoadedNodes(nodes: IZoweTreeNode[], uri: vscode.Uri): IZoweTreeNode[] {
+        const found: IZoweTreeNode[] = [];
+        for (const node of nodes) {
+            const nodeUri = node?.resourceUri;
+            // Nodes such as the Favorites section have no URI for the filesystem, so they are searched through
+            if (nodeUri?.scheme === uri.scheme) {
+                if (nodeUri.path === uri.path) {
+                    found.push(node);
+                    continue;
+                }
+                if (!uri.path.startsWith(`${nodeUri.path.replace(/\/+$/, "")}/`)) {
+                    continue;
+                }
+            }
+            found.push(...SharedActions.findLoadedNodes(node?.children ?? [], uri));
+        }
+        return found;
+    }
+
+    /**
+     * Makes a tree node or editor read-only or writable
+     */
+    public static async toggleReadOnly(target: IZoweTreeNode | vscode.Uri | undefined, readOnly: boolean): Promise<void> {
+        if (target == null) {
+            return SharedActions.toggleEditorReadOnly(vscode.window.activeTextEditor?.document.uri, readOnly);
+        }
+        if (target instanceof vscode.Uri) {
+            return SharedActions.toggleEditorReadOnly(target, readOnly);
+        }
+        return SharedActions.toggleNodeReadOnly(target, readOnly);
+    }
+
+    /**
+     * Flip between the editor's data set, member or USS file being read-only or writable
+     */
+    public static async toggleEditorReadOnly(uri: vscode.Uri | undefined, readOnly: boolean): Promise<void> {
+        ZoweLogger.trace("SharedActions.toggleEditorReadOnly called.");
+        // If file is opened with readonly=true parameter, don't allow the toggle to be clicked (when clause on menu items disables from UI side)
+        if (!ReadOnlyManagement.isSupportedUri(uri) || FsAbstractUtils.isReadOnlyUri(uri)) {
+            return;
+        }
+        ReadOnlyManagement.setReadOnly(uri, readOnly);
+
+        // Refresh only the node of the tree that the active file is open from
+        const tree = (uri.scheme as ZoweScheme) === ZoweScheme.DS ? SharedTreeProviders.ds : SharedTreeProviders.uss;
+        for (const node of SharedActions.findLoadedNodes(tree?.mSessionNodes ?? [], uri)) {
+            tree.nodeDataChanged?.(node);
+        }
+
+        const fileName = path.posix.basename(uri.path);
+        await Gui.withProgress(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: readOnly ? vscode.l10n.t("Making {0} read-only...", fileName) : vscode.l10n.t("Making {0} writable...", fileName),
+            },
+            async () => {
+                // Wait for the existing stat command for the uri to finish (which is automagically triggered from the read-only change, not here)
+                try {
+                    await vscode.workspace.fs.stat(uri);
+                } catch (err) {
+                    ZoweLogger.warn(`Failed to check ${uri.path} after changing its read-only state: ${err?.message}`);
+                }
+            }
+        );
+    }
+
+    /**
+     * Flip between the tree node being read-only or writable
+     */
+    public static async toggleNodeReadOnly(node: IZoweTreeNode, readOnly: boolean): Promise<void> {
+        ZoweLogger.trace("SharedActions.toggleNodeReadOnly called.");
+        if (!ReadOnlyManagement.isEligibleNode(node)) {
+            return;
+        }
+        await ReadOnlyManagement.setReadOnly(ReadOnlyManagement.getNodeUri(node), readOnly);
+        SharedTreeProviders.getProviderForNode(node)?.nodeDataChanged?.(node);
     }
 }

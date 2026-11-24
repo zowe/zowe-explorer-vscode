@@ -34,6 +34,7 @@ import { ZoweDatasetNode } from "./ZoweDatasetNode";
 import { DatasetUtils } from "./DatasetUtils";
 import { DatasetFSProvider } from "./DatasetFSProvider";
 import { ZoweLogger } from "../../tools/ZoweLogger";
+import { ReadOnlyManagement } from "../../management/ReadOnlyManagement";
 import { Constants } from "../../configuration/Constants";
 import { Profiles } from "../../configuration/Profiles";
 import { ZoweExplorerApiRegister } from "../../extending/ZoweExplorerApiRegister";
@@ -276,6 +277,54 @@ export class DatasetActions {
         return Promise.resolve(Gui.showQuickPick(stepThreeChoices, stepThreeOptions));
     }
 
+    /**
+     * Shows an error if a data set or member about to be created is read-only, or would be created in a read-only PDS or profile
+     * @returns true if the destination is read-only and the action should stop
+     */
+    private static async isReadOnlyDestination(profile: imperative.IProfileLoaded, dsName: string, member?: string): Promise<boolean> {
+        if (profile?.name == null || !dsName) {
+            return false;
+        }
+        const segments = [profile.name, dsName.toUpperCase(), ...(member ? [member.toUpperCase()] : [])];
+        return ReadOnlyManagement.showErrorIfReadOnly(vscode.Uri.from({ scheme: ZoweScheme.DS, path: `/${segments.join("/")}` }), {
+            checkParent: true,
+        });
+    }
+
+    /**
+     * Shows an error if a PDS about to be pasted into, or any of the members that would be written to it, is read-only
+     * @returns true if the PDS or any of the members is read-only and the paste should stop
+     */
+    private static async isReadOnlyPdsDestination(profile: imperative.IProfileLoaded, dsName: string, members: string[] = []): Promise<boolean> {
+        if (await DatasetActions.isReadOnlyDestination(profile, dsName)) {
+            return true;
+        }
+        for (const member of members) {
+            if (await DatasetActions.isReadOnlyDestination(profile, dsName, member)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Shows an error if any of the files would be uploaded to a read-only member of the PDS
+     * @returns true if a file would be uploaded to a read-only member and the upload should stop
+     */
+    private static async isReadOnlyUploadTarget(node: IZoweDatasetTreeNode, files: vscode.Uri[]): Promise<boolean> {
+        if (!SharedContext.isPds(node)) {
+            return false;
+        }
+        for (const file of files) {
+            const memberName = zosfiles.ZosFilesUtils.generateMemberName(file.fsPath);
+            const memberUri = node.resourceUri.with({ path: path.posix.join(node.resourceUri.path, memberName), query: "" });
+            if (await ReadOnlyManagement.showErrorIfReadOnly(memberUri)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private static async allocateNewDataSet(
         node: IZoweDatasetTreeNode,
         dsName: string,
@@ -283,6 +332,9 @@ export class DatasetActions {
         datasetProvider: Types.IZoweDatasetTreeType
     ): Promise<void> {
         const profile = node.getProfile();
+        if (await DatasetActions.isReadOnlyDestination(profile, dsName)) {
+            return;
+        }
         try {
             // Allocate the data set
             await ZoweExplorerApiRegister.getMvsApi(profile).createDataSet(DatasetActions.typeEnum, dsName, {
@@ -443,6 +495,9 @@ export class DatasetActions {
             return;
         } else {
             ZoweLogger.trace(`${newDSName} was entered for the name of the new data set.`);
+            if (await DatasetActions.isReadOnlyDestination(profile, newDSName)) {
+                return;
+            }
             // Allocate the data set, or throw an error
             try {
                 await ZoweExplorerApiRegister.getMvsApi(profile).allocateLikeDataSet(newDSName.toUpperCase(), likeDSName);
@@ -485,6 +540,9 @@ export class DatasetActions {
 
     public static async uploadDialog(node: ZoweDatasetNode, datasetProvider: Types.IZoweDatasetTreeType): Promise<void> {
         ZoweLogger.trace("dataset.actions.uploadDialog called.");
+        if (await ReadOnlyManagement.showErrorIfReadOnly(node.resourceUri)) {
+            return;
+        }
         const fileOpenOptions = {
             canSelectFiles: true,
             openLabel: "Upload File",
@@ -493,6 +551,9 @@ export class DatasetActions {
         };
         const value = await Gui.showOpenDialog(fileOpenOptions);
         if (value?.length > 0) {
+            if (await DatasetActions.isReadOnlyUploadTarget(node, value)) {
+                return;
+            }
             await Gui.withProgress(
                 {
                     location: vscode.ProgressLocation.Notification,
@@ -552,6 +613,9 @@ export class DatasetActions {
             Gui.showMessage(vscode.l10n.t("This action is only supported for partitioned data sets."));
             return;
         }
+        if (await ReadOnlyManagement.showErrorIfReadOnly(node.resourceUri)) {
+            return;
+        }
 
         const profile = node.getProfile();
         const encoding = await SharedUtils.promptForUploadEncoding(profile, node.label as string);
@@ -568,6 +632,9 @@ export class DatasetActions {
         };
         const selectedFiles = await Gui.showOpenDialog(fileOpenOptions);
         if (!selectedFiles || selectedFiles.length === 0) {
+            return;
+        }
+        if (await DatasetActions.isReadOnlyUploadTarget(node, selectedFiles)) {
             return;
         }
 
@@ -1279,6 +1346,12 @@ export class DatasetActions {
             return;
         }
 
+        for (const n of nodes) {
+            if (await ReadOnlyManagement.showErrorIfReadOnly(n.resourceUri)) {
+                return;
+            }
+        }
+
         // The names of the nodes that should be deleted
         const deleteItemName = (aNode: IZoweDatasetTreeNode): string =>
             SharedContext.isDsMember(aNode)
@@ -1400,6 +1473,9 @@ export class DatasetActions {
      */
     public static async createMember(parent: IZoweDatasetTreeNode, datasetProvider: Types.IZoweDatasetTreeType): Promise<void> {
         ZoweLogger.trace("dataset.actions.createMember called.");
+        if (await ReadOnlyManagement.showErrorIfReadOnly(parent.resourceUri)) {
+            return;
+        }
         const options: vscode.InputBoxOptions = {
             placeHolder: vscode.l10n.t("Name of member"),
             validateInput: (text) => {
@@ -1417,6 +1493,9 @@ export class DatasetActions {
         if (name) {
             const label = parent.label as string;
             const profile = parent.getProfile();
+            if (await DatasetActions.isReadOnlyDestination(profile, label, name)) {
+                return;
+            }
             let replace: Definitions.ShouldReplace;
             const extension = DatasetUtils.getExtension(label);
             const memberUri = parent.resourceUri.with({
@@ -2116,8 +2195,6 @@ export class DatasetActions {
     public static async submitMember(node: IZoweDatasetTreeNode): Promise<void> {
         ZoweLogger.trace("dataset.actions.submitMember called.");
         let label: string;
-        let sesName: string;
-        let sessProfile: imperative.IProfileLoaded;
         const profiles = Profiles.getInstance();
         const nodeProfile = node.getProfile();
         await profiles.checkCurrentProfile(nodeProfile, node);
@@ -2135,21 +2212,20 @@ export class DatasetActions {
                 // For favorited or non-favorited sequential DS:
                 case SharedContext.isFavorite(node) && !SharedContext.isDsMember(node):
                 case SharedContext.isSessionNotFav(node.getParent()):
-                    sesName = node.getParent().getLabel() as string;
+                case SharedContext.isDs(node):
                     label = node.label as string;
-                    sessProfile = node.getProfile();
                     break;
                 // For favorited or non-favorited data set members:
                 case SharedContext.isFavoritePds(node.getParent()):
                 case SharedContext.isPdsNotFav(node.getParent()):
-                    sesName = node.getParent().getParent().getLabel() as string;
                     label = node.getParent().getLabel().toString() + "(" + node.label.toString() + ")";
-                    sessProfile = node.getProfile();
                     break;
                 default:
                     Gui.errorMessage(defaultMessage);
                     throw Error(defaultMessage);
             }
+            const sessProfile = node.getProfile();
+            const sesName = sessProfile.name;
             try {
                 const job = await ZoweExplorerApiRegister.getJesApi(sessProfile).submitJob(label);
                 const args = [sesName, job.jobid];
@@ -2632,6 +2708,9 @@ export class DatasetActions {
      */
     public static async pasteDataSet(datasetProvider: Types.IZoweDatasetTreeType, node: ZoweDatasetNode): Promise<void> {
         ZoweLogger.trace("dataset.actions.pasteDataSet called.");
+        if (!SharedContext.isDsSession(node) && (await ReadOnlyManagement.showErrorIfReadOnly(node.resourceUri))) {
+            return;
+        }
         let clipboardContent;
         try {
             clipboardContent = JSON.parse(await vscode.env.clipboard.readText());
@@ -2724,6 +2803,9 @@ export class DatasetActions {
                         if (!dsname) {
                             return;
                         }
+                        if (await DatasetActions.isReadOnlyDestination(node.getProfile(), dsname)) {
+                            continue;
+                        }
                         const replace = await DatasetActions.determineReplacement(node.getProfile(), dsname, "ps");
                         if (replace === "cancel") {
                             continue;
@@ -2801,6 +2883,9 @@ export class DatasetActions {
                         const memberName = await Gui.showInputBox(inputBoxOptions);
                         if (!memberName) {
                             return;
+                        }
+                        if (await DatasetActions.isReadOnlyDestination(node.getProfile(), node.getLabel() as string, memberName)) {
+                            continue;
                         }
                         const replace = await DatasetActions.determineReplacement(
                             node.getProfile(),
@@ -2954,6 +3039,9 @@ export class DatasetActions {
                     const dsname = await Gui.showInputBox(inputBoxOptions);
                     if (!dsname) {
                         return;
+                    }
+                    if (await DatasetActions.isReadOnlyPdsDestination(node.getProfile(), dsname, content.members)) {
+                        continue;
                     }
                     const replace = await DatasetActions.determineReplacement(node.getProfile(), dsname, "po");
                     if (replace === "cancel") {
@@ -3170,6 +3258,9 @@ export class DatasetActions {
                 const profileName = node.profileName ?? nodes[0]?.profileName;
                 const profile = DatasetActions.getProfileByName(profileName);
                 if (profile == null) {
+                    continue;
+                }
+                if (await DatasetActions.isReadOnlyPdsDestination(profile, dsname, type === "po" ? node.members : undefined)) {
                     continue;
                 }
                 const replace = await DatasetActions.determineReplacement(profile, dsname, type);

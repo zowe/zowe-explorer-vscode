@@ -304,6 +304,12 @@ export class AuthUtils {
                 usingCertAuth = true;
                 break;
         }
+        if (!usingBasicAuth && !usingTokenAuth && !usingCertAuth) {
+            const firstInOrder = iSessFromProf.authTypeOrder?.[0];
+            if (firstInOrder === imperative.SessConstants.AUTH_TYPE_TOKEN || firstInOrder === imperative.SessConstants.AUTH_TYPE_BEARER) {
+                usingTokenAuth = true;
+            }
+        }
 
         if (profile.type === "ssh") {
             if (profile.profile.privateKey) {

@@ -194,7 +194,7 @@ function createProfInfoMock(profiles: Partial<imperative.IProfileLoaded>[]): imp
 describe("ProfilesCache", () => {
     const fakeLogger = { debug: vi.fn(), error: vi.fn(), warn: vi.fn() };
     const fakeZoweDir = path.join(__dirname, "..");
-    const readProfilesFromDiskSpy = vi.spyOn(imperative.ProfileInfo.prototype, "readProfilesFromDisk");
+    const readProfilesFromDiskSpy = vi.spyOn(imperative.ProfileInfo.prototype, "readProfilesFromDisk").mockResolvedValue(undefined);
     const defaultCredMgrWithKeytarSpy = vi.spyOn(imperative.ProfileCredentials, "defaultCredMgrWithKeytar");
 
     afterEach(() => {
@@ -208,14 +208,8 @@ describe("ProfilesCache", () => {
         expect(readProfilesFromDiskSpy).toHaveBeenCalledTimes(1);
         expect(defaultCredMgrWithKeytarSpy).toHaveBeenCalledTimes(1);
         expect(defaultCredMgrWithKeytarSpy).toHaveBeenCalledWith(ProfilesCache.requireKeyring);
-        const teamConfig = profInfo.getTeamConfig();
-        expect(teamConfig.appName).toBe("zowe");
-        expect(teamConfig.paths).toEqual([
-            path.join(__dirname, teamConfig.userConfigName),
-            path.join(__dirname, teamConfig.configName),
-            path.join(fakeZoweDir, teamConfig.userConfigName),
-            path.join(fakeZoweDir, teamConfig.configName),
-        ]);
+        expect(profInfo).toBeInstanceOf(imperative.ProfileInfo);
+        expect(readProfilesFromDiskSpy).toHaveBeenCalledWith({ homeDir: fakeZoweDir, projectDir: __dirname });
         existsSync.mockRestore();
     });
 

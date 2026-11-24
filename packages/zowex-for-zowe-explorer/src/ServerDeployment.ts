@@ -8,7 +8,7 @@ export function deployWithProgress(session: SshSession | SessionContext, serverP
     return Gui.withProgress(
         {
             location: vscode.ProgressLocation.Notification,
-            title: "Deploying Zowe Remote SSH server...",
+            title: "Deploying zo server...",
         },
         async (progress) => {
             // Create error callback that uses error correlations
