@@ -2802,6 +2802,28 @@ describe("USS Action Unit Tests - downloading functions", () => {
     });
 
     describe("downloadUssDirectory", () => {
+        it.each([false, true])("should download the USS root into the selected folder (generateDirectory: %s)", async (generateDirectory) => {
+            const node = createMockNode();
+            node.fullPath = "/";
+            const selectedPath = vscode.Uri.file("/test/download/path");
+            vi.spyOn(SharedUtils, "showMultiSelectQuickPick").mockResolvedValueOnce(
+                generateDirectory ? [{ label: "Generate Directory Structure" }] : []
+            );
+            mockZoweLocalStorage.mockReturnValue({});
+            mockShowOpenDialog.mockResolvedValueOnce([selectedPath]);
+            globalMocks.ussApi.fileList.mockResolvedValueOnce({ success: true, apiResponse: { items: [{}] } });
+            globalMocks.withProgress.mockImplementation(async (_options, callback) => callback());
+
+            await USSActions.downloadUssDirectory(node);
+
+            expect(globalMocks.ussApi.downloadDirectory).toHaveBeenCalledWith(
+                "/",
+                expect.objectContaining({ directory: path.join(selectedPath.fsPath, generateDirectory ? "/" : "") }),
+                expect.objectContaining({ type: "f" })
+            );
+            expect(AuthUtils.errorHandling).not.toHaveBeenCalled();
+        });
+
         it.each([false, true])("should reject a target outside the selected folder (generateDirectory: %s)", async (generateDirectory) => {
             const containment = vi.spyOn(imperative.IO, "isSubPath").mockReturnValue(false);
             try {

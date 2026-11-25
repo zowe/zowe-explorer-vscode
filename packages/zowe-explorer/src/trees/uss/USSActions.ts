@@ -902,7 +902,10 @@ export class USSActions {
                     const directoryPath = downloadOptions.generateDirectory
                         ? path.join(downloadOptions.selectedPath.fsPath, node.fullPath)
                         : path.join(downloadOptions.selectedPath.fsPath, path.basename(node.fullPath));
-                    SharedUtils.validateDownloadPath(downloadOptions.selectedPath.fsPath, directoryPath);
+                    // The USS root downloads its contents directly into the selected directory.
+                    if (path.relative(downloadOptions.selectedPath.fsPath, directoryPath) !== "") {
+                        SharedUtils.validateDownloadPath(downloadOptions.selectedPath.fsPath, directoryPath);
+                    }
 
                     const filterOpts = downloadOptions.dirOptions.chooseFilterOptions ? downloadOptions.dirFilterOptions : {};
                     const { includeHidden = false, ...listFilterOpts } = filterOpts;
