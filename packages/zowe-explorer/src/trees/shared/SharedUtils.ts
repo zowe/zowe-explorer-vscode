@@ -398,6 +398,23 @@ export class SharedUtils {
     }
 
     /**
+     * Returns a copy of the download options without any encoding override.
+     * An override applies only to the download it was chosen for, so it is never persisted between downloads.
+     */
+    public static withoutDownloadEncodingOverrides<T extends { encoding?: ZosEncoding | null; dirOptions?: Definitions.UssDirOptions }>(
+        options: T
+    ): T {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { encoding: _encoding, ...persistedOptions } = options;
+        if (options.dirOptions == null) {
+            return persistedOptions as T;
+        }
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { directoryEncoding: _directoryEncoding, ...dirOptions } = options.dirOptions;
+        return { ...persistedOptions, dirOptions } as T;
+    }
+
+    /**
      * Prompts user for encoding selection for download operations.
      *
      * @param {imperative.IProfileLoaded} profile - The profile loaded
@@ -470,30 +487,10 @@ export class SharedUtils {
      *
      * @param {imperative.IProfileLoaded} profile - The profile loaded
      * @param {string} contextLabel - The context label of the directory (e.g. USS directory path)
-     * @param {"auto-detect" | ZosEncoding} currentDirectoryEncoding - Current directory encoding preference
      * @returns {Promise<ZosEncoding | undefined>} ZosEncoding object or undefined if dismissed
      */
-    public static async promptForDirectoryEncoding(
-        profile: imperative.IProfileLoaded,
-        contextLabel: string,
-        currentDirectoryEncoding?: ZosEncoding
-    ): Promise<ZosEncoding | undefined> {
+    public static async promptForDirectoryEncoding(profile: imperative.IProfileLoaded, contextLabel: string): Promise<ZosEncoding | undefined> {
         const items = SharedUtils.buildEncodingOptions(profile, undefined, true);
-
-        let currentEncoding: string | undefined;
-        if (currentDirectoryEncoding?.kind === "auto-detect") {
-            currentEncoding = vscode.l10n.t("Auto-detect from file tags");
-        } else if (currentDirectoryEncoding) {
-            if (currentDirectoryEncoding.kind === "binary") {
-                currentEncoding = vscode.l10n.t("Binary");
-            } else if (currentDirectoryEncoding.kind === "text") {
-                currentEncoding = vscode.l10n.t("EBCDIC");
-            } else if (currentDirectoryEncoding.kind === "other") {
-                currentEncoding = `${currentDirectoryEncoding.kind.toUpperCase()}-${currentDirectoryEncoding.codepage}`;
-            }
-        } else {
-            currentEncoding = vscode.l10n.t("Auto-detect from file tags"); // Default for directories
-        }
 
         const response = await SharedUtils.promptForEncodingSelection(
             items,
@@ -503,8 +500,8 @@ export class SharedUtils {
                 comment: ["Directory path"],
             }),
             vscode.l10n.t({
-                message: "Current encoding is {0}",
-                args: [currentEncoding],
+                message: "Default encoding is {0}",
+                args: [vscode.l10n.t("Auto-detect from file tags")],
                 comment: ["Encoding name"],
             })
         );

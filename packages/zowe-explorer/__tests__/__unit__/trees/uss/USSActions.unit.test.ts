@@ -2326,7 +2326,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
         });
 
         mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
-            mockQuickPick.selectedItems = [{ label: "Choose Encoding" }];
+            mockQuickPick.selectedItems = [{ label: "Override Encoding" }];
             callback();
         });
 
@@ -2334,7 +2334,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
 
         const result = await (USSActions as any).getUssDownloadOptions(mockNode, true);
 
-        expect(promptForDirectoryEncodingSpy).toHaveBeenCalledWith(mockNode.getProfile(), mockNode.fullPath, undefined);
+        expect(promptForDirectoryEncodingSpy).toHaveBeenCalledWith(mockNode.getProfile(), mockNode.fullPath);
         expect(result.dirOptions.directoryEncoding).toEqual({ kind: "other", codepage: "UTF-8" });
 
         l10nSpy.mockRestore();
@@ -2443,7 +2443,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
             mockZoweLocalStorage.mockReturnValue(storedOptions);
 
             mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
-                mockQuickPick.selectedItems = [{ label: "Choose Encoding", picked: true }];
+                mockQuickPick.selectedItems = [{ label: "Override Encoding", picked: true }];
                 callback();
             });
 
@@ -2454,6 +2454,53 @@ describe("USS Action Unit Tests - downloading functions", () => {
 
             expect(result.chooseEncoding).toBe(true);
             expect(result.selectedPath.fsPath).toBe("/new/path");
+        });
+
+        it("should ignore a previously stored file encoding override and show the profile encoding as the default", async () => {
+            const mockNode = createMockNode();
+            mockNode.getProfile = vi.fn().mockReturnValue({ ...createIProfile(), profile: { encoding: "IBM-1148" } });
+            mockZoweLocalStorage.mockReturnValue({ chooseEncoding: false, encoding: { kind: "binary" } });
+
+            mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                mockQuickPick.selectedItems = [];
+                callback();
+            });
+
+            mockShowOpenDialog.mockResolvedValue([vscode.Uri.file("/new/path")]);
+
+            const result = await (USSActions as any).getUssDownloadOptions(mockNode, false);
+
+            const encodingItem = mockQuickPick.items.find((item: vscode.QuickPickItem) => item.label === "Override Encoding");
+            expect(encodingItem.description).toBe("Override the default encoding (default: IBM-1148)");
+            expect(result.encoding).toBeUndefined();
+            expect(vi.mocked(ZoweLocalStorage.setValue).mock.calls[0][1]).not.toHaveProperty("encoding");
+        });
+
+        it("should ignore a previously stored directory encoding override and not persist a new one", async () => {
+            const mockNode = createMockNode();
+            mockZoweLocalStorage.mockReturnValue({ chooseEncoding: false, dirOptions: { directoryEncoding: { kind: "binary" } } });
+
+            mockQuickPick.onDidAccept
+                .mockImplementationOnce((callback: () => void) => {
+                    mockQuickPick.selectedItems = [];
+                    callback();
+                })
+                .mockImplementationOnce((callback: () => void) => {
+                    mockQuickPick.selectedItems = [{ label: "Override Encoding", picked: true }];
+                    callback();
+                });
+
+            mockShowOpenDialog.mockResolvedValue([vscode.Uri.file("/new/path")]);
+            vi.spyOn(SharedUtils, "promptForDirectoryEncoding").mockResolvedValue({ kind: "other", codepage: "IBM-1047" });
+
+            const firstResult = await (USSActions as any).getUssDownloadOptions(mockNode, true);
+            const encodingItem = mockQuickPick.items.find((item: vscode.QuickPickItem) => item.label === "Override Encoding");
+            expect(encodingItem.description).toBe("Override the default encoding for directory files (default: Auto-detect from file tags)");
+            expect(firstResult.dirOptions.directoryEncoding).toBeUndefined();
+
+            const secondResult = await (USSActions as any).getUssDownloadOptions(mockNode, true);
+            expect(secondResult.dirOptions.directoryEncoding).toEqual({ kind: "other", codepage: "IBM-1047" });
+            expect(vi.mocked(ZoweLocalStorage.setValue).mock.calls[1][1].dirOptions).not.toHaveProperty("directoryEncoding");
         });
 
         it("should return undefined when user cancels quick pick selection", async () => {
@@ -2493,7 +2540,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
             // Second iteration: dismiss quick pick
             mockQuickPick.onDidAccept
                 .mockImplementationOnce((callback: () => void) => {
-                    mockQuickPick.selectedItems = [{ label: "Choose Encoding", picked: true }];
+                    mockQuickPick.selectedItems = [{ label: "Override Encoding", picked: true }];
                     callback();
                 })
                 .mockImplementationOnce(() => {});
@@ -2563,7 +2610,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
             vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue(mockUssApi);
 
             mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
-                mockQuickPick.selectedItems = [{ label: "Choose Encoding", picked: true }];
+                mockQuickPick.selectedItems = [{ label: "Override Encoding", picked: true }];
                 callback();
             });
 
@@ -2583,7 +2630,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
             vi.spyOn(SharedUtils, "promptForDirectoryEncoding").mockResolvedValue({ kind: "other", codepage: "UTF-8" });
 
             mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
-                mockQuickPick.selectedItems = [{ label: "Choose Encoding", picked: true }];
+                mockQuickPick.selectedItems = [{ label: "Override Encoding", picked: true }];
                 callback();
             });
 
@@ -2592,7 +2639,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
             await (USSActions as any).getUssDownloadOptions(mockNode, true);
 
             expect(mockUssApi.getTag).not.toHaveBeenCalled();
-            expect(SharedUtils.promptForDirectoryEncoding).toHaveBeenCalledWith(mockNode.getProfile(), mockNode.fullPath, undefined);
+            expect(SharedUtils.promptForDirectoryEncoding).toHaveBeenCalledWith(mockNode.getProfile(), mockNode.fullPath);
         });
     });
 

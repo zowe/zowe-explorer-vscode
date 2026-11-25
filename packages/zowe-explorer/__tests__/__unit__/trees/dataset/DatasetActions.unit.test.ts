@@ -6336,7 +6336,7 @@ describe("DatasetActions - downloading functions", () => {
             });
         });
 
-        it("should handle encoding selection when Choose Encoding is selected", async () => {
+        it("should handle encoding selection when Override Encoding is selected", async () => {
             const mockNode = new ZoweDatasetNode({
                 label: "TEST.DS",
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
@@ -6354,7 +6354,7 @@ describe("DatasetActions - downloading functions", () => {
             );
 
             mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
-                mockQuickPick.selectedItems = [{ label: vscode.l10n.t("Choose Encoding"), picked: true }];
+                mockQuickPick.selectedItems = [{ label: vscode.l10n.t("Override Encoding"), picked: true }];
                 callback();
             });
 
@@ -6365,8 +6365,59 @@ describe("DatasetActions - downloading functions", () => {
             expect(mockPromptForDownloadEncoding.mock).toHaveBeenCalledWith(defaultTestProfile, "TEST.DS");
             expect(result.chooseEncoding).toBe(true);
             expect(result.encoding).toEqual({ kind: "binary" });
+            expect(mockSetValue.mock.mock.calls[0][1]).not.toHaveProperty("encoding");
 
             mockPromptForDownloadEncoding[Symbol.dispose]();
+        });
+
+        it("should ignore a previously stored encoding override and show the profile encoding as the default", async () => {
+            const profileWithEncoding = { ...defaultTestProfile, profile: { ...defaultTestProfile.profile, encoding: "IBM-1148" } };
+            const mockNode = new ZoweDatasetNode({
+                label: "TEST.DS",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                profile: profileWithEncoding,
+            });
+            mockNode.getProfile = vi.fn().mockReturnValue(profileWithEncoding);
+
+            mockZoweLocalStorage.mock.mockReturnValue({ ...defaultDownloadOptions, encoding: { kind: "binary" } });
+
+            mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                mockQuickPick.selectedItems = [];
+                callback();
+            });
+
+            mockShowOpenDialog.mock.mockResolvedValue([vscode.Uri.file("/test/path")]);
+
+            const result = await DatasetActions["getDataSetDownloadOptions"](mockNode);
+
+            const encodingItem = mockQuickPick.items.find((item: vscode.QuickPickItem) => item.label === "Override Encoding");
+            expect(encodingItem.description).toBe("Override the default encoding (default: IBM-1148)");
+            expect(result.chooseEncoding).toBe(false);
+            expect(result.encoding).toBeUndefined();
+            expect(mockSetValue.mock.mock.calls[0][1]).not.toHaveProperty("encoding");
+        });
+
+        it("should show EBCDIC as the default encoding when the profile has no encoding", async () => {
+            const mockNode = new ZoweDatasetNode({
+                label: "TEST.DS",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                profile: defaultTestProfile,
+            });
+            mockNode.getProfile = vi.fn().mockReturnValue(defaultTestProfile);
+
+            mockZoweLocalStorage.mock.mockReturnValue(defaultDownloadOptions);
+
+            mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                mockQuickPick.selectedItems = [];
+                callback();
+            });
+
+            mockShowOpenDialog.mock.mockResolvedValue([vscode.Uri.file("/test/path")]);
+
+            await DatasetActions["getDataSetDownloadOptions"](mockNode);
+
+            const encodingItem = mockQuickPick.items.find((item: vscode.QuickPickItem) => item.label === "Override Encoding");
+            expect(encodingItem.description).toBe("Override the default encoding (default: EBCDIC)");
         });
 
         it("should return undefined when encoding selection is cancelled", async () => {
@@ -6387,7 +6438,7 @@ describe("DatasetActions - downloading functions", () => {
             );
 
             mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
-                mockQuickPick.selectedItems = [{ label: vscode.l10n.t("Choose Encoding"), picked: true }];
+                mockQuickPick.selectedItems = [{ label: vscode.l10n.t("Override Encoding"), picked: true }];
                 callback();
             });
 
@@ -6418,7 +6469,7 @@ describe("DatasetActions - downloading functions", () => {
             );
 
             mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
-                mockQuickPick.selectedItems = [{ label: vscode.l10n.t("Choose Encoding"), picked: true }];
+                mockQuickPick.selectedItems = [{ label: vscode.l10n.t("Override Encoding"), picked: true }];
                 callback();
             });
 
@@ -6934,6 +6985,47 @@ describe("DatasetActions - downloading functions", () => {
             );
         });
 
+        it("should use the profile encoding when no encoding was chosen", async () => {
+            const profileWithEncoding = { ...defaultTestProfile, profile: { ...defaultTestProfile.profile, encoding: "IBM-1148" } };
+            mockGetDataSetDownloadOptions.mock.mockResolvedValue({ ...defaultDownloadOptions });
+
+            const pdsNode = new ZoweDatasetNode({
+                label: "TEST.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testMocks.datasetSessionNode,
+                profile: profileWithEncoding,
+            });
+
+            pdsNode.getProfile = vi.fn().mockReturnValue(profileWithEncoding);
+            pdsNode.getLabel = vi.fn().mockReturnValue("TEST.PDS");
+
+            mocked(testMocks.mvsApi.allMembers).mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: { items: [{ member: "MEMBER1" }] },
+            });
+
+            const downloadAllMembersSpy = vi.spyOn(testMocks.mvsApi, "downloadAllMembers").mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: {},
+            });
+
+            await DatasetActions.downloadAllMembers(pdsNode);
+
+            const downloadFn = mockExecuteDownloadWithProgress.mock.mock.calls[0][1];
+            await downloadFn();
+
+            expect(downloadAllMembersSpy).toHaveBeenCalledWith(
+                "TEST.PDS",
+                expect.objectContaining({
+                    record: false,
+                    encoding: "IBM-1148",
+                    binary: false,
+                })
+            );
+        });
+
         it("should report progress correctly", async () => {
             const pdsNode = new ZoweDatasetNode({
                 label: "TEST.PDS",
@@ -7126,7 +7218,7 @@ describe("DatasetActions - downloading functions", () => {
                     file: expect.stringMatching(/member1\.txt$/),
                     binary: false,
                     encoding: undefined,
-                    overwrite: false,
+                    overwrite: true,
                     responseTimeout: 30000,
                 })
             );
@@ -7196,6 +7288,53 @@ describe("DatasetActions - downloading functions", () => {
                     binary: false,
                 })
             );
+        });
+
+        it("should use the profile encoding when no encoding was chosen", async () => {
+            const profileWithEncoding = { ...defaultTestProfile, profile: { ...defaultTestProfile.profile, encoding: "IBM-1148" } };
+            const { memberNode } = createMemberNodes("TEST.PDS", "MEMBER1");
+            memberNode.getProfile = vi.fn().mockReturnValue(profileWithEncoding);
+
+            const getContentsSpy = vi.spyOn(testMocks.mvsApi, "getContents").mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: { etag: "123" },
+            });
+
+            await (DatasetActions as any).downloadSingleMember(memberNode, { ...defaultDownloadOptions }, "txt");
+
+            expect(getContentsSpy).toHaveBeenCalledWith(
+                "TEST.PDS(MEMBER1)",
+                expect.objectContaining({
+                    record: false,
+                    encoding: "IBM-1148",
+                    binary: false,
+                })
+            );
+        });
+
+        it("should not use the profile encoding when an encoding was explicitly chosen", async () => {
+            const profileWithEncoding = { ...defaultTestProfile, profile: { ...defaultTestProfile.profile, encoding: "IBM-1148" } };
+            const { memberNode } = createMemberNodes("TEST.PDS", "MEMBER1");
+            memberNode.getProfile = vi.fn().mockReturnValue(profileWithEncoding);
+
+            const getContentsSpy = vi.spyOn(testMocks.mvsApi, "getContents").mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: { etag: "123" },
+            });
+
+            await (DatasetActions as any).downloadSingleMember(memberNode, { ...defaultDownloadOptions, encoding: { kind: "binary" } }, "txt");
+            await (DatasetActions as any).downloadSingleMember(memberNode, { ...defaultDownloadOptions, encoding: { kind: "text" } }, "txt");
+            await (DatasetActions as any).downloadSingleMember(
+                memberNode,
+                { ...defaultDownloadOptions, encoding: { kind: "other", codepage: "IBM-037" } },
+                "txt"
+            );
+
+            expect(getContentsSpy).toHaveBeenNthCalledWith(1, "TEST.PDS(MEMBER1)", expect.objectContaining({ binary: true, encoding: undefined }));
+            expect(getContentsSpy).toHaveBeenNthCalledWith(2, "TEST.PDS(MEMBER1)", expect.objectContaining({ binary: false, encoding: undefined }));
+            expect(getContentsSpy).toHaveBeenNthCalledWith(3, "TEST.PDS(MEMBER1)", expect.objectContaining({ binary: false, encoding: "IBM-037" }));
         });
     });
 
@@ -8091,7 +8230,7 @@ describe("DatasetActions - downloading functions", () => {
                     file: expect.stringMatching(/test\.dataset\.seq\.txt$/),
                     binary: false,
                     encoding: undefined,
-                    overwrite: false,
+                    overwrite: true,
                     responseTimeout: 30000,
                 })
             );
@@ -8299,6 +8438,37 @@ describe("DatasetActions - downloading functions", () => {
                 expect.objectContaining({
                     record: true,
                     encoding: undefined,
+                    binary: false,
+                })
+            );
+        });
+
+        it("should use the profile encoding when no encoding was chosen", async () => {
+            const profileWithEncoding = { ...defaultTestProfile, profile: { ...defaultTestProfile.profile, encoding: "IBM-1148" } };
+            mockGetDataSetDownloadOptions.mock.mockResolvedValue({ ...defaultDownloadOptions });
+
+            const dsNode = new ZoweDatasetNode({
+                label: "TEST.DATASET.SEQ",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: testMocks.datasetSessionNode,
+                profile: profileWithEncoding,
+            });
+
+            dsNode.getLabel = vi.fn().mockReturnValue("TEST.DATASET.SEQ");
+            dsNode.getProfile = vi.fn().mockReturnValue(profileWithEncoding);
+
+            const getContentsSpy = vi.spyOn(testMocks.mvsApi, "getContents").mockResolvedValue(undefined);
+
+            await DatasetActions.downloadDataSet(dsNode);
+
+            const downloadFn = mockExecuteDownloadWithProgress.mock.mock.calls[0][1];
+            await downloadFn();
+
+            expect(getContentsSpy).toHaveBeenCalledWith(
+                "TEST.DATASET.SEQ",
+                expect.objectContaining({
+                    record: false,
+                    encoding: "IBM-1148",
                     binary: false,
                 })
             );

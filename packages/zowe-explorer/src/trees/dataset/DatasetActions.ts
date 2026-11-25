@@ -721,8 +721,9 @@ export class DatasetActions {
     }
 
     private static async getDataSetDownloadOptions(node: IZoweDatasetTreeNode): Promise<Definitions.DataSetDownloadOptions> {
-        const dataSetDownloadOptions: Definitions.DataSetDownloadOptions =
-            ZoweLocalStorage.getValue<Definitions.DataSetDownloadOptions>(Definitions.LocalStorageKey.DS_DOWNLOAD_OPTIONS) ?? {};
+        const dataSetDownloadOptions = SharedUtils.withoutDownloadEncodingOverrides(
+            ZoweLocalStorage.getValue<Definitions.DataSetDownloadOptions>(Definitions.LocalStorageKey.DS_DOWNLOAD_OPTIONS) ?? {}
+        );
 
         dataSetDownloadOptions.overwrite ??= true;
         dataSetDownloadOptions.generateDirectory ??= true;
@@ -732,21 +733,6 @@ export class DatasetActions {
         dataSetDownloadOptions.selectedPath ??= LocalFileManagement.getDefaultUri();
 
         const profile = node.getProfile();
-        const getEncodingDescription = (): string => {
-            if (dataSetDownloadOptions.encoding) {
-                if (dataSetDownloadOptions.encoding.kind === "binary") {
-                    return vscode.l10n.t("Choose encoding for download (current: Binary)");
-                } else if (dataSetDownloadOptions.encoding.kind === "text") {
-                    return vscode.l10n.t("Choose encoding for download (current: EBCDIC)");
-                } else if (dataSetDownloadOptions.encoding.kind === "other") {
-                    return vscode.l10n.t("Choose encoding for download (current: {0})", dataSetDownloadOptions.encoding.codepage);
-                }
-            }
-            if (profile.profile?.encoding) {
-                return vscode.l10n.t("Choose encoding for download (current: {0})", profile.profile.encoding);
-            }
-            return vscode.l10n.t("Choose encoding for download (current: EBCDIC)");
-        };
 
         const getExtensionDescription = (): string => {
             if (dataSetDownloadOptions.fileExtension) {
@@ -777,8 +763,12 @@ export class DatasetActions {
                 picked: dataSetDownloadOptions.overrideExtension,
             },
             {
-                label: vscode.l10n.t("Choose Encoding"),
-                description: getEncodingDescription(),
+                label: vscode.l10n.t("Override Encoding"),
+                description: vscode.l10n.t({
+                    message: "Override the default encoding (default: {0})",
+                    args: [profile.profile?.encoding ?? vscode.l10n.t("EBCDIC")],
+                    comment: ["Encoding name"],
+                }),
                 picked: dataSetDownloadOptions.chooseEncoding,
             },
         ];
@@ -798,7 +788,7 @@ export class DatasetActions {
         dataSetDownloadOptions.overwrite = getOption("Overwrite");
         dataSetDownloadOptions.generateDirectory = getOption("Generate Directory Structure");
         dataSetDownloadOptions.uppercaseNames = getOption("Use Uppercase Names");
-        dataSetDownloadOptions.chooseEncoding = getOption("Choose Encoding");
+        dataSetDownloadOptions.chooseEncoding = getOption("Override Encoding");
         dataSetDownloadOptions.overrideExtension = getOption("Override File Extension");
 
         if (dataSetDownloadOptions.chooseEncoding) {
@@ -808,8 +798,6 @@ export class DatasetActions {
                 return;
             }
             dataSetDownloadOptions.encoding = encoding;
-        } else {
-            dataSetDownloadOptions.encoding = undefined;
         }
 
         if (dataSetDownloadOptions.overrideExtension) {
@@ -852,7 +840,10 @@ export class DatasetActions {
 
         const selectedPath = downloadPath[0].fsPath;
         dataSetDownloadOptions.selectedPath = vscode.Uri.file(selectedPath);
-        await ZoweLocalStorage.setValue<Definitions.DataSetDownloadOptions>(Definitions.LocalStorageKey.DS_DOWNLOAD_OPTIONS, dataSetDownloadOptions);
+        await ZoweLocalStorage.setValue<Definitions.DataSetDownloadOptions>(
+            Definitions.LocalStorageKey.DS_DOWNLOAD_OPTIONS,
+            SharedUtils.withoutDownloadEncodingOverrides(dataSetDownloadOptions)
+        );
 
         return dataSetDownloadOptions;
     }
@@ -895,6 +886,28 @@ export class DatasetActions {
                 }
             }
         );
+    }
+
+    /**
+     * Builds the encoding related options for a data set download.
+     * When no encoding override is chosen, fallback to profile encoding - but a binary or record override takes precedence over the profile encoding
+     */
+    private static getDownloadEncodingOptions(
+        encoding: ZosEncoding | undefined,
+        profile: imperative.IProfileLoaded
+    ): Pick<zosfiles.IDownloadOptions, "binary" | "record" | "encoding"> {
+        const isRecordEncoding = encoding?.kind === "other" && encoding.codepage?.toLowerCase() === "record";
+        let resolvedEncoding: string | undefined;
+        if (encoding == null) {
+            resolvedEncoding = profile?.profile?.encoding;
+        } else if (encoding.kind === "other" && !isRecordEncoding) {
+            resolvedEncoding = encoding.codepage;
+        }
+        return {
+            binary: encoding?.kind === "binary",
+            record: isRecordEncoding,
+            encoding: resolvedEncoding,
+        };
     }
 
     private static resolveMemberExtension(datasetName: string, overrideExtension?: string): string {
@@ -1004,15 +1017,12 @@ export class DatasetActions {
                     SharedUtils.validateDownloadPath(selectedPath.fsPath, path.join(generatedFileDirectory, `${fileName}.${extension}`));
                 }
 
-                const isRecordEncoding = encoding?.kind === "other" && encoding.codepage?.toLowerCase() === "record";
                 const downloadOptions: zosfiles.IDownloadOptions = {
                     directory: generatedFileDirectory,
                     maxConcurrentRequests,
                     preserveOriginalLetterCase: uppercaseNames,
                     extensionMap,
-                    binary: encoding?.kind === "binary",
-                    record: isRecordEncoding,
-                    encoding: encoding?.kind === "other" && !isRecordEncoding ? encoding.codepage : undefined,
+                    ...DatasetActions.getDownloadEncodingOptions(encoding, profile),
                     overwrite,
                     task,
                     responseTimeout: profile.profile?.responseTimeout,
@@ -1051,12 +1061,9 @@ export class DatasetActions {
         const filePath = path.join(targetDirectory, `${fileName}.${extension}`);
         SharedUtils.validateDownloadPath(selectedPath.fsPath, filePath);
 
-        const isRecordEncoding = encoding?.kind === "other" && encoding.codepage?.toLowerCase() === "record";
         const downloadOptions = {
             file: filePath,
-            binary: encoding?.kind === "binary",
-            record: isRecordEncoding,
-            encoding: encoding?.kind === "other" && !isRecordEncoding ? encoding.codepage : undefined,
+            ...DatasetActions.getDownloadEncodingOptions(encoding, profile),
             overwrite,
             responseTimeout: profile?.profile?.responseTimeout,
         };
@@ -1279,12 +1286,9 @@ export class DatasetActions {
                 SharedUtils.validateDownloadName(extension);
                 SharedUtils.validateDownloadPath(selectedPath.fsPath, filePath);
 
-                const isRecordEncoding = encoding?.kind === "other" && encoding.codepage?.toLowerCase() === "record";
                 const downloadOptions = {
                     file: filePath,
-                    binary: encoding?.kind === "binary",
-                    record: isRecordEncoding,
-                    encoding: encoding?.kind === "other" && !isRecordEncoding ? encoding.codepage : undefined,
+                    ...DatasetActions.getDownloadEncodingOptions(encoding, profile),
                     overwrite,
                     responseTimeout: profile?.profile?.responseTimeout,
                 };

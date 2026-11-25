@@ -1627,6 +1627,29 @@ describe("SharedUtils.handleProfileChange", () => {
     });
 });
 
+describe("Shared utils unit tests - function withoutDownloadEncodingOverrides", () => {
+    it("removes the encoding override and keeps the other options", () => {
+        const options = { overwrite: true, chooseEncoding: true, encoding: { kind: "binary" } as ZosEncoding };
+
+        const result = SharedUtils.withoutDownloadEncodingOverrides(options);
+
+        expect(result).toEqual({ overwrite: true, chooseEncoding: true });
+        expect(options.encoding).toEqual({ kind: "binary" });
+    });
+
+    it("removes the directory encoding override and keeps the other directory options", () => {
+        const options = {
+            encoding: { kind: "other", codepage: "IBM-1047" } as ZosEncoding,
+            dirOptions: { followSymlinks: false, directoryEncoding: { kind: "binary" } as ZosEncoding },
+        };
+
+        const result = SharedUtils.withoutDownloadEncodingOverrides(options);
+
+        expect(result).toEqual({ dirOptions: { followSymlinks: false } });
+        expect(options.dirOptions.directoryEncoding).toEqual({ kind: "binary" });
+    });
+});
+
 describe("Shared utils unit tests - function promptForDirectoryEncoding", () => {
     const binaryEncoding: ZosEncoding = { kind: "binary" };
     const textEncoding: ZosEncoding = { kind: "text" };
@@ -1720,48 +1743,15 @@ describe("Shared utils unit tests - function promptForDirectoryEncoding", () => 
         expect(result).toBeUndefined();
     });
 
-    it("handles current directory encoding as auto-detect", async () => {
+    it("shows auto-detect as the default encoding", async () => {
         const blockMocks = createBlockMocks();
         blockMocks.showQuickPick.mockResolvedValueOnce({ label: vscode.l10n.t("Binary") });
 
-        await SharedUtils.promptForDirectoryEncoding(blockMocks.profile, "/test/path", { kind: "auto-detect" });
+        await SharedUtils.promptForDirectoryEncoding(blockMocks.profile, "/test/path");
 
         expect(blockMocks.showQuickPick).toHaveBeenCalled();
         const callArgs = blockMocks.showQuickPick.mock.calls[0][1];
-        expect(callArgs?.placeHolder).toContain(vscode.l10n.t("Auto-detect from file tags"));
-    });
-
-    it("handles current directory encoding as binary", async () => {
-        const blockMocks = createBlockMocks();
-        blockMocks.showQuickPick.mockResolvedValueOnce({ label: vscode.l10n.t("EBCDIC") });
-
-        await SharedUtils.promptForDirectoryEncoding(blockMocks.profile, "/test/path", binaryEncoding);
-
-        expect(blockMocks.showQuickPick).toHaveBeenCalled();
-        const callArgs = blockMocks.showQuickPick.mock.calls[0][1];
-        expect(callArgs?.placeHolder).toContain(vscode.l10n.t("Binary"));
-    });
-
-    it("handles current directory encoding as text", async () => {
-        const blockMocks = createBlockMocks();
-        blockMocks.showQuickPick.mockResolvedValueOnce({ label: vscode.l10n.t("EBCDIC") });
-
-        await SharedUtils.promptForDirectoryEncoding(blockMocks.profile, "/test/path", textEncoding);
-
-        expect(blockMocks.showQuickPick).toHaveBeenCalled();
-        const callArgs = blockMocks.showQuickPick.mock.calls[0][1];
-        expect(callArgs?.placeHolder).toContain(vscode.l10n.t("EBCDIC"));
-    });
-
-    it("handles current directory encoding as other codepage", async () => {
-        const blockMocks = createBlockMocks();
-        blockMocks.showQuickPick.mockResolvedValueOnce({ label: vscode.l10n.t("EBCDIC") });
-
-        await SharedUtils.promptForDirectoryEncoding(blockMocks.profile, "/test/path", otherEncoding);
-
-        expect(blockMocks.showQuickPick).toHaveBeenCalled();
-        const callArgs = blockMocks.showQuickPick.mock.calls[0][1];
-        expect(callArgs?.placeHolder).toContain("OTHER-IBM-1047");
+        expect(callArgs?.placeHolder).toContain("Default encoding is Auto-detect from file tags");
     });
 
     it("handles profile encoding in options", async () => {
