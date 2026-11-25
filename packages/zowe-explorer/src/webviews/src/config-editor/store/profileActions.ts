@@ -9,6 +9,7 @@
 import { handleRenameProfile, handleDeleteProfile, handleProfileSelection, handleNavigateToSource } from "../handlers/profileHandlers";
 import { getProfileType } from "../utils/profileUtils";
 import { createProfileUtils } from "./profileUtils";
+import { createPropertyActions } from "./propertyActions";
 import { createUtilityHelpers } from "./utilityHelpers";
 import type { EditorRuntime } from "./types";
 
@@ -41,21 +42,11 @@ export function createProfileActions(state: EditorRuntime) {
         handleNavigateToSource: (jsonLoc: string, osLoc?: string[]) => handleNavigateToSource(context)(jsonLoc, osLoc),
         handleSetAsDefault: (profileKey: string) => {
             state.setPendingProfileDeletion(null);
-            state.setPendingPropertyDeletion(null);
             const type = getProfileType({ profileKey, ...state });
             const config = state.selectedTab === null ? undefined : state.configurations[state.selectedTab];
             if (!type || !config) return;
-            state.setPendingDefaults((previous) => ({
-                ...previous,
-                [config.configPath]: {
-                    ...previous[config.configPath],
-                    [type]: { value: profileKey, path: ["defaults", type] },
-                },
-            }));
-            state.setDefaultsDeletions((previous) => ({
-                ...previous,
-                [config.configPath]: previous[config.configPath]?.filter((key) => key !== type) ?? [],
-            }));
+            // Same change tracking as the Defaults dropdown: a value equal to the saved one stages nothing.
+            createPropertyActions(state).handleDefaultsChange(type, profileKey);
         },
     };
 }

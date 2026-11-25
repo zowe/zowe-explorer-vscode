@@ -220,7 +220,7 @@ export function createUtilityHelpers(
             isProfileDefault({ profileKey, selectedTab, configurations, pendingChanges, pendingDefaults, renames }),
 
         getProjectDefaultSource: (profileKey: string) =>
-            getProjectDefaultSource({ profileKey, selectedTab, configurations, pendingChanges, pendingDefaults, renames }),
+            getProjectDefaultSource({ profileKey, selectedTab, configurations, pendingChanges, pendingDefaults, renames, deletions }),
 
         isCurrentProfileUntyped: () => isCurrentProfileUntyped({ selectedProfileKey, selectedTab, configurations, pendingChanges, renames }),
 

@@ -9,8 +9,9 @@
  *
  */
 
-import { getAllQualifiedProfileKeys, getProfileType, getRenamedProfileKeyWithNested } from "./profileUtils";
-import { Configuration, PendingChange, PendingDefault, ConfigStateContext, PendingDefaultsMap } from "../types";
+import { extractPendingProfiles, getAllQualifiedProfileKeys, getProfileType, getRenamedProfileKeyWithNested } from "./profileUtils";
+import { getEffectiveProfileKeys } from "./profileConflicts";
+import { Configuration, PendingChange, PendingDefault, ConfigStateContext, PendingDefaultsMap, DeletionsMap } from "../types";
 export type { Configuration, PendingChange, PendingDefault };
 
 interface IsProfileDefaultParams extends ConfigStateContext {
@@ -33,13 +34,19 @@ export function isProfileDefault(params: IsProfileDefaultParams): boolean {
     return typeof savedDefault === "string" && getRenamedProfileKeyWithNested(savedDefault, configPath, renames) === profileKey;
 }
 
+interface GetProjectDefaultSourceParams extends IsProfileDefaultParams {
+    deletions: DeletionsMap;
+}
+
 /**
  * When the selected tab is a global config, finds the project config whose `defaults` points at
  * `profileKey` even though that project config has no profile of that name (the dropdown in a
- * project config can pick global profiles). Returns that config's path, or null.
+ * project config can pick global profiles). Profile names are resolved against the effective set
+ * of profiles (saved profiles with staged renames, additions and deletions applied). Returns that
+ * config's path, or null.
  */
-export function getProjectDefaultSource(params: IsProfileDefaultParams): string | null {
-    const { profileKey, selectedTab, configurations, pendingChanges, pendingDefaults, renames } = params;
+export function getProjectDefaultSource(params: GetProjectDefaultSourceParams): string | null {
+    const { profileKey, selectedTab, configurations, pendingChanges, pendingDefaults, renames, deletions } = params;
 
     if (selectedTab === null || !configurations[selectedTab]?.global) return null;
     const profileType = getProfileType({ profileKey, selectedTab, configurations, pendingChanges, renames });
@@ -49,9 +56,18 @@ export function getProjectDefaultSource(params: IsProfileDefaultParams): string 
         if (config.global) return false;
         const pendingDefault = pendingDefaults[config.configPath]?.[profileType];
         const savedDefault = config.properties?.defaults?.[profileType];
-        const effectiveDefault = pendingDefault ? pendingDefault.value : savedDefault;
+        const effectiveDefault = pendingDefault
+            ? pendingDefault.value
+            : typeof savedDefault === "string"
+              ? getRenamedProfileKeyWithNested(savedDefault, config.configPath, renames)
+              : undefined;
         if (effectiveDefault !== profileKey) return false;
-        return !getAllQualifiedProfileKeys(config.properties?.profiles).includes(profileKey);
+        return !getEffectiveProfileKeys(
+            getAllQualifiedProfileKeys(config.properties?.profiles),
+            extractPendingProfiles(pendingChanges, config.configPath),
+            renames[config.configPath] || {},
+            deletions[config.configPath]
+        ).includes(profileKey);
     });
     return source?.configPath ?? null;
 }
