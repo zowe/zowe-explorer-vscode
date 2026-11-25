@@ -9,7 +9,7 @@
  *
  */
 
-import { isProfileDefault, isCurrentProfileUntyped } from "../../../../src/webviews/src/config-editor/utils/profileHelpers";
+import { isProfileDefault, getProjectDefaultSource, isCurrentProfileUntyped } from "../../../../src/webviews/src/config-editor/utils/profileHelpers";
 
 const configPath = "/c";
 const configs = [
@@ -169,6 +169,57 @@ describe("profileHelpers", () => {
                     renames,
                 })
             ).toBe(true);
+        });
+    });
+
+    describe("getProjectDefaultSource", () => {
+        const globalPath = "/global";
+        const projectPath = "/project";
+        const buildConfigs = (projectDefault: string) =>
+            [
+                { configPath: globalPath, global: true, properties: { defaults: {}, profiles: { shared: { type: "zosmf", properties: {} } } } },
+                {
+                    configPath: projectPath,
+                    global: false,
+                    properties: { defaults: { zosmf: projectDefault }, profiles: { local: { type: "zosmf", properties: {} } } },
+                },
+            ] as any;
+        const run = (overrides: Record<string, unknown> = {}, projectDefault = "shared") =>
+            getProjectDefaultSource({
+                profileKey: "shared",
+                selectedTab: 0,
+                configurations: buildConfigs(projectDefault),
+                pendingChanges: {},
+                pendingDefaults: {},
+                renames: {},
+                deletions: {},
+                ...overrides,
+            });
+
+        it("returns the project config whose default points at a global profile", () => {
+            expect(run()).toBe(projectPath);
+        });
+        it("returns null when the project config has its own profile of that name", () => {
+            expect(run({ renames: { [projectPath]: { local: "shared" } } })).toBeNull();
+        });
+        it("returns null when a staged new profile in the project config takes the name", () => {
+            expect(run({ pendingChanges: { [projectPath]: { "profiles.shared.type": { value: "zosmf", profile: "shared" } } } })).toBeNull();
+        });
+        it("returns the project config when its same-named profile is staged for deletion", () => {
+            const configurations = [
+                { configPath: globalPath, global: true, properties: { defaults: {}, profiles: { shared: { type: "zosmf", properties: {} } } } },
+                {
+                    configPath: projectPath,
+                    global: false,
+                    properties: { defaults: { zosmf: "shared" }, profiles: { shared: { type: "zosmf", properties: {} } } },
+                },
+            ] as any;
+            expect(run({ configurations })).toBeNull();
+            expect(run({ configurations, deletions: { [projectPath]: ["profiles.shared"] } })).toBe(projectPath);
+        });
+        it("does not badge the global profile when a project default was renamed away from it", () => {
+            expect(run({}, "local")).toBeNull();
+            expect(run({ pendingDefaults: { [projectPath]: { zosmf: { value: "local" } } } })).toBeNull();
         });
     });
 

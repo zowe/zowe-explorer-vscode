@@ -5,31 +5,19 @@ Feature: Profile Info Management - Comprehensive Testing
     When a user opens the Zowe Config Editor from the Command Palette
     Then the Zowe Config Editor webview should be opened
     And the profile list is set to flat view mode
-    And the user clicks the defaults toggle button to open the defaults section
 
   @config-editor @profile-defaults
-  Scenario Outline: Check each type dropdown for defaults
-    When the user selects the <type> default dropdown
-    Then the dropdown should have "<value>" as options
-
-    Examples:
-      | type  | value                                                                 |
-      | zosmf | ,zosmf1,zosmf2,zosmf3,zosmf-dev,zosmf-prod,nested.child1              |
-      | tso   | ,tso1                                                                 |
-      | ssh   | ,ssh1,nested.child2                                                    |
-      | base  | ,base,test-profile,special-chars,nested                                |
-
-  @config-editor @profile-defaults
-  Scenario: Selecting the current TSO default leaves no pending changes
-    When the user selects "tso1" in the tso default dropdown
-    Then there are no pending changes in the Config Editor
+  Scenario: The current TSO default is marked with the default badge and has no pending changes
+    Then the "tso1" profile shows the default badge
+    And there are no pending changes in the Config Editor
     And the tso default should be "tso1"
 
   @config-editor @profile-defaults
-  Scenario Outline: Select a new default and save
-    When the user selects "<option>" in the <type> default dropdown
+  Scenario Outline: Set a new default and save
+    When the user sets "<option>" as the default profile
     And the user saves the changes
     Then the <type> default should be "<option>"
+    And the "<option>" profile shows the default badge
 
     Examples:
       | type  | option        |

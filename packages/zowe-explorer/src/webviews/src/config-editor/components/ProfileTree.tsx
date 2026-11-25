@@ -7,7 +7,7 @@ import { getAllQualifiedProfileKeys } from "../utils/profileRenames";
 import { useIsLightTheme } from "../hooks/useIsLightTheme";
 import { useScrollToSelected } from "../hooks/useScrollToSelected";
 import { ProfileTypeBadge } from "./ProfileTypeBadge";
-import { DefaultStarButton } from "./DefaultStarButton";
+import { DefaultBadge } from "./DefaultBadge";
 import { getEffectiveProfileKeys, resolveProfileDestination } from "../utils/profileConflicts";
 import { suppressClickAfterDrag } from "../utils/dragDropUtils";
 
@@ -67,7 +67,6 @@ interface ProfileTreeProps {
   selectedTab?: number | null;
   renames?: { [configPath: string]: { [originalKey: string]: string } };
   onSetAsDefault?: (profileKey: string) => void;
-  setPendingDefaults?: React.Dispatch<React.SetStateAction<{ [configPath: string]: { [key: string]: { value: string; path: string[] } } }>>;
   onFilterChange?: (filterType: string | null) => void;
   filterType?: string | null; // Added to support toggle behavior
 }
@@ -100,7 +99,6 @@ export function ProfileTree({
   selectedTab,
   renames,
   onSetAsDefault,
-  setPendingDefaults,
   onFilterChange,
   filterType,
 }: ProfileTreeProps) {
@@ -582,18 +580,7 @@ export function ProfileTree({
                 }}
               />
             )}
-            {getProfileType(node.key) && (
-              <DefaultStarButton
-                variant="tree"
-                profileKey={node.key}
-                profileType={getProfileType(node.key)}
-                isDefault={isDefault}
-                configurations={configurations}
-                selectedTab={selectedTab}
-                setPendingDefaults={setPendingDefaults}
-                onSetAsDefault={onSetAsDefault}
-              />
-            )}
+            {getProfileType(node.key) && <DefaultBadge profileKey={node.key} profileType={getProfileType(node.key)!} isDefault={isDefault} />}
           </div>
         </div>
 
@@ -722,6 +709,9 @@ export function ProfileTree({
           onClose={() => setContextMenu(null)}
           onProfileSelect={onProfileSelect}
           onDeleteProfile={onDeleteProfile}
+          onSetAsDefault={onSetAsDefault}
+          isProfileDefault={isProfileDefault}
+          getProfileType={getProfileType}
         />
       )}
     </div>

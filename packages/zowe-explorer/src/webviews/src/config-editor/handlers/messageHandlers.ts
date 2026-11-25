@@ -364,7 +364,9 @@ export const handleLocalStorageValueMessage = (data: LocalStorageValueMessagePay
     const { key, value } = data;
     if (key === CONFIG_EDITOR_SETTINGS_KEY) {
         const defaultSettings = createDefaultEditorSettings();
-        const settings: ConfigEditorSettings = value !== undefined ? (value as ConfigEditorSettings) : defaultSettings;
+        // The Defaults section always starts collapsed on launch; whatever state was persisted is ignored.
+        const settings: ConfigEditorSettings =
+            value !== undefined ? { ...(value as ConfigEditorSettings), defaultsCollapsed: defaultSettings.defaultsCollapsed } : defaultSettings;
         setConfigEditorSettings(settings);
 
         // Trigger sort order version update if needed

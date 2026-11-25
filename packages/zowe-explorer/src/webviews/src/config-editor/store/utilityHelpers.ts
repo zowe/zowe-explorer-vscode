@@ -21,6 +21,7 @@ import {
     isProfileOrParentDeleted,
     getAvailableProfilesByType,
     isProfileDefault,
+    getProjectDefaultSource,
     isCurrentProfileUntyped,
     sortProfilesAtLevel,
     isPropertyActuallyInherited,
@@ -217,6 +218,9 @@ export function createUtilityHelpers(
 
         isProfileDefault: (profileKey: string) =>
             isProfileDefault({ profileKey, selectedTab, configurations, pendingChanges, pendingDefaults, renames }),
+
+        getProjectDefaultSource: (profileKey: string) =>
+            getProjectDefaultSource({ profileKey, selectedTab, configurations, pendingChanges, pendingDefaults, renames, deletions }),
 
         isCurrentProfileUntyped: () => isCurrentProfileUntyped({ selectedProfileKey, selectedTab, configurations, pendingChanges, renames }),
 
