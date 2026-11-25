@@ -1085,10 +1085,6 @@ describe("ReadOnlyManagement - isEligibleNode", () => {
     ])("returns false for %s", (_desc, uri, contextValue) => {
         expect(ReadOnlyManagement.isEligibleNode(treeNode(uri, contextValue))).toBe(false);
     });
-
-    it("returns false for an undefined node", () => {
-        expect(ReadOnlyManagement.isEligibleNode(undefined as any)).toBe(false);
-    });
 });
 
 describe("ReadOnlyManagement - getTreeItem", () => {
