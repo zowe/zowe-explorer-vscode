@@ -35,7 +35,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Updated Zowe SDKs to `8.43.0` for technical currency. [#4556](https://github.com/zowe/zowe-explorer-vscode/pull/4556)
 - Fixed incorrect profile validation results for profiles that use certificates or set the `authOrder` property. [#4617](https://github.com/zowe/zowe-explorer-vscode/pull/4617)
 - Fixed job submission from favorited data set searches. Sequential data sets can be submitted, and the job ID link, Open Job, and polling now use the correct profile. [#4352](https://github.com/zowe/zowe-explorer-vscode/issues/4352)
-- Fixed profile encoding not being respected when "Choose Encoding" download option is selected (which is now renamed to "Override Encoding"). [#4533](https://github.com/zowe/zowe-explorer-vscode/issues/4533)
+- Fixed profile encoding not being respected when `Choose Encoding` download option is selected (which is now renamed to `Override Encoding`). [#4533](https://github.com/zowe/zowe-explorer-vscode/issues/4533)
 
 ## `3.6.1`
 
@@ -46,7 +46,6 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 
 ### Bug fixes
 
-- Fixed an issue where the `Download All Members...`, `Download Member...`, and `Download Data Set...` commands ignored the profile `encoding` when the "Choose Encoding" option was not selected. The profile encoding is now used as the default. [#4533](https://github.com/zowe/zowe-explorer-vscode/issues/4533)
 - Fixed an issue where a single failed load of the credential manager caused Zowe Explorer to report an erroneous error message and error cause for the rest of the user session. The `Failed to initialize secure credential manager` message was associated to the cause `Keytar was not properly loaded due to an unknown cause`, which kept the failed module with empty exports. Later checks incorrectly reported the credential manager as available. The real load error is now logged, and Zowe Explorer consistently falls back to unsecured profiles instead. [#4360](https://github.com/zowe/zowe-explorer-vscode/issues/4360)
 - Fixed an issue where falling back to unsecured profiles could fail activation with the message `The credential manager name 'false' is an unknown credential manager`. [#4360](https://github.com/zowe/zowe-explorer-vscode/issues/4360)
 - Fixed an issue where the error message shown when saving a data set with lines exceeding the logical record length was too vague to identify the problem. [#4076](https://github.com/zowe/zowe-explorer-vscode/issues/4076)

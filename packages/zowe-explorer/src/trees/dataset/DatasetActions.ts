@@ -721,8 +721,9 @@ export class DatasetActions {
     }
 
     private static async getDataSetDownloadOptions(node: IZoweDatasetTreeNode): Promise<Definitions.DataSetDownloadOptions> {
-        const dataSetDownloadOptions: Definitions.DataSetDownloadOptions =
-            ZoweLocalStorage.getValue<Definitions.DataSetDownloadOptions>(Definitions.LocalStorageKey.DS_DOWNLOAD_OPTIONS) ?? {};
+        const dataSetDownloadOptions = SharedUtils.withoutDownloadEncodingOverrides(
+            ZoweLocalStorage.getValue<Definitions.DataSetDownloadOptions>(Definitions.LocalStorageKey.DS_DOWNLOAD_OPTIONS) ?? {}
+        );
 
         dataSetDownloadOptions.overwrite ??= true;
         dataSetDownloadOptions.generateDirectory ??= true;
@@ -730,9 +731,6 @@ export class DatasetActions {
         dataSetDownloadOptions.chooseEncoding ??= false;
         dataSetDownloadOptions.overrideExtension ??= false;
         dataSetDownloadOptions.selectedPath ??= LocalFileManagement.getDefaultUri();
-
-        // The encoding override is chosen per download and never persisted, so the description always reflects the default
-        delete dataSetDownloadOptions.encoding;
 
         const profile = node.getProfile();
 
@@ -842,8 +840,10 @@ export class DatasetActions {
 
         const selectedPath = downloadPath[0].fsPath;
         dataSetDownloadOptions.selectedPath = vscode.Uri.file(selectedPath);
-        const { encoding: _encoding, ...persistedOptions } = dataSetDownloadOptions;
-        await ZoweLocalStorage.setValue<Definitions.DataSetDownloadOptions>(Definitions.LocalStorageKey.DS_DOWNLOAD_OPTIONS, persistedOptions);
+        await ZoweLocalStorage.setValue<Definitions.DataSetDownloadOptions>(
+            Definitions.LocalStorageKey.DS_DOWNLOAD_OPTIONS,
+            SharedUtils.withoutDownloadEncodingOverrides(dataSetDownloadOptions)
+        );
 
         return dataSetDownloadOptions;
     }

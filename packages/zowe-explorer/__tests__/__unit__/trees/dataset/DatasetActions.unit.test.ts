@@ -7218,7 +7218,7 @@ describe("DatasetActions - downloading functions", () => {
                     file: expect.stringMatching(/member1\.txt$/),
                     binary: false,
                     encoding: undefined,
-                    overwrite: false,
+                    overwrite: true,
                     responseTimeout: 30000,
                 })
             );
@@ -8230,7 +8230,7 @@ describe("DatasetActions - downloading functions", () => {
                     file: expect.stringMatching(/test\.dataset\.seq\.txt$/),
                     binary: false,
                     encoding: undefined,
-                    overwrite: false,
+                    overwrite: true,
                     responseTimeout: 30000,
                 })
             );

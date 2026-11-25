@@ -592,8 +592,9 @@ export class USSActions {
     }
 
     private static async getUssDownloadOptions(node: IZoweUSSTreeNode, isDirectory: boolean = false): Promise<Definitions.UssDownloadOptions> {
-        const downloadOpts: Definitions.UssDownloadOptions =
-            ZoweLocalStorage.getValue<Definitions.UssDownloadOptions>(Definitions.LocalStorageKey.USS_DOWNLOAD_OPTIONS) ?? {};
+        const downloadOpts = SharedUtils.withoutDownloadEncodingOverrides(
+            ZoweLocalStorage.getValue<Definitions.UssDownloadOptions>(Definitions.LocalStorageKey.USS_DOWNLOAD_OPTIONS) ?? {}
+        );
 
         downloadOpts.overwrite ??= false;
         downloadOpts.generateDirectory ??= false;
@@ -605,10 +606,6 @@ export class USSActions {
         downloadOpts.dirFilterOptions ??= {};
         downloadOpts.dirFilterOptions.includeHidden ??= false;
         downloadOpts.dirFilterOptions.filesys ??= false;
-
-        // The encoding override is chosen per download and never persisted, so the description always reflects the default
-        delete downloadOpts.encoding;
-        delete downloadOpts.dirOptions.directoryEncoding;
 
         const encodingDescription = isDirectory
             ? vscode.l10n.t("Override the default encoding for directory files (default: Auto-detect from file tags)")
@@ -741,14 +738,10 @@ export class USSActions {
 
             const selectedPath = downloadPath[0].fsPath;
             downloadOpts.selectedPath = vscode.Uri.file(selectedPath);
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const { encoding: _encoding, dirOptions, ...persistedOptions } = downloadOpts;
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const { directoryEncoding: _directoryEncoding, ...persistedDirOptions } = dirOptions;
-            await ZoweLocalStorage.setValue<Definitions.UssDownloadOptions>(Definitions.LocalStorageKey.USS_DOWNLOAD_OPTIONS, {
-                ...persistedOptions,
-                dirOptions: persistedDirOptions,
-            });
+            await ZoweLocalStorage.setValue<Definitions.UssDownloadOptions>(
+                Definitions.LocalStorageKey.USS_DOWNLOAD_OPTIONS,
+                SharedUtils.withoutDownloadEncodingOverrides(downloadOpts)
+            );
 
             return downloadOpts;
         }
