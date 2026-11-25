@@ -154,7 +154,7 @@ export class ZoweJobNode extends ZoweTreeNode implements IZoweJobTreeNode {
         ZoweLogger.trace(`ZoweJobNode.getChildren called for ${this.label as string}.`);
         if (SharedContext.isSession(this) && !this.filtered && !SharedContext.isFavorite(this)) {
             const placeholder = new ZoweJobNode({
-                label: vscode.l10n.t("Use the search button to display jobs"),
+                label: vscode.l10n.t("Use the search button 🔎 to display jobs"),
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
                 parentNode: this,
                 contextOverride: Constants.INFORMATION_CONTEXT,

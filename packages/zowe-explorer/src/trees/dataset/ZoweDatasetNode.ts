@@ -368,7 +368,7 @@ export class ZoweDatasetNode extends ZoweTreeNode implements IZoweDatasetTreeNod
         const dsTree = SharedTreeProviders.ds as DatasetTree;
         if (!this.pattern && SharedContext.isSessionNotFav(this)) {
             const placeholder = new ZoweDatasetNode({
-                label: vscode.l10n.t("Use the search button to display data sets"),
+                label: vscode.l10n.t("Use the search button 🔎 to display data sets"),
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
                 parentNode: this,
                 contextOverride: Constants.INFORMATION_CONTEXT,

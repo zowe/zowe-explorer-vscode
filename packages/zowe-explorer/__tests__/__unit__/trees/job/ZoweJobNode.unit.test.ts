@@ -441,7 +441,7 @@ describe("ZoweJobNode unit tests - Function getChildren", () => {
     it("should return placeholder node if session node expanded without search params", async () => {
         const globalMocks = await createGlobalMocks();
         const expectedJob = new ZoweJobNode({
-            label: "Use the search button to display jobs",
+            label: "Use the search button 🔎 to display jobs",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: globalMocks.testJobNode,
             contextOverride: Constants.INFORMATION_CONTEXT,
