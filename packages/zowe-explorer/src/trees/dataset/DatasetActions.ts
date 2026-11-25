@@ -731,22 +731,10 @@ export class DatasetActions {
         dataSetDownloadOptions.overrideExtension ??= false;
         dataSetDownloadOptions.selectedPath ??= LocalFileManagement.getDefaultUri();
 
+        // The encoding override is chosen per download and never persisted, so the description always reflects the default
+        delete dataSetDownloadOptions.encoding;
+
         const profile = node.getProfile();
-        const getEncodingDescription = (): string => {
-            if (dataSetDownloadOptions.encoding) {
-                if (dataSetDownloadOptions.encoding.kind === "binary") {
-                    return vscode.l10n.t("Choose encoding for download (current: Binary)");
-                } else if (dataSetDownloadOptions.encoding.kind === "text") {
-                    return vscode.l10n.t("Choose encoding for download (current: EBCDIC)");
-                } else if (dataSetDownloadOptions.encoding.kind === "other") {
-                    return vscode.l10n.t("Choose encoding for download (current: {0})", dataSetDownloadOptions.encoding.codepage);
-                }
-            }
-            if (profile.profile?.encoding) {
-                return vscode.l10n.t("Choose encoding for download (current: {0})", profile.profile.encoding);
-            }
-            return vscode.l10n.t("Choose encoding for download (current: EBCDIC)");
-        };
 
         const getExtensionDescription = (): string => {
             if (dataSetDownloadOptions.fileExtension) {
@@ -777,8 +765,12 @@ export class DatasetActions {
                 picked: dataSetDownloadOptions.overrideExtension,
             },
             {
-                label: vscode.l10n.t("Choose Encoding"),
-                description: getEncodingDescription(),
+                label: vscode.l10n.t("Override Encoding"),
+                description: vscode.l10n.t({
+                    message: "Override the default encoding (default: {0})",
+                    args: [profile.profile?.encoding ?? vscode.l10n.t("EBCDIC")],
+                    comment: ["Encoding name"],
+                }),
                 picked: dataSetDownloadOptions.chooseEncoding,
             },
         ];
@@ -798,7 +790,7 @@ export class DatasetActions {
         dataSetDownloadOptions.overwrite = getOption("Overwrite");
         dataSetDownloadOptions.generateDirectory = getOption("Generate Directory Structure");
         dataSetDownloadOptions.uppercaseNames = getOption("Use Uppercase Names");
-        dataSetDownloadOptions.chooseEncoding = getOption("Choose Encoding");
+        dataSetDownloadOptions.chooseEncoding = getOption("Override Encoding");
         dataSetDownloadOptions.overrideExtension = getOption("Override File Extension");
 
         if (dataSetDownloadOptions.chooseEncoding) {
@@ -808,8 +800,6 @@ export class DatasetActions {
                 return;
             }
             dataSetDownloadOptions.encoding = encoding;
-        } else {
-            dataSetDownloadOptions.encoding = undefined;
         }
 
         if (dataSetDownloadOptions.overrideExtension) {
@@ -852,7 +842,8 @@ export class DatasetActions {
 
         const selectedPath = downloadPath[0].fsPath;
         dataSetDownloadOptions.selectedPath = vscode.Uri.file(selectedPath);
-        await ZoweLocalStorage.setValue<Definitions.DataSetDownloadOptions>(Definitions.LocalStorageKey.DS_DOWNLOAD_OPTIONS, dataSetDownloadOptions);
+        const { encoding: _encoding, ...persistedOptions } = dataSetDownloadOptions;
+        await ZoweLocalStorage.setValue<Definitions.DataSetDownloadOptions>(Definitions.LocalStorageKey.DS_DOWNLOAD_OPTIONS, persistedOptions);
 
         return dataSetDownloadOptions;
     }

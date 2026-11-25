@@ -6336,7 +6336,7 @@ describe("DatasetActions - downloading functions", () => {
             });
         });
 
-        it("should handle encoding selection when Choose Encoding is selected", async () => {
+        it("should handle encoding selection when Override Encoding is selected", async () => {
             const mockNode = new ZoweDatasetNode({
                 label: "TEST.DS",
                 collapsibleState: vscode.TreeItemCollapsibleState.None,
@@ -6354,7 +6354,7 @@ describe("DatasetActions - downloading functions", () => {
             );
 
             mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
-                mockQuickPick.selectedItems = [{ label: vscode.l10n.t("Choose Encoding"), picked: true }];
+                mockQuickPick.selectedItems = [{ label: vscode.l10n.t("Override Encoding"), picked: true }];
                 callback();
             });
 
@@ -6365,8 +6365,59 @@ describe("DatasetActions - downloading functions", () => {
             expect(mockPromptForDownloadEncoding.mock).toHaveBeenCalledWith(defaultTestProfile, "TEST.DS");
             expect(result.chooseEncoding).toBe(true);
             expect(result.encoding).toEqual({ kind: "binary" });
+            expect(mockSetValue.mock.mock.calls[0][1]).not.toHaveProperty("encoding");
 
             mockPromptForDownloadEncoding[Symbol.dispose]();
+        });
+
+        it("should ignore a previously stored encoding override and show the profile encoding as the default", async () => {
+            const profileWithEncoding = { ...defaultTestProfile, profile: { ...defaultTestProfile.profile, encoding: "IBM-1148" } };
+            const mockNode = new ZoweDatasetNode({
+                label: "TEST.DS",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                profile: profileWithEncoding,
+            });
+            mockNode.getProfile = vi.fn().mockReturnValue(profileWithEncoding);
+
+            mockZoweLocalStorage.mock.mockReturnValue({ ...defaultDownloadOptions, encoding: { kind: "binary" } });
+
+            mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                mockQuickPick.selectedItems = [];
+                callback();
+            });
+
+            mockShowOpenDialog.mock.mockResolvedValue([vscode.Uri.file("/test/path")]);
+
+            const result = await DatasetActions["getDataSetDownloadOptions"](mockNode);
+
+            const encodingItem = mockQuickPick.items.find((item: vscode.QuickPickItem) => item.label === "Override Encoding");
+            expect(encodingItem.description).toBe("Override the default encoding (default: IBM-1148)");
+            expect(result.chooseEncoding).toBe(false);
+            expect(result.encoding).toBeUndefined();
+            expect(mockSetValue.mock.mock.calls[0][1]).not.toHaveProperty("encoding");
+        });
+
+        it("should show EBCDIC as the default encoding when the profile has no encoding", async () => {
+            const mockNode = new ZoweDatasetNode({
+                label: "TEST.DS",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                profile: defaultTestProfile,
+            });
+            mockNode.getProfile = vi.fn().mockReturnValue(defaultTestProfile);
+
+            mockZoweLocalStorage.mock.mockReturnValue(defaultDownloadOptions);
+
+            mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
+                mockQuickPick.selectedItems = [];
+                callback();
+            });
+
+            mockShowOpenDialog.mock.mockResolvedValue([vscode.Uri.file("/test/path")]);
+
+            await DatasetActions["getDataSetDownloadOptions"](mockNode);
+
+            const encodingItem = mockQuickPick.items.find((item: vscode.QuickPickItem) => item.label === "Override Encoding");
+            expect(encodingItem.description).toBe("Override the default encoding (default: EBCDIC)");
         });
 
         it("should return undefined when encoding selection is cancelled", async () => {
@@ -6387,7 +6438,7 @@ describe("DatasetActions - downloading functions", () => {
             );
 
             mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
-                mockQuickPick.selectedItems = [{ label: vscode.l10n.t("Choose Encoding"), picked: true }];
+                mockQuickPick.selectedItems = [{ label: vscode.l10n.t("Override Encoding"), picked: true }];
                 callback();
             });
 
@@ -6418,7 +6469,7 @@ describe("DatasetActions - downloading functions", () => {
             );
 
             mockQuickPick.onDidAccept.mockImplementation((callback: () => void) => {
-                mockQuickPick.selectedItems = [{ label: vscode.l10n.t("Choose Encoding"), picked: true }];
+                mockQuickPick.selectedItems = [{ label: vscode.l10n.t("Override Encoding"), picked: true }];
                 callback();
             });
 

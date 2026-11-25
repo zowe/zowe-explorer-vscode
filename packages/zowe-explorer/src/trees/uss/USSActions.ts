@@ -43,7 +43,6 @@ import { AuthUtils } from "../../utils/AuthUtils";
 import { ProfileManagement } from "../../management/ProfileManagement";
 import { Definitions } from "../../configuration/Definitions";
 import { ZoweLocalStorage } from "../../tools/ZoweLocalStorage";
-import { USSUtils } from "./USSUtils";
 
 export class USSActions {
     /**
@@ -607,36 +606,17 @@ export class USSActions {
         downloadOpts.dirFilterOptions.includeHidden ??= false;
         downloadOpts.dirFilterOptions.filesys ??= false;
 
-        if (downloadOpts.encoding && USSUtils.zosEncodingToString(downloadOpts.encoding) == "text") {
-            downloadOpts.encoding = undefined;
-        }
+        // The encoding override is chosen per download and never persisted, so the description always reflects the default
+        delete downloadOpts.encoding;
+        delete downloadOpts.dirOptions.directoryEncoding;
 
-        const getEncodingDescription = (): string => {
-            if (isDirectory) {
-                const currentEncoding = downloadOpts.dirOptions.directoryEncoding;
-                if (!currentEncoding || currentEncoding.kind === "auto-detect") {
-                    return vscode.l10n.t("Select default encoding for directory files (current: Auto-detect from file tags)");
-                }
-
-                const encodingName =
-                    currentEncoding.kind === "binary" ? "binary" : currentEncoding.kind === "other" ? currentEncoding.codepage : "EBCDIC";
-
-                return vscode.l10n.t("Select default encoding for directory files (current: {0})", encodingName);
-            } else {
-                if (!downloadOpts.encoding) {
-                    return vscode.l10n.t("Select specific encoding for file");
-                }
-
-                const encodingName =
-                    downloadOpts.encoding.kind === "binary"
-                        ? "binary"
-                        : downloadOpts.encoding.kind === "other"
-                          ? downloadOpts.encoding.codepage
-                          : "EBCDIC";
-
-                return vscode.l10n.t("Select specific encoding for file (current: {0})", encodingName);
-            }
-        };
+        const encodingDescription = isDirectory
+            ? vscode.l10n.t("Override the default encoding for directory files (default: Auto-detect from file tags)")
+            : vscode.l10n.t({
+                  message: "Override the default encoding (default: {0})",
+                  args: [node.getProfile()?.profile?.encoding ?? vscode.l10n.t("EBCDIC")],
+                  comment: ["Encoding name"],
+              });
 
         // Loop so that cancelling sub-prompts (filter options, encoding) returns to this quick pick
         // eslint-disable-next-line no-constant-condition
@@ -675,8 +655,8 @@ export class USSActions {
             }
 
             optionItems.push({
-                label: vscode.l10n.t("Choose Encoding"),
-                description: getEncodingDescription(),
+                label: vscode.l10n.t("Override Encoding"),
+                description: encodingDescription,
                 picked: downloadOpts.chooseEncoding,
             });
 
@@ -692,7 +672,7 @@ export class USSActions {
             const localizedLabels = {
                 overwrite: vscode.l10n.t("Overwrite"),
                 generateDirectory: vscode.l10n.t("Generate Directory Structure"),
-                chooseEncoding: vscode.l10n.t("Choose Encoding"),
+                chooseEncoding: vscode.l10n.t("Override Encoding"),
                 followSymlinks: vscode.l10n.t("Follow Symlinks"),
                 applyFilterOptions: vscode.l10n.t("Apply Filter Options"),
             };
@@ -722,11 +702,7 @@ export class USSActions {
                 if (isDirectory) {
                     const profile = node.getProfile();
 
-                    downloadOpts.dirOptions.directoryEncoding = await SharedUtils.promptForDirectoryEncoding(
-                        profile,
-                        node.fullPath,
-                        downloadOpts.dirOptions.directoryEncoding
-                    );
+                    downloadOpts.dirOptions.directoryEncoding = await SharedUtils.promptForDirectoryEncoding(profile, node.fullPath);
 
                     if (downloadOpts.dirOptions.directoryEncoding === undefined) {
                         shouldRetry = true;
@@ -765,7 +741,14 @@ export class USSActions {
 
             const selectedPath = downloadPath[0].fsPath;
             downloadOpts.selectedPath = vscode.Uri.file(selectedPath);
-            await ZoweLocalStorage.setValue<Definitions.UssDownloadOptions>(Definitions.LocalStorageKey.USS_DOWNLOAD_OPTIONS, downloadOpts);
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { encoding: _encoding, dirOptions, ...persistedOptions } = downloadOpts;
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { directoryEncoding: _directoryEncoding, ...persistedDirOptions } = dirOptions;
+            await ZoweLocalStorage.setValue<Definitions.UssDownloadOptions>(Definitions.LocalStorageKey.USS_DOWNLOAD_OPTIONS, {
+                ...persistedOptions,
+                dirOptions: persistedDirOptions,
+            });
 
             return downloadOpts;
         }

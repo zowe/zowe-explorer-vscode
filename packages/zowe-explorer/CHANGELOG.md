@@ -19,6 +19,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Migrated webviews from the deprecated Webview UI Toolkit to VS Code Elements. [#3443](https://github.com/zowe/zowe-explorer-vscode/issues/3443)
 - Added support for changing the password on the remote system, which then also updates the locally stored password. Currently only supports the z/OSMF profile type. [#1538](https://github.com/zowe/zowe-explorer-vscode/issues/1538)
 - Replaced confusing "SSH server" terminology with "zo server" in deployment prompts, status messages, settings descriptions, and Command Palette labels. [#4583](https://github.com/zowe/zowe-explorer-vscode/issues/4583)
+- Replaced "Choose Encoding" with "Override Encoding" option in the data set and USS download menu. The default encoding is either pulled from the profile or if none, EBCDIC, and selecting the "Override Encoding" now opens the encoding menu to select the encoding of choice. [#4533](https://github.com/zowe/zowe-explorer-vscode/issues/4533)
 
 ### Bug fixes
 
@@ -32,6 +33,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Updated Zowe SDKs to `8.43.0` for technical currency. [#4556](https://github.com/zowe/zowe-explorer-vscode/pull/4556)
 - Fixed incorrect profile validation results for profiles that use certificates or set the `authOrder` property. [#4617](https://github.com/zowe/zowe-explorer-vscode/pull/4617)
 - Fixed job submission from favorited data set searches. Sequential data sets can be submitted, and the job ID link, Open Job, and polling now use the correct profile. [#4352](https://github.com/zowe/zowe-explorer-vscode/issues/4352)
+- Fixed profile encoding not being respected when "Choose Encoding" download option is selected (which is now renamed to "Override Encoding"). [#4533](https://github.com/zowe/zowe-explorer-vscode/issues/4533)
 
 ## `3.6.1`
 
