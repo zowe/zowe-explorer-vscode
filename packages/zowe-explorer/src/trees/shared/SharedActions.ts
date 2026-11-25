@@ -466,7 +466,7 @@ export class SharedActions {
     public static async toggleEditorReadOnly(uri: vscode.Uri | undefined, readOnly: boolean): Promise<void> {
         ZoweLogger.trace("SharedActions.toggleEditorReadOnly called.");
         // If file is opened with readonly=true parameter, don't allow the toggle to be clicked (when clause on menu items disables from UI side)
-        if (!ReadOnlyManagement.isSupportedUri(uri) || FsAbstractUtils.isReadOnlyUri(uri)) {
+        if (!ReadOnlyManagement.isSupportedUri(uri) || FsAbstractUtils.hasReadOnlyQuery(uri)) {
             return;
         }
         ReadOnlyManagement.setReadOnly(uri, readOnly);

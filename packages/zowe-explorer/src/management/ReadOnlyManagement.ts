@@ -64,7 +64,7 @@ export class ReadOnlyManagement {
         if (!ReadOnlyManagement.isSupportedUri(uri)) {
             return false;
         }
-        if (FsAbstractUtils.isReadOnlyUri(uri)) {
+        if (FsAbstractUtils.hasReadOnlyQuery(uri)) {
             return true;
         }
 
@@ -89,7 +89,7 @@ export class ReadOnlyManagement {
             return;
         }
         // Gives a more specific error for files opened from a readonly=true link
-        FsAbstractUtils.throwIfReadOnly(uri);
+        FsAbstractUtils.throwIfReadOnlyQuery(uri);
         const parent = opts?.checkParent ? ReadOnlyManagement.getParentUri(uri) : undefined;
         const readOnlyUri = [parent, uri].find((u) => u != null && ReadOnlyManagement.isReadOnly(u));
         if (readOnlyUri != null) {
