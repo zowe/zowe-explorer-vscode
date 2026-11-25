@@ -14,6 +14,7 @@ import { MainframeInteraction } from "./MainframeInteraction";
 import { Validation } from "../profiles";
 import * as vscode from "vscode";
 import { DataSetAttributesProvider } from "../dataset/DatasetAttributesProvider";
+import { IReadOnlyChangeEvent } from "./IReadOnlyChangeEvent";
 
 /**
  * This interface can be used by other VS Code Extensions to register themselves
@@ -144,6 +145,22 @@ export interface IRegisterClient {
      * The event payload is the full profile that was hidden.
      */
     onProfileHidden?: vscode.Event<imperative.IProfileLoaded>;
+
+    /**
+     * Checks whether Zowe Explorer treats a data set, member or USS resource as read-only.
+     * Takes into account `readonly=true` query parameter, the Make Read-Only/Make Writable session overrides, and the `zowe.readOnly.rules` setting.
+     * This does not call the server, and does not check the user's permissions on the system.
+     * @param uri A URI with the `zowe-ds` or `zowe-uss` scheme
+     * @returns true if the resource is read-only, false if it is writable or the URI has another scheme
+     */
+    isReadOnly?(uri: vscode.Uri): boolean;
+
+    /**
+     * Fires when the resources that Zowe Explorer treats as read-only may have changed,
+     * e.g. when the user selects Make Read-Only or Make Writable, or edits the `zowe.readOnly.rules` setting.
+     * Use {@link isReadOnly} to get the new state.
+     */
+    onReadOnlyChanged?: vscode.Event<IReadOnlyChangeEvent>;
 
     /**
      * Lookup of any registered API (Uss, Mvs, Jes, or Command).

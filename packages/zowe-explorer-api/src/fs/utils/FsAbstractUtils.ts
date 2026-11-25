@@ -81,20 +81,20 @@ export class FsAbstractUtils {
     }
 
     /**
-     * Checks whether the given URI has the readonly=true query parameter, i.e. a resource opened from a read-only link.
+     * Checks whether the given URI has the `readonly=true` query parameter, i.e. a resource opened from a read-only link.
      * This does not check Zowe Explorer's read-only rules or overrides -
-     * to find out whether a file is read-only, use `vscode.workspace.fs.stat(uri)` and check for `vscode.FilePermission.Readonly` in its permissions.
-     * @returns true if the URI has the readonly=true query parameter
+     * to find out whether a resource is read-only, use `isReadOnly` on the API register returned by `ZoweVsCodeExtension.getZoweExplorerApi()`.
+     * @returns true if the URI has the `readonly=true` query parameter
      */
     public static hasReadOnlyQuery(uri: vscode.Uri): boolean {
         return !!uri?.query && new URLSearchParams(uri.query).get("readonly") === "true";
     }
 
     /**
-     * Throws a NoPermissions filesystem error if the given URI has the readonly=true query parameter.
+     * Throws a NoPermissions filesystem error if the given URI has the `readonly=true` query parameter.
      * Use as a precheck when performing a modify operation on the URI.
      * This does not check Zowe Explorer's read-only rules or overrides.
-     * @throws vscode.FileSystemError.NoPermissions if the URI has the readonly=true query parameter
+     * @throws vscode.FileSystemError.NoPermissions if the URI has the `readonly=true` query parameter
      */
     public static throwIfReadOnlyQuery(uri: vscode.Uri): void {
         if (FsAbstractUtils.hasReadOnlyQuery(uri)) {

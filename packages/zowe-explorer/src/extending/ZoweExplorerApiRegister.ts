@@ -15,6 +15,7 @@ import {
     BaseProvider,
     DataSetAttributesProvider,
     IApiExplorerExtender,
+    IReadOnlyChangeEvent,
     MainframeInteraction,
     Types,
     Validation,
@@ -26,6 +27,7 @@ import {
 import { ZoweExplorerExtender } from "./ZoweExplorerExtender";
 import { ZoweLogger } from "../tools/ZoweLogger";
 import { ProfilesUtils } from "../utils/ProfilesUtils";
+import { ReadOnlyManagement } from "../management/ReadOnlyManagement";
 
 /**
  * The Zowe Explorer API Register singleton that gets exposed to other VS Code
@@ -421,6 +423,24 @@ export class ZoweExplorerApiRegister implements Types.IApiRegisterClient {
      */
     public get onProfileHidden(): vscode.Event<imperative.IProfileLoaded> {
         return this.onProfileHiddenEmitter.event;
+    }
+
+    /**
+     * Checks whether Zowe Explorer treats a data set, member or USS resource as read-only,
+     * from the `readonly=true` query parameter, session overrides and the `zowe.readOnly.rules` setting.
+     * @param uri A URI with the zowe-ds or zowe-uss scheme
+     * @returns true if the resource is read-only, false if it is writable or the URI has another scheme
+     */
+    public isReadOnly(uri: vscode.Uri): boolean {
+        return ReadOnlyManagement.isReadOnly(uri);
+    }
+
+    /**
+     * Event for extenders to subscribe to that will fire when the resources Zowe Explorer treats as read-only may have changed.
+     * @returns event that can be attached that will be called with the changed resource, or no resource if any may have changed
+     */
+    public get onReadOnlyChanged(): vscode.Event<IReadOnlyChangeEvent> {
+        return ReadOnlyManagement.onDidChange;
     }
 
     /**

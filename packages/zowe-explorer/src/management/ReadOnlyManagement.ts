@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as path from "path";
-import { FsAbstractUtils, Gui, IZoweTreeNode, IZoweUSSTreeNode, ZoweScheme } from "@zowe/zowe-explorer-api";
+import { FsAbstractUtils, Gui, IReadOnlyChangeEvent, IZoweTreeNode, IZoweUSSTreeNode, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { SharedContext } from "../trees/shared/SharedContext";
 import { Constants } from "../configuration/Constants";
 import { SettingsConfig } from "../configuration/SettingsConfig";
@@ -42,7 +42,7 @@ interface CachedReadOnlyRule {
 export class ReadOnlyManagement {
     private static overrides = new Map<string, boolean>(); // pattern, is read-only?
     private static ruleCache: CachedReadOnlyRule[] | undefined;
-    private static changeEmitter = new vscode.EventEmitter<void>();
+    private static changeEmitter = new vscode.EventEmitter<IReadOnlyChangeEvent>();
     public static readonly onDidChange = ReadOnlyManagement.changeEmitter.event;
 
     public static initialize(context: vscode.ExtensionContext): void {
@@ -141,7 +141,8 @@ export class ReadOnlyManagement {
             ReadOnlyManagement.overrides.set(newKey + key.substring(oldKey.length), readOnly);
         }
         if (moved.length > 0) {
-            ReadOnlyManagement.notifyChanged();
+            ReadOnlyManagement.notifyChanged(oldUri);
+            ReadOnlyManagement.notifyChanged(newUri);
         }
     }
 
@@ -201,11 +202,15 @@ export class ReadOnlyManagement {
             ReadOnlyManagement.overrides.set(key, readOnly);
         }
 
-        ReadOnlyManagement.notifyChanged();
+        ReadOnlyManagement.notifyChanged(uri);
     }
 
-    public static notifyChanged(): void {
-        ReadOnlyManagement.changeEmitter.fire();
+    /**
+     * Notify that read-only states may have changed
+     * @param uri The resource whose state changed, along with anything beneath it. If any resource may have changed, leave out
+     */
+    public static notifyChanged(uri?: vscode.Uri): void {
+        ReadOnlyManagement.changeEmitter.fire({ uri: uri?.with({ query: "" }) });
     }
 
     /**
