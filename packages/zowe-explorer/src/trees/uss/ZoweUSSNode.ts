@@ -101,6 +101,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         if (opts.contextOverride) {
             this.contextValue = opts.contextOverride;
         }
+        if (opts.isSymlink) {
+            this.contextValue += Constants.SYMLINK_SUFFIX;
+        }
 
         const icon = IconGenerator.getIconByNode(this);
         if (icon) {
@@ -172,14 +175,26 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
     public async fetchAttributes(): Promise<Types.FileAttributes> {
         const ussEntry = UssFSProvider.instance.lookup(this.resourceUri, true) as UssFile | UssDirectory;
-        if (ussEntry == null || FsAbstractUtils.isDirectoryEntry(ussEntry)) {
+        if (ussEntry == null) {
             return undefined;
         }
-        const response = await this.getUssFiles(this.profile);
-        if (response.success === false || response.apiResponse?.items?.length !== 1) {
-            return undefined;
+        let item;
+        if (FsAbstractUtils.isDirectoryEntry(ussEntry)) {
+            if (!SharedContext.isSymlink(this)) {
+                return undefined;
+            }
+            const response = await this.getUssFiles(this.profile, true);
+            if (response.success === false) {
+                return undefined;
+            }
+            item = response.apiResponse?.items?.find((listItem) => listItem.name === ".");
+        } else {
+            const response = await this.getUssFiles(this.profile);
+            if (response.success === false || response.apiResponse?.items?.length !== 1) {
+                return undefined;
+            }
+            item = response.apiResponse.items[0];
         }
-        const item = response.apiResponse.items[0];
         if (item == null) {
             return undefined;
         }
@@ -300,6 +315,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         const canReportCreations = !isFirstListing;
         const createdUris: vscode.Uri[] = [];
         const responseNodes: IZoweUSSTreeNode[] = [];
+        // Nodes replaced by a new node for the same path, whose provider entries now belong to the new node (for symlink change jank)
+        const replacedNodes: IZoweUSSTreeNode[] = [];
         for (const item of response.apiResponse?.items ?? []) {
             // ".", "..", and "..." have already been filtered out
             let itemName = item.name as string;
@@ -313,6 +330,20 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
             }
 
             let ussNode = existingItems[`${itemParentPath}/${itemName}`];
+            // A symbolic link to a directory is listed like a directory, so it can be expanded
+            const isDir = USSUtils.isDirectoryItem(item);
+            const isSymlink = item.isSymlink === true;
+
+            // Check if the object was replaced on the mainframe by a different type, e.g. a broken symlink that now points to a directory
+            // Can't update a node in place so create a new node instead
+            const typeChanged = ussNode != null && (ussNode.collapsibleState !== vscode.TreeItemCollapsibleState.None) !== isDir;
+            if (ussNode != null && (typeChanged || SharedContext.isSymlink(ussNode) !== isSymlink)) {
+                if (typeChanged) {
+                    UssFSProvider.instance.removeEntry(ussNode.resourceUri);
+                }
+                replacedNodes.push(ussNode);
+                ussNode = undefined;
+            }
 
             // The child node already exists. Use that node for the list instead, and update the file attributes in case they've changed
             if (ussNode != null) {
@@ -330,7 +361,6 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 continue;
             }
 
-            const isDir = item.mode.startsWith("d");
             const collapseState = isDir ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None;
             ussNode = new ZoweUSSNode({
                 label: itemName,
@@ -339,6 +369,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 parentPath: itemParentPath,
                 profile: cachedProfile,
                 encoding: isDir ? undefined : this.getEncodingInMap(`${itemParentPath}/${itemName}`),
+                isSymlink,
             });
 
             if (isDir) {
@@ -371,7 +402,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
         // remove any entries from FS provider that were deleted from mainframe when tree view is refreshed
         for (const node of nodesToRemove) {
-            if (node.resourceUri) {
+            if (node.resourceUri && !replacedNodes.includes(node)) {
                 UssFSProvider.instance.removeEntry(node.resourceUri);
             }
         }
@@ -402,6 +433,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         if (!(this.contextValue.startsWith(Constants.USS_BINARY_FILE_CONTEXT) || this.contextValue.startsWith(Constants.USS_TEXT_FILE_CONTEXT))) {
             throw new Error(`Cannot set encoding for node with context ${this.contextValue}`);
         }
+        const isSymlink = SharedContext.isSymlink(this);
         if (encoding?.kind === "binary") {
             this.contextValue = Constants.USS_BINARY_FILE_CONTEXT;
         } else {
@@ -418,6 +450,9 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 encoding?.kind === "binary"
                     ? Constants.USS_BINARY_FILE_CONTEXT + Constants.FAV_SUFFIX
                     : Constants.USS_TEXT_FILE_CONTEXT + Constants.FAV_SUFFIX;
+        }
+        if (isSymlink) {
+            this.contextValue += Constants.SYMLINK_SUFFIX;
         }
 
         const icon = IconGenerator.getIconByNode(this);
@@ -634,7 +669,8 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      * Getter for folder type
      */
     public get isFolder(): boolean {
-        return [Constants.USS_DIR_CONTEXT, Constants.USS_DIR_CONTEXT + Constants.FAV_SUFFIX].indexOf(this.contextValue) > -1;
+        // Match the start of the context value, so that suffixes such as favorites and symlinks are still folders
+        return this.contextValue?.startsWith(Constants.USS_DIR_CONTEXT) ?? false;
     }
 
     /**
@@ -732,7 +768,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
      */
     public async paste(
         destUri: vscode.Uri,
-        uss: { tree: USSFileStructure.UssFileTree; api?: MainframeInteraction.IUss; options?: zosfiles.IUploadOptions }
+        uss: { tree: USSFileStructure.UssFileTree; api?: MainframeInteraction.IUss; options?: zosfiles.IUploadOptions; skippedLinks?: string[] }
     ): Promise<void> {
         ZoweLogger.trace("ZoweUSSNode.paste called.");
         if (!uss.api) {
@@ -752,6 +788,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
 
         await UssFSProvider.instance.copy(localUri, destUri, {
             overwrite: true,
+            skippedLinks: uss.skippedLinks,
         });
     }
 
@@ -781,13 +818,25 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                 responseTimeout: prof.profile?.responseTimeout,
             };
 
+            const skippedLinks: string[] = [];
             for (const subnode of fileTreeToPaste.children) {
                 await this.paste(
                     vscode.Uri.from({
                         scheme: ZoweScheme.USS,
                         path: `/${this.profile.name}${this.fullPath}`,
                     }),
-                    { api, tree: subnode, options }
+                    { api, tree: subnode, options, skippedLinks }
+                );
+            }
+            if (skippedLinks.length > 0) {
+                const skipped = skippedLinks.join(", ");
+                ZoweLogger.warn(`Skipped ${skippedLinks.length} symbolic link(s) while pasting: ${skipped}`);
+                Gui.warningMessage(
+                    vscode.l10n.t({
+                        message: "Symbolic links inside pasted folders could not be copied and were skipped: {0}",
+                        args: [skipped],
+                        comment: ["List of skipped USS paths"],
+                    })
                 );
             }
         } catch (error) {
@@ -799,7 +848,7 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
         }
     }
 
-    private async getUssFiles(profile: imperative.IProfileLoaded): Promise<zosfiles.IZosFilesResponse> {
+    private async getUssFiles(profile: imperative.IProfileLoaded, keepRelative = false): Promise<zosfiles.IZosFilesResponse> {
         let response_list: zosfiles.IZosFilesResponse;
         const showHidden = SettingsConfig.getDirectValue<boolean>("zowe.files.showHiddenFiles");
         try {
@@ -817,9 +866,11 @@ export class ZoweUSSNode extends ZoweTreeNode implements IZoweUSSTreeNode {
                           })
                 );
             } else {
-                response_list = await UssFSProvider.instance.listFiles(profile, this.resourceUri);
+                response_list = keepRelative
+                    ? await UssFSProvider.instance.listFiles(profile, this.resourceUri, true)
+                    : await UssFSProvider.instance.listFiles(profile, this.resourceUri);
             }
-            return showHidden ? response_list : await USSUtils.filterHiddenFiles(response_list);
+            return showHidden || keepRelative ? response_list : await USSUtils.filterHiddenFiles(response_list);
         } catch (error) {
             const updated = await AuthUtils.errorHandling(error, {
                 apiType: ZoweExplorerApiType.Uss,

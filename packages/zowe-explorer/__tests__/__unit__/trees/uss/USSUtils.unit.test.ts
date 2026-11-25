@@ -374,3 +374,43 @@ describe("USSUtils Unit Tests - filterHiddenFiles", () => {
         expect(result.apiResponse.items).toEqual([]);
     });
 });
+
+describe("USSUtils symbolic link helpers", () => {
+    it("identifies symlink items by their mode", () => {
+        expect(USSUtils.isSymlinkItem({ name: "link", mode: "lrwxrwxrwx" })).toBe(true);
+        expect(USSUtils.isSymlinkItem({ name: "dir", mode: "drwxrwxrwx" })).toBe(false);
+        expect(USSUtils.isSymlinkItem({ name: "noMode" })).toBe(false);
+    });
+
+    it("treats directories and symlinks to directories as directory items", () => {
+        expect(USSUtils.isDirectoryItem({ name: "dir", mode: "drwxrwxrwx" })).toBe(true);
+        expect(USSUtils.isDirectoryItem({ name: "link", mode: "lrwxrwxrwx", isSymlink: true, isSymlinkToDirectory: true })).toBe(true);
+        expect(USSUtils.isDirectoryItem({ name: "link", mode: "lrwxrwxrwx", isSymlink: true, isSymlinkToDirectory: false })).toBe(false);
+        expect(USSUtils.isDirectoryItem({ name: "file", mode: "-rwxrwxrwx" })).toBe(false);
+    });
+
+    describe("isDirectoryListing", () => {
+        it("uses the '.' entry when present", () => {
+            expect(USSUtils.isDirectoryListing([{ name: ".", mode: "drwxrwxrwx" }], "/u/dir")).toBe(true);
+            expect(USSUtils.isDirectoryListing([{ name: ".", mode: "-rwxrwxrwx" }], "/u/dir")).toBe(false);
+        });
+        it("treats a directory containing a child named after the directory as a directory", () => {
+            const items = [
+                { name: "temp", mode: "-rwxrwxrwx" },
+                { name: "other.txt", mode: "-rwxrwxrwx" },
+            ];
+            expect(USSUtils.isDirectoryListing(items, "/u/users/ibmuser/temp")).toBe(true);
+        });
+        it("treats a single matching item that is a directory as a directory", () => {
+            expect(USSUtils.isDirectoryListing([{ name: "temp", mode: "drwxrwxrwx" }], "/u/users/ibmuser/temp")).toBe(true);
+        });
+        it("detects a listing of a single file by its name", () => {
+            expect(USSUtils.isDirectoryListing([{ name: "file.txt", mode: "-rw-r--r--" }], "/u/file.txt")).toBe(false);
+            expect(USSUtils.isDirectoryListing([{ name: "/u/file.txt", mode: "-rw-r--r--" }], "/u/file.txt")).toBe(false);
+        });
+        it("treats a directory with a single child, or no children, as a directory", () => {
+            expect(USSUtils.isDirectoryListing([{ name: "child.txt", mode: "-rw-r--r--" }], "/u/dir")).toBe(true);
+            expect(USSUtils.isDirectoryListing([], "/u/dir")).toBe(true);
+        });
+    });
+});

@@ -38,6 +38,9 @@ import { SharedTreeProviders } from "../../../../src/trees/shared/SharedTreeProv
 import { USSFileStructure } from "../../../../src/trees/uss/USSFileStructure";
 import { SharedUtils } from "../../../../src/trees/shared/SharedUtils";
 import { SettingsConfig } from "../../../../src/configuration/SettingsConfig";
+import { SharedContext } from "../../../../src/trees/shared/SharedContext";
+import { IconGenerator } from "../../../../src/icons/IconGenerator";
+import { IconUtils } from "../../../../src/icons/IconUtils";
 
 vi.mock("fs");
 
@@ -721,6 +724,48 @@ describe("ZoweUSSNode Unit Tests - node.setEncoding() and encoding behaviors", (
         expect(node.contextValue).toEqual(Constants.USS_TEXT_FILE_CONTEXT + Constants.FAV_SUFFIX);
     });
 
+    it.each([
+        ["binary", { kind: "binary" }, Constants.USS_BINARY_FILE_CONTEXT],
+        ["text", { kind: "text" }, Constants.USS_TEXT_FILE_CONTEXT],
+        ["another codepage", { kind: "other", codepage: "IBM-1047" }, Constants.USS_TEXT_FILE_CONTEXT],
+        ["no", undefined, Constants.USS_TEXT_FILE_CONTEXT],
+    ])("keeps a symlink marked as a symlink when setting %s encoding", (_name, encoding, baseContext) => {
+        const globalMocks = createGlobalMocks();
+        getEncodingMock.mockReturnValue(encoding);
+        const node = new ZoweUSSNode({
+            label: "encodingTest",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: globalMocks.profileOne,
+            isSymlink: true,
+        });
+        node.setEncoding(encoding);
+        expect(node.contextValue).toEqual(baseContext + Constants.SYMLINK_SUFFIX);
+        expect(SharedContext.isSymlink(node)).toBe(true);
+        expect(JSON.stringify(node.iconPath)).toContain("file-symlink-file.svg");
+    });
+
+    it("keeps a symlink in favorites marked as both a favorite and a symlink when setting encoding", () => {
+        const globalMocks = createGlobalMocks();
+        const parentNode = new ZoweUSSNode({
+            label: "favoriteTest",
+            collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+            profile: globalMocks.profileOne,
+        });
+        parentNode.contextValue = Constants.FAV_PROFILE_CONTEXT;
+        const binaryEncoding = { kind: "binary" };
+        getEncodingMock.mockReturnValue(binaryEncoding);
+        const node = new ZoweUSSNode({
+            label: "encodingTest",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            parentNode,
+            isSymlink: true,
+        });
+        node.setEncoding(binaryEncoding);
+        expect(SharedContext.isSymlink(node)).toBe(true);
+        expect(SharedContext.isFavorite(node)).toBe(true);
+        expect(SharedContext.isBinary(node)).toBe(true);
+    });
+
     it("resets encoding to undefined", () => {
         const globalMocks = createGlobalMocks();
         const node = new ZoweUSSNode({
@@ -1247,6 +1292,214 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
         expect(createEntrySpy).toHaveBeenCalled();
 
         createEntrySpy.mockRestore();
+    });
+
+    it("Tests that getChildren() treats a symlink to a directory as a folder", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const parentNode = new ZoweUSSNode({
+            label: "testDir",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.rootNode,
+            session: globalMocks.session,
+            profile: globalMocks.profileOne,
+            parentPath: "/u",
+        });
+        vi.spyOn(parentNode as any, "getUssFiles").mockResolvedValueOnce({
+            success: true,
+            apiResponse: {
+                items: [{ name: "dirLink", mode: "lrwxrwxrwx", isSymlink: true, isSymlinkToDirectory: true }],
+            },
+        });
+
+        parentNode.dirty = true;
+        const [child] = await parentNode.getChildren();
+
+        expect(child.label).toBe("dirLink");
+        expect(child.collapsibleState).toBe(vscode.TreeItemCollapsibleState.Collapsed);
+        expect(child.contextValue).toBe(Constants.USS_DIR_CONTEXT + Constants.SYMLINK_SUFFIX);
+        expect(SharedContext.isFolder(child)).toBe(true);
+        expect(SharedContext.isSymlink(child)).toBe(true);
+        expect(child.command).toBeUndefined();
+        expect(child.iconPath).toBe(IconGenerator.getIconById(IconUtils.IconId.symlinkFolder).path);
+        expect(globalMocks.FileSystemProvider.createDirectory).toHaveBeenCalledWith(child.resourceUri);
+    });
+
+    it("Tests that getChildren() treats a symlink to a file as an openable file", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const parentNode = new ZoweUSSNode({
+            label: "testDir",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.rootNode,
+            session: globalMocks.session,
+            profile: globalMocks.profileOne,
+            parentPath: "/u",
+        });
+        vi.spyOn(parentNode as any, "getUssFiles").mockResolvedValueOnce({
+            success: true,
+            apiResponse: {
+                items: [{ name: "fileLink", mode: "lrwxrwxrwx", isSymlink: true, isSymlinkToDirectory: false }],
+            },
+        });
+        const createEntrySpy = vi.spyOn(UssFSProvider.instance, "createEntry").mockImplementation((() => undefined) as any);
+
+        parentNode.dirty = true;
+        const [child] = await parentNode.getChildren();
+
+        expect(child.collapsibleState).toBe(vscode.TreeItemCollapsibleState.None);
+        expect(child.contextValue).toBe(Constants.USS_TEXT_FILE_CONTEXT + Constants.SYMLINK_SUFFIX);
+        expect(SharedContext.isSymlink(child)).toBe(true);
+        expect(child.command).toEqual({ command: "vscode.open", title: "", arguments: [child.resourceUri] });
+        expect(child.iconPath).toBe(IconGenerator.getIconById(IconUtils.IconId.symlinkFile).path);
+        expect(createEntrySpy).toHaveBeenCalledWith(child.resourceUri, "file");
+        createEntrySpy.mockRestore();
+    });
+
+    it("Tests that regular files and folders are not marked as symlinks", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        const parentNode = new ZoweUSSNode({
+            label: "testDir",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            parentNode: blockMocks.rootNode,
+            session: globalMocks.session,
+            profile: globalMocks.profileOne,
+            parentPath: "/u",
+        });
+        vi.spyOn(parentNode as any, "getUssFiles").mockResolvedValueOnce({
+            success: true,
+            apiResponse: {
+                items: [
+                    { name: "aDir", mode: "drwxrwxrwx" },
+                    { name: "aFile.txt", mode: "-rwxrwxrwx" },
+                ],
+            },
+        });
+        const createEntrySpy = vi.spyOn(UssFSProvider.instance, "createEntry").mockImplementation((() => undefined) as any);
+
+        parentNode.dirty = true;
+        const children = await parentNode.getChildren();
+
+        expect(children.map((c) => SharedContext.isSymlink(c))).toEqual([false, false]);
+        createEntrySpy.mockRestore();
+    });
+
+    describe("when a child's type changes on the mainframe", () => {
+        const useFakeEntries = () => {
+            const entries = new Map<string, "file" | "directory">();
+            const calls: string[] = [];
+            const spies = [
+                vi.spyOn(UssFSProvider.instance, "exists").mockImplementation((uri) => entries.has(uri.path)),
+                vi.spyOn(UssFSProvider.instance, "createParentDirectories").mockImplementation((() => undefined) as any),
+                vi.spyOn(UssFSProvider.instance, "createDirectory").mockImplementation(((uri: vscode.Uri) => {
+                    calls.push(`createDirectory ${uri.path}`);
+                    entries.set(uri.path, "directory");
+                }) as any),
+                vi.spyOn(UssFSProvider.instance, "createEntry").mockImplementation(((uri: vscode.Uri) => {
+                    calls.push(`createEntry ${uri.path}`);
+                    entries.set(uri.path, "file");
+                }) as any),
+                vi.spyOn(UssFSProvider.instance, "removeEntry").mockImplementation((uri) => {
+                    calls.push(`removeEntry ${uri.path}`);
+                    return entries.delete(uri.path);
+                }),
+            ];
+            return { entries, calls, restore: () => spies.forEach((spy) => spy.mockRestore()) };
+        };
+
+        const listTwice = async (before: Record<string, unknown>, after: Record<string, unknown>) => {
+            const globalMocks = createGlobalMocks();
+            const blockMocks = createBlockMocks(globalMocks);
+            const fake = useFakeEntries();
+            const parentNode = new ZoweUSSNode({
+                label: "testDir",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: blockMocks.rootNode,
+                session: globalMocks.session,
+                profile: globalMocks.profileOne,
+                parentPath: "/u",
+            });
+            const getUssFilesMock = vi
+                .spyOn(parentNode as any, "getUssFiles")
+                .mockResolvedValueOnce({ success: true, apiResponse: { items: [before] } })
+                .mockResolvedValueOnce({ success: true, apiResponse: { items: [after] } });
+
+            parentNode.dirty = true;
+            const [first] = await parentNode.getChildren();
+            fake.calls.length = 0;
+            parentNode.dirty = true;
+            const [second] = await parentNode.getChildren();
+
+            expect(getUssFilesMock).toHaveBeenCalledTimes(2);
+            fake.restore();
+            return { first, second, ...fake };
+        };
+
+        const brokenLink = { name: "target", mode: "lrwxrwxrwx", isSymlink: true, isSymlinkToDirectory: false };
+        const dirLink = { name: "target", mode: "lrwxrwxrwx", isSymlink: true, isSymlinkToDirectory: true };
+        const plainFile = { name: "target", mode: "-rwxrwxrwx" };
+        const plainDir = { name: "target", mode: "drwxrwxrwx" };
+
+        it("replaces a broken symlink with a folder when it becomes a symlink to a directory", async () => {
+            const { first, second, entries, calls } = await listTwice(brokenLink, dirLink);
+            const childPath = second.resourceUri.path;
+
+            expect(second).not.toBe(first);
+            expect(second.collapsibleState).toBe(vscode.TreeItemCollapsibleState.Collapsed);
+            expect(second.contextValue).toBe(Constants.USS_DIR_CONTEXT + Constants.SYMLINK_SUFFIX);
+            expect(second.command).toBeUndefined();
+            expect(second.iconPath).toBe(IconGenerator.getIconById(IconUtils.IconId.symlinkFolder).path);
+            // The old file entry is removed before the folder entry is created, and the folder entry is kept
+            expect(calls).toEqual([`removeEntry ${childPath}`, `createDirectory ${childPath}`]);
+            expect(entries.get(childPath)).toBe("directory");
+        });
+
+        it("replaces a plain file with a folder when it becomes a symlink to a directory", async () => {
+            const { second, entries } = await listTwice(plainFile, dirLink);
+            const childPath = second.resourceUri.path;
+
+            expect(second.collapsibleState).toBe(vscode.TreeItemCollapsibleState.Collapsed);
+            expect(SharedContext.isSymlink(second)).toBe(true);
+            expect(entries.get(childPath)).toBe("directory");
+        });
+
+        it("replaces a folder with a file when it becomes a broken symlink", async () => {
+            const { second, entries, calls } = await listTwice(plainDir, brokenLink);
+            const childPath = second.resourceUri.path;
+
+            expect(second.collapsibleState).toBe(vscode.TreeItemCollapsibleState.None);
+            expect(second.contextValue).toBe(Constants.USS_TEXT_FILE_CONTEXT + Constants.SYMLINK_SUFFIX);
+            expect(second.command).toEqual({ command: "vscode.open", title: "", arguments: [second.resourceUri] });
+            expect(calls).toEqual([`removeEntry ${childPath}`, `createEntry ${childPath}`]);
+            expect(entries.get(childPath)).toBe("file");
+        });
+
+        it("updates a folder that becomes a symlink to a directory without replacing its entry", async () => {
+            const { first, second, entries, calls } = await listTwice(plainDir, dirLink);
+            const childPath = second.resourceUri.path;
+
+            expect(second).not.toBe(first);
+            expect(second.contextValue).toBe(Constants.USS_DIR_CONTEXT + Constants.SYMLINK_SUFFIX);
+            expect(second.iconPath).toBe(IconGenerator.getIconById(IconUtils.IconId.symlinkFolder).path);
+            // Both are folders, so the folder entry and anything cached under it are kept
+            expect(calls).toEqual([]);
+            expect(entries.get(childPath)).toBe("directory");
+        });
+
+        it("updates a symlink to a directory that becomes a plain folder", async () => {
+            const { second } = await listTwice(dirLink, plainDir);
+
+            expect(second.contextValue).toBe(Constants.USS_DIR_CONTEXT);
+            expect(SharedContext.isSymlink(second)).toBe(false);
+        });
+
+        it("keeps the same node when the child's type has not changed", async () => {
+            const { first, second, calls } = await listTwice(dirLink, { ...dirLink, mtime: "2026-11-08T10:00:00" });
+
+            expect(second).toBe(first);
+            expect(calls).toEqual([]);
+        });
     });
 
     it("Tests that error is thrown when node label is blank", async () => {
@@ -1846,6 +2099,94 @@ describe("ZoweUSSNode Unit Tests - Function node.pasteUssTree()", () => {
 
         await blockMocks.testNode.pasteUssTree();
     });
+
+    it("warns once after pasting about the links that could not be copied", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        blockMocks.pasteSpy.mockClear();
+        const warningSpy = vi.spyOn(Gui, "warningMessage").mockResolvedValue(undefined);
+        // Each pasted item reports the links it skipped into the shared list
+        blockMocks.pasteSpy.mockImplementation(async (_destUri, uss) => {
+            uss.skippedLinks.push(`${uss.tree.ussPath}/link`);
+        });
+
+        try {
+            await blockMocks.testNode.pasteUssTree();
+
+            expect(blockMocks.pasteSpy).toHaveBeenCalledTimes(3);
+            expect(warningSpy).toHaveBeenCalledTimes(1);
+            for (const ussPath of ["/path/testFile/link", "/path/testFile2/link", "/path/testFile3/link"]) {
+                expect(warningSpy.mock.calls[0][0]).toContain(ussPath);
+            }
+        } finally {
+            warningSpy.mockRestore();
+            blockMocks.pasteSpy.mockRestore();
+        }
+    });
+
+    it("does not warn after pasting when no links were skipped", async () => {
+        const globalMocks = createGlobalMocks();
+        const blockMocks = createBlockMocks(globalMocks);
+        blockMocks.pasteSpy.mockClear();
+        const warningSpy = vi.spyOn(Gui, "warningMessage").mockResolvedValue(undefined);
+        blockMocks.pasteSpy.mockResolvedValue(undefined);
+
+        try {
+            await blockMocks.testNode.pasteUssTree();
+
+            expect(blockMocks.pasteSpy).toHaveBeenCalledTimes(3);
+            expect(warningSpy).not.toHaveBeenCalled();
+        } finally {
+            warningSpy.mockRestore();
+            blockMocks.pasteSpy.mockRestore();
+        }
+    });
+
+    it("passes the list for skipped links on to the provider when pasting", async () => {
+        createGlobalMocks();
+        const node = new ZoweUSSNode({
+            label: "root",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            profile: createIProfile(),
+        });
+        const copySpy = vi.spyOn(UssFSProvider.instance, "copy").mockResolvedValue(undefined);
+        const skippedLinks: string[] = [];
+        const tree = { localUri: vscode.Uri.from({ scheme: ZoweScheme.USS, path: "/sestest/a" }), ussPath: "/a", type: 1 };
+
+        try {
+            await node.paste(vscode.Uri.from({ scheme: ZoweScheme.USS, path: "/sestest/dest" }), {
+                api: { fileList: vi.fn(), copy: vi.fn() } as any,
+                tree,
+                skippedLinks,
+            });
+
+            expect(copySpy).toHaveBeenCalledWith(expect.anything(), expect.anything(), { overwrite: true, skippedLinks });
+        } finally {
+            copySpy.mockRestore();
+        }
+    });
+});
+
+describe("ZoweUSSNode Unit Tests - isFolder", () => {
+    it.each([
+        ["a folder", Constants.USS_DIR_CONTEXT, true],
+        ["a favorite folder", Constants.USS_DIR_CONTEXT + Constants.FAV_SUFFIX, true],
+        ["a symlink to a folder", Constants.USS_DIR_CONTEXT + Constants.SYMLINK_SUFFIX, true],
+        ["a favorite symlink to a folder", Constants.USS_DIR_CONTEXT + Constants.SYMLINK_SUFFIX + Constants.FAV_SUFFIX, true],
+        ["a text file", Constants.USS_TEXT_FILE_CONTEXT, false],
+        ["a symlink to a file", Constants.USS_TEXT_FILE_CONTEXT + Constants.SYMLINK_SUFFIX, false],
+        ["a binary file", Constants.USS_BINARY_FILE_CONTEXT, false],
+        ["a filtered session", Constants.USS_SESSION_CONTEXT + "_" + Constants.FILTER_SEARCH, false],
+    ])("is correct for %s (%s)", (_name, context, expected) => {
+        createGlobalMocks();
+        const node = new ZoweUSSNode({
+            label: "node",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            profile: createIProfile(),
+            contextOverride: context,
+        });
+        expect(node.isFolder).toBe(expected);
+    });
 });
 
 describe("ZoweUSSNode Unit Tests - Function node.setEtag", () => {
@@ -1948,6 +2289,107 @@ describe("ZoweUSSNode Unit Tests - Function node.fetchAttributes", () => {
         expect(await uss_node.fetchAttributes()).toStrictEqual(attrs2);
         lookupMock.mockRestore();
     });
+    describe("for a symlink to a directory", () => {
+        const targetDirItem = { name: ".", mode: "drwxr-x---", user: "bUser", uid: 0, group: "USERS", gid: 1000 };
+
+        function createLinkNode(globalMocks: any): ZoweUSSNode {
+            vi.spyOn(UssFSProvider.instance, "lookup").mockReturnValue(new UssDirectory("dirLink"));
+            const node = new ZoweUSSNode({
+                label: "dirLink",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentPath: "/",
+                profile: globalMocks.profileOne,
+                isSymlink: true,
+            });
+            vi.spyOn(node, "setAttributes").mockImplementation((() => undefined) as any);
+            return node;
+        }
+
+        afterEach(() => {
+            vi.restoreAllMocks();
+        });
+
+        it("fetches the attributes of the target directory from its dot entry", async () => {
+            const globalMocks = createGlobalMocks();
+            const node = createLinkNode(globalMocks);
+            const getUssFilesMock = vi.spyOn(node as any, "getUssFiles").mockResolvedValueOnce({
+                success: true,
+                apiResponse: { items: [{ name: "a.txt", mode: "-rw-r--r--", user: "cUser" }, targetDirItem, { name: "..", mode: "drwxrwxrwx" }] },
+                commandResponse: "",
+            });
+
+            const attrs = await node.fetchAttributes();
+
+            expect(getUssFilesMock).toHaveBeenCalledWith(globalMocks.profileOne, true);
+            expect(attrs).toStrictEqual({ owner: "bUser", uid: 0, group: "USERS", gid: 1000, perms: "drwxr-x---" });
+            expect(node.setAttributes).toHaveBeenCalledWith(attrs);
+        });
+
+        it("returns undefined if the listing has no dot entry", async () => {
+            const globalMocks = createGlobalMocks();
+            const node = createLinkNode(globalMocks);
+            vi.spyOn(node as any, "getUssFiles").mockResolvedValueOnce({
+                success: true,
+                apiResponse: { items: [{ name: "a.txt", mode: "-rw-r--r--" }] },
+                commandResponse: "",
+            });
+
+            expect(await node.fetchAttributes()).toBeUndefined();
+            expect(node.setAttributes).not.toHaveBeenCalled();
+        });
+
+        it("returns undefined if the link cannot be listed", async () => {
+            const globalMocks = createGlobalMocks();
+            const node = createLinkNode(globalMocks);
+            vi.spyOn(node as any, "getUssFiles").mockResolvedValueOnce({ success: false, commandResponse: null });
+
+            expect(await node.fetchAttributes()).toBeUndefined();
+            expect(node.setAttributes).not.toHaveBeenCalled();
+        });
+
+        it("still does not fetch attributes for a plain directory", async () => {
+            const globalMocks = createGlobalMocks();
+            vi.spyOn(UssFSProvider.instance, "lookup").mockReturnValue(new UssDirectory("aDir"));
+            const node = new ZoweUSSNode({
+                label: "aDir",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentPath: "/",
+                profile: globalMocks.profileOne,
+            });
+            const getUssFilesMock = vi.spyOn(node as any, "getUssFiles");
+
+            expect(await node.fetchAttributes()).toBeUndefined();
+            expect(getUssFilesMock).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("getUssFiles keeping relative entries", () => {
+        afterEach(() => {
+            vi.restoreAllMocks();
+        });
+
+        it("asks the provider to keep the dot entry and does not filter it out as a hidden file", async () => {
+            const globalMocks = createGlobalMocks();
+            const node = new ZoweUSSNode({
+                label: "dirLink",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentPath: "/",
+                profile: globalMocks.profileOne,
+                parentNode: createUSSSessionNode(globalMocks.session, globalMocks.profileOne),
+            });
+            vi.spyOn(ZoweExplorerApiRegister, "getUssApi").mockReturnValue({ getSession: () => globalMocks.session } as any);
+            const response = { success: true, apiResponse: { items: [{ name: "." }, { name: "a.txt" }] }, commandResponse: "" };
+            const listFilesMock = vi.spyOn(UssFSProvider.instance, "listFiles").mockResolvedValueOnce(response as any);
+            const filterHiddenMock = vi.spyOn(USSUtils, "filterHiddenFiles");
+
+            const result = await (node as any).getUssFiles(globalMocks.profileOne, true);
+
+            expect(listFilesMock).toHaveBeenCalledWith(globalMocks.profileOne, node.resourceUri, true);
+            expect(filterHiddenMock).not.toHaveBeenCalled();
+            expect(result.apiResponse.items.map((item) => item.name)).toEqual([".", "a.txt"]);
+        });
+    });
+
     it("returns undefined if no entry is found", async () => {
         const globalMocks = createGlobalMocks();
         const lookupMock = vi.spyOn(UssFSProvider.instance, "lookup").mockReturnValueOnce(undefined);
