@@ -888,6 +888,10 @@ export class DatasetActions {
         );
     }
 
+    /**
+     * Builds the encoding related options for a data set download.
+     * When no encoding override is chosen, fallback to profile encoding - but a binary or record override takes precedence over the profile encoding
+     */
     private static getDownloadEncodingOptions(
         encoding: ZosEncoding | undefined,
         profile: imperative.IProfileLoaded
