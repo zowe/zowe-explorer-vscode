@@ -10,6 +10,7 @@
  */
 
 import * as vscode from "vscode";
+import * as path from "path";
 import { createIProfile, createISession, createInstanceOfProfile } from "../../../__mocks__/mockCreators/shared";
 import { createDatasetSessionNode } from "../../../__mocks__/mockCreators/datasets";
 import { createUSSNode, createUSSSessionNode } from "../../../__mocks__/mockCreators/uss";
@@ -71,6 +72,27 @@ beforeEach(() => {
     vi.resetAllMocks();
     vi.clearAllMocks();
     vi.spyOn(ZoweExplorerApiRegister as any, "getMvsApi").mockImplementation(() => makeFakeMvsApi());
+});
+
+describe("SharedUtils download path validation", () => {
+    it.each(["../evil", "..\\evil", "a/../evil", "a\\..\\evil", "a/..", "a\\..", "a/..\\evil", ".."])(
+        "rejects backtracking components with either separator: %s",
+        (name) => {
+            expect(() => SharedUtils.validateDownloadName(name)).toThrow("backtracking path segments");
+        }
+    );
+
+    it.each(["HLQ.DATA.SET", "MEMBER", "/u/user/.hidden", "a/./file", "a..b", "..file"])("allows safe names: %s", (name) => {
+        expect(() => SharedUtils.validateDownloadName(name)).not.toThrow();
+    });
+
+    it("allows a descendant and rejects the selected directory, its parent, and a sibling with the same prefix", () => {
+        const selectedPath = path.resolve("downloads");
+        expect(() => SharedUtils.validateDownloadPath(selectedPath, path.join(selectedPath, "nested", "file.txt"))).not.toThrow();
+        for (const target of [selectedPath, path.dirname(selectedPath), `${selectedPath}-outside/file.txt`]) {
+            expect(() => SharedUtils.validateDownloadPath(selectedPath, target)).toThrow("inside the selected directory");
+        }
+    });
 });
 
 describe("Shared Utils Unit Tests - Function node.concatChildNodes()", () => {

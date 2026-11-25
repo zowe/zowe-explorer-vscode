@@ -2687,6 +2687,29 @@ describe("USS Action Unit Tests - downloading functions", () => {
     });
 
     describe("downloadUssFile", () => {
+        it.each([false, true])("should reject a target outside the selected folder (generateDirectory: %s)", async (generateDirectory) => {
+            const containment = vi.spyOn(imperative.IO, "isSubPath").mockReturnValue(false);
+            try {
+                const node = createMockNode();
+                vi.spyOn(USSActions as any, "getUssDownloadOptions").mockResolvedValue({
+                    selectedPath: vscode.Uri.file("/test/download/path"),
+                    generateDirectory,
+                    dirOptions: { followSymlinks: false, chooseFilterOptions: false },
+                });
+                globalMocks.ussApi.fileList.mockResolvedValue({ success: true, apiResponse: { items: [{}] } });
+                globalMocks.withProgress.mockImplementation(async (_options, callback) => callback());
+                await USSActions.downloadUssFile(node);
+                expect(containment).toHaveBeenCalled();
+                expect(globalMocks.ussApi.getContents).not.toHaveBeenCalled();
+                expect(AuthUtils.errorHandling).toHaveBeenCalledWith(
+                    expect.objectContaining({ message: expect.stringContaining("inside the selected directory") }),
+                    expect.objectContaining({ apiType: ZoweExplorerApiType.Uss })
+                );
+            } finally {
+                containment.mockRestore();
+            }
+        });
+
         it("should download a USS file successfully with default encoding", async () => {
             const mockNode = createMockNode();
             const mockDownloadOptions = {
@@ -2807,7 +2830,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
             );
         });
 
-        it("should download a USS file with directory structure generation - backtracking in path segment", async () => {
+        it("should reject USS file backtracking before downloading", async () => {
             const mockNode = createMockNode();
             mockNode.fullPath = "/u/test/../file.txt";
             const mockDownloadOptions = {
@@ -2824,16 +2847,11 @@ describe("USS Action Unit Tests - downloading functions", () => {
 
             await USSActions.downloadUssFile(mockNode);
 
-            expect(globalMocks.ussApi.getContents).toHaveBeenCalledWith(
-                "/u/test/../file.txt",
-                expect.objectContaining({
-                    file: expect.stringMatching(/u.test.file\.txt$/),
-                })
-            );
-            expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith(
-                { success: true, commandResponse: "", apiResponse: {} },
-                "USS file",
-                expect.stringMatching(/u.test.file\.txt$/)
+            expect(globalMocks.ussApi.getContents).not.toHaveBeenCalled();
+            expect(SharedUtils.handleDownloadResponse).not.toHaveBeenCalled();
+            expect(AuthUtils.errorHandling).toHaveBeenCalledWith(
+                expect.objectContaining({ message: expect.stringContaining("backtracking path segments") }),
+                expect.objectContaining({ apiType: ZoweExplorerApiType.Uss })
             );
         });
 
@@ -2874,6 +2892,29 @@ describe("USS Action Unit Tests - downloading functions", () => {
     });
 
     describe("downloadUssDirectory", () => {
+        it.each([false, true])("should reject a target outside the selected folder (generateDirectory: %s)", async (generateDirectory) => {
+            const containment = vi.spyOn(imperative.IO, "isSubPath").mockReturnValue(false);
+            try {
+                const node = createMockNode();
+                vi.spyOn(USSActions as any, "getUssDownloadOptions").mockResolvedValue({
+                    selectedPath: vscode.Uri.file("/test/download/path"),
+                    generateDirectory,
+                    dirOptions: { followSymlinks: false, chooseFilterOptions: false },
+                });
+                globalMocks.ussApi.fileList.mockResolvedValue({ success: true, apiResponse: { items: [{}] } });
+                globalMocks.withProgress.mockImplementation(async (_options, callback) => callback());
+                await USSActions.downloadUssDirectory(node);
+                expect(containment).toHaveBeenCalled();
+                expect(globalMocks.ussApi.downloadDirectory).not.toHaveBeenCalled();
+                expect(AuthUtils.errorHandling).toHaveBeenCalledWith(
+                    expect.objectContaining({ message: expect.stringContaining("inside the selected directory") }),
+                    expect.objectContaining({ apiType: ZoweExplorerApiType.Uss })
+                );
+            } finally {
+                containment.mockRestore();
+            }
+        });
+
         it("should download a USS directory successfully", async () => {
             const mockNode = createMockNode();
             mockNode.fullPath = "/u/test/directory";
@@ -2967,7 +3008,7 @@ describe("USS Action Unit Tests - downloading functions", () => {
             );
         });
 
-        it("should download a USS directory with directory structure generation 2", async () => {
+        it("should reject USS directory backtracking before downloading", async () => {
             const mockNode = createMockNode();
             mockNode.fullPath = "/u/test/../directory";
             const mockDownloadOptions = {
@@ -2988,23 +3029,11 @@ describe("USS Action Unit Tests - downloading functions", () => {
 
             await USSActions.downloadUssDirectory(mockNode);
 
-            expect(globalMocks.ussApi.downloadDirectory).toHaveBeenCalledWith(
-                "/u/test/../directory",
-                expect.objectContaining({
-                    directory: expect.stringMatching(/u.test.directory$/),
-                    overwrite: false,
-                    includeHidden: true,
-                }),
-                expect.objectContaining({
-                    type: "f",
-                    symlinks: false,
-                })
-            );
-            expect(SharedUtils.handleDownloadResponse).toHaveBeenCalledWith(
-                { success: true, commandResponse: "", apiResponse: {} },
-                "USS directory",
-                path.normalize("/test/download/path/u/test/directory"),
-                false
+            expect(globalMocks.ussApi.downloadDirectory).not.toHaveBeenCalled();
+            expect(SharedUtils.handleDownloadResponse).not.toHaveBeenCalled();
+            expect(AuthUtils.errorHandling).toHaveBeenCalledWith(
+                expect.objectContaining({ message: expect.stringContaining("backtracking path segments") }),
+                expect.objectContaining({ apiType: ZoweExplorerApiType.Uss })
             );
         });
 

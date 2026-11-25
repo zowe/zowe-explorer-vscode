@@ -10,6 +10,7 @@
  */
 
 import * as vscode from "vscode";
+import type { Mock } from "vitest";
 import {
     createConfigLoad,
     createGetConfigMock,
@@ -1323,8 +1324,13 @@ describe("Shared Actions Unit Tests - Function toggleEditorReadOnly", () => {
         ({ resourceUri: uri, children }) as unknown as IZoweTreeNode;
 
     let setReadOnlySpy: ReturnType<typeof vi.spyOn>;
-    let dsTree: { mSessionNodes: IZoweTreeNode[]; nodeDataChanged: ReturnType<typeof vi.fn>; refresh: ReturnType<typeof vi.fn> };
-    let ussTree: { mSessionNodes: IZoweTreeNode[]; nodeDataChanged: ReturnType<typeof vi.fn>; refresh: ReturnType<typeof vi.fn> };
+    let dsTree: {
+        mSessionNodes: IZoweTreeNode[];
+        mFavorites: IZoweTreeNode[];
+        nodeDataChanged: Mock<(node: IZoweTreeNode) => void>;
+        refresh: Mock<() => void>;
+    };
+    let ussTree: typeof dsTree;
 
     let withProgressSpy: ReturnType<typeof vi.spyOn>;
     let statSpy: ReturnType<typeof vi.spyOn>;
@@ -1333,8 +1339,8 @@ describe("Shared Actions Unit Tests - Function toggleEditorReadOnly", () => {
         setReadOnlySpy = vi.spyOn(ReadOnlyManagement, "setReadOnly").mockReturnValue(undefined);
         withProgressSpy = vi.spyOn(Gui, "withProgress").mockImplementation((_opts, task) => task(undefined, undefined) as any);
         statSpy = vi.spyOn(vscode.workspace.fs, "stat").mockResolvedValue({} as vscode.FileStat);
-        dsTree = { mSessionNodes: [], nodeDataChanged: vi.fn(), refresh: vi.fn() };
-        ussTree = { mSessionNodes: [], nodeDataChanged: vi.fn(), refresh: vi.fn() };
+        dsTree = { mSessionNodes: [], mFavorites: [], nodeDataChanged: vi.fn(), refresh: vi.fn() };
+        ussTree = { mSessionNodes: [], mFavorites: [], nodeDataChanged: vi.fn(), refresh: vi.fn() };
         vi.spyOn(SharedTreeProviders, "ds", "get").mockReturnValue(dsTree as any);
         vi.spyOn(SharedTreeProviders, "uss", "get").mockReturnValue(ussTree as any);
     });
@@ -1361,16 +1367,15 @@ describe("Shared Actions Unit Tests - Function toggleEditorReadOnly", () => {
     it("updates a USS file's node under a filtered profile and in Favorites", async () => {
         const file = fakeNode(ussUri("/sestest/z/ibmuser/hello.txt"));
         const favFile = fakeNode(ussUri("/sestest/z/ibmuser/hello.txt"));
-        ussTree.mSessionNodes = [
-            fakeNode(undefined, [fakeNode(ussUri("/sestest"), [favFile])]),
-            fakeNode(ussUri("/sestest"), [fakeNode(ussUri("/sestest/z/ibmuser/cobol")), file]),
-        ];
+        ussTree.mSessionNodes = [fakeNode(undefined), fakeNode(ussUri("/sestest"), [fakeNode(ussUri("/sestest/z/ibmuser/cobol")), file])];
+        ussTree.mFavorites = [fakeNode(ussUri("/sestest"), [favFile])];
 
         await SharedActions.toggleEditorReadOnly(ussUri("/sestest/z/ibmuser/hello.txt"), false);
 
         expect(ussTree.nodeDataChanged).toHaveBeenCalledTimes(2);
-        expect(ussTree.nodeDataChanged).toHaveBeenCalledWith(favFile);
-        expect(ussTree.nodeDataChanged).toHaveBeenCalledWith(file);
+        const refreshedNodes = ussTree.nodeDataChanged.mock.calls.map(([node]) => node);
+        expect(refreshedNodes).toContain(file);
+        expect(refreshedNodes).toContain(favFile);
         expect(ussTree.refresh).not.toHaveBeenCalled();
     });
 

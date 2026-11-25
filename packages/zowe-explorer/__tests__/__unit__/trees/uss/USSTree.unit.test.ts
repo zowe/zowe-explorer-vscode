@@ -3103,7 +3103,9 @@ describe("USSTree.handleDrop - blocking behavior", () => {
                 // The other files are still moved, but the directory holding the file that failed is not deleted
                 expect(writeFileMock).toHaveBeenCalledTimes(3);
                 expect(deleteMock).not.toHaveBeenCalled();
-                expect(Gui.errorMessage).toHaveBeenCalledWith(expect.stringContaining("was not deleted because some of its contents could not be moved."));
+                expect(Gui.errorMessage).toHaveBeenCalledWith(
+                    expect.stringContaining("was not deleted because some of its contents could not be moved.")
+                );
             });
 
             it("keeps every directory above a nested file that failed to move", async () => {
