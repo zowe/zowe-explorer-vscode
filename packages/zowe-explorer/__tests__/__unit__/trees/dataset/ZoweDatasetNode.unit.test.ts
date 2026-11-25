@@ -320,7 +320,7 @@ describe("ZoweDatasetNode Unit Tests", () => {
             contextOverride: Constants.DS_SESSION_CONTEXT,
         });
         const infoChild = new ZoweDatasetNode({
-            label: "Use the search button to display data sets",
+            label: "Use the search button 🔎 to display data sets",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: rootNode,
             contextOverride: Constants.INFORMATION_CONTEXT,
@@ -343,7 +343,7 @@ describe("ZoweDatasetNode Unit Tests", () => {
             contextOverride: Constants.DS_SESSION_CONTEXT,
         });
         const infoChild = new ZoweDatasetNode({
-            label: "Use the search button to display data sets",
+            label: "Use the search button 🔎 to display data sets",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: rootNode,
             contextOverride: Constants.INFORMATION_CONTEXT,

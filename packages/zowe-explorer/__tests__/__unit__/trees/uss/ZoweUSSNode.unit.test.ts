@@ -250,7 +250,7 @@ describe("ZoweUSSNode Unit Tests - Initialization of class", () => {
         const globalMocks = createGlobalMocks();
 
         const placeholderNode = new ZoweUSSNode({
-            label: vscode.l10n.t("Use the Search button to list USS files"),
+            label: vscode.l10n.t("Use the search button 🔎 to list USS files"),
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: {} as any,
             contextOverride: Constants.INFORMATION_CONTEXT,
@@ -258,7 +258,7 @@ describe("ZoweUSSNode Unit Tests - Initialization of class", () => {
             profile: globalMocks.profileOne,
         });
         expect(placeholderNode.contextValue).toBe(Constants.INFORMATION_CONTEXT);
-        expect(placeholderNode.tooltip).toBe("Use the Search button to list USS files");
+        expect(placeholderNode.tooltip).toBe("Use the search button 🔎 to list USS files");
         expect(placeholderNode.command?.command).toBe("zowe.placeholderCommand");
     });
 
@@ -1306,7 +1306,7 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
 
         const response = await sessionNode.getChildren();
         expect(response.length).toBe(1);
-        expect(response[0].label).toBe("Use the Search button to list USS files");
+        expect(response[0].label).toBe("Use the search button 🔎 to list USS files");
         expect(sessionNode.fullPath).toBeUndefined();
         expect(sessionNode.description).toBeUndefined();
         expect(sessionNode.tooltip).toContain("Profile: mySession");
@@ -1334,7 +1334,7 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
 
         const response = await nonSessionNode.getChildren();
         expect(response.length).toBe(1);
-        expect(response[0].label).toBe("Use the Search button to list USS files");
+        expect(response[0].label).toBe("Use the search button 🔎 to list USS files");
         expect(nonSessionNode.fullPath).toBeUndefined();
         expect(nonSessionNode.description).toBeUndefined();
         expect(nonSessionNode.tooltip).toBe("Some Tooltip");
@@ -1357,7 +1357,7 @@ describe("ZoweUSSNode Unit Tests - Function node.getChildren()", () => {
 
         blockMocks.rootNode.contextValue = Constants.USS_SESSION_CONTEXT;
         const expectedNode = new ZoweUSSNode({
-            label: "Use the Search button to list USS files",
+            label: "Use the search button 🔎 to list USS files",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             parentNode: blockMocks.rootNode,
             contextOverride: Constants.INFORMATION_CONTEXT,

@@ -1379,7 +1379,7 @@ Would you like to do this now?`,
 
     public async filterJobsDialog(job: IZoweJobTreeNode): Promise<vscode.InputBox> {
         if (job.collapsibleState === vscode.TreeItemCollapsibleState.Collapsed) {
-            Gui.infoMessage(vscode.l10n.t("Use the search button to display jobs"));
+            Gui.infoMessage(vscode.l10n.t("Use the search button 🔎 to display jobs"));
             return;
         }
         const selection = await Gui.showQuickPick(JobUtils.JOB_FILTER_OPTS, {
