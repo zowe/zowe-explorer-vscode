@@ -987,6 +987,8 @@ describe("ReadOnlyManagement - setReadOnly", () => {
             ReadOnlyManagement.setReadOnly(ds("/zosmf/IBMUSER.JCL"), true);
             ReadOnlyManagement.setReadOnly(uss("/zosmf/PROD"), false);
             expect(listener).toHaveBeenCalledTimes(2);
+            expect(listener).toHaveBeenNthCalledWith(1, { uri: ds("/zosmf/IBMUSER.JCL", "") });
+            expect(listener).toHaveBeenNthCalledWith(2, { uri: uss("/zosmf/PROD", "") });
             subscription.dispose();
         });
     });
@@ -1028,6 +1030,7 @@ describe("ReadOnlyManagement - initialize and onDidChange", () => {
         const subscription = ReadOnlyManagement.onDidChange(listener);
         onConfigChange({ affectsConfiguration: (key: string) => key === Constants.SETTINGS_READ_ONLY_RULES });
         expect(listener).toHaveBeenCalledTimes(1);
+        expect(listener).toHaveBeenCalledWith({ uri: undefined });
         subscription.dispose();
     });
 
@@ -1045,6 +1048,15 @@ describe("ReadOnlyManagement - initialize and onDidChange", () => {
         const subscription = ReadOnlyManagement.onDidChange(listener);
         ReadOnlyManagement.notifyChanged();
         expect(listener).toHaveBeenCalledTimes(1);
+        expect(listener).toHaveBeenCalledWith({ uri: undefined });
+        subscription.dispose();
+    });
+
+    it("passes the changed resource to onDidChange without its query", () => {
+        const listener = vi.fn();
+        const subscription = ReadOnlyManagement.onDidChange(listener);
+        ReadOnlyManagement.notifyChanged(uss("/zosmf/z/ibmuser/hello.txt", "fetch=true"));
+        expect(listener).toHaveBeenCalledWith({ uri: uss("/zosmf/z/ibmuser/hello.txt", "") });
         subscription.dispose();
     });
 });
@@ -1739,7 +1751,7 @@ describe("ReadOnlyManagement - moveOverrides and removeOverrides", () => {
         expect(ReadOnlyManagement.isReadOnly(ds("/zosmf/IBMUSER.JCL.BACKUP"))).toBe(true);
     });
 
-    it("fires onDidChange only when an override was moved", () => {
+    it("fires onDidChange for the old and new location only when an override was moved", () => {
         const listener = vi.fn();
         const subscription = ReadOnlyManagement.onDidChange(listener);
         ReadOnlyManagement.moveOverrides(ds("/zosmf/IBMUSER.JCL/HELLO"), ds("/zosmf/IBMUSER.JCL/GOODBYE"));
@@ -1747,7 +1759,9 @@ describe("ReadOnlyManagement - moveOverrides and removeOverrides", () => {
         ReadOnlyManagement.setReadOnly(ds("/zosmf/IBMUSER.JCL/HELLO"), true);
         listener.mockClear();
         ReadOnlyManagement.moveOverrides(ds("/zosmf/IBMUSER.JCL/HELLO"), ds("/zosmf/IBMUSER.JCL/GOODBYE"));
-        expect(listener).toHaveBeenCalledTimes(1);
+        expect(listener).toHaveBeenCalledTimes(2);
+        expect(listener).toHaveBeenNthCalledWith(1, { uri: ds("/zosmf/IBMUSER.JCL/HELLO", "") });
+        expect(listener).toHaveBeenNthCalledWith(2, { uri: ds("/zosmf/IBMUSER.JCL/GOODBYE", "") });
         subscription.dispose();
     });
 
