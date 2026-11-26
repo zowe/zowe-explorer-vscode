@@ -513,12 +513,12 @@ export class SharedInit {
             );
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.readOnly.makeReadOnly", async (target: IZoweTreeNode | vscode.Uri) =>
-                    SharedActions.toggleReadOnly(target, true)
+                    SharedActions.setReadOnly(target, true)
                 )
             );
             context.subscriptions.push(
                 vscode.commands.registerCommand("zowe.readOnly.makeReadWrite", async (target: IZoweTreeNode | vscode.Uri) =>
-                    SharedActions.toggleReadOnly(target, false)
+                    SharedActions.setReadOnly(target, false)
                 )
             );
 

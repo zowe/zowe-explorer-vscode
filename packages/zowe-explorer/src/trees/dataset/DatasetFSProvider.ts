@@ -942,7 +942,8 @@ export class DatasetFSProvider extends BaseProvider implements vscode.FileSystem
      * - `overwrite` - Overwrites the content if the data set exists
      */
     public async writeFile(uri: vscode.Uri, content: Uint8Array, options: { readonly create: boolean; readonly overwrite: boolean }): Promise<void> {
-        FsAbstractUtils.throwIfReadOnly(uri);
+        // Fail fast for files opened read-only, before looking up the entry (rules are checked below once it is known whether the entry is new)
+        FsAbstractUtils.throwIfReadOnlyQuery(uri);
         const basename = path.posix.basename(uri.path);
         // TODO: Improve behavior of creating PDS members with lowercase names, to avoid data loss, just reject from the virtual workspace context if uri path contains lowercase.
         if (options.create && /[a-z]/.test(path.posix.basename(basename, path.posix.extname(basename)))) {

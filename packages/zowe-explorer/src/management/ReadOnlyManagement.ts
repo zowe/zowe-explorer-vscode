@@ -11,7 +11,7 @@
 
 import * as vscode from "vscode";
 import * as path from "path";
-import { FsAbstractUtils, Gui, IZoweTreeNode, IZoweUSSTreeNode, ZoweScheme } from "@zowe/zowe-explorer-api";
+import { FsAbstractUtils, Gui, IReadOnlyChangeEvent, IZoweTreeNode, IZoweUSSTreeNode, ZoweScheme } from "@zowe/zowe-explorer-api";
 import { SharedContext } from "../trees/shared/SharedContext";
 import { Constants } from "../configuration/Constants";
 import { SettingsConfig } from "../configuration/SettingsConfig";
@@ -42,7 +42,7 @@ interface CachedReadOnlyRule {
 export class ReadOnlyManagement {
     private static overrides = new Map<string, boolean>(); // pattern, is read-only?
     private static ruleCache: CachedReadOnlyRule[] | undefined;
-    private static changeEmitter = new vscode.EventEmitter<void>();
+    private static changeEmitter = new vscode.EventEmitter<IReadOnlyChangeEvent>();
     public static readonly onDidChange = ReadOnlyManagement.changeEmitter.event;
 
     public static initialize(context: vscode.ExtensionContext): void {
@@ -64,7 +64,7 @@ export class ReadOnlyManagement {
         if (!ReadOnlyManagement.isSupportedUri(uri)) {
             return false;
         }
-        if (FsAbstractUtils.isReadOnlyUri(uri)) {
+        if (FsAbstractUtils.hasReadOnlyQuery(uri)) {
             return true;
         }
 
@@ -89,7 +89,7 @@ export class ReadOnlyManagement {
             return;
         }
         // Gives a more specific error for files opened from a readonly=true link
-        FsAbstractUtils.throwIfReadOnly(uri);
+        FsAbstractUtils.throwIfReadOnlyQuery(uri);
         const parent = opts?.checkParent ? ReadOnlyManagement.getParentUri(uri) : undefined;
         const readOnlyUri = [parent, uri].find((u) => u != null && ReadOnlyManagement.isReadOnly(u));
         if (readOnlyUri != null) {
@@ -141,7 +141,8 @@ export class ReadOnlyManagement {
             ReadOnlyManagement.overrides.set(newKey + key.substring(oldKey.length), readOnly);
         }
         if (moved.length > 0) {
-            ReadOnlyManagement.notifyChanged();
+            ReadOnlyManagement.notifyChanged(oldUri);
+            ReadOnlyManagement.notifyChanged(newUri);
         }
     }
 
@@ -201,11 +202,15 @@ export class ReadOnlyManagement {
             ReadOnlyManagement.overrides.set(key, readOnly);
         }
 
-        ReadOnlyManagement.notifyChanged();
+        ReadOnlyManagement.notifyChanged(uri);
     }
 
-    public static notifyChanged(): void {
-        ReadOnlyManagement.changeEmitter.fire();
+    /**
+     * Notify that read-only states may have changed
+     * @param uri The resource whose state changed, along with anything beneath it. If any resource may have changed, leave out
+     */
+    public static notifyChanged(uri?: vscode.Uri): void {
+        ReadOnlyManagement.changeEmitter.fire({ uri: uri?.with({ query: "" }) });
     }
 
     /**

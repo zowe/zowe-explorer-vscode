@@ -774,7 +774,8 @@ export class UssFSProvider extends BaseProvider implements vscode.FileSystemProv
         content: Uint8Array,
         options: { create: boolean; overwrite: boolean; noStatusMsg?: boolean }
     ): Promise<void> {
-        FsAbstractUtils.throwIfReadOnly(uri);
+        // Fail fast for files opened read-only, before looking up the entry (rules are checked below once it is known whether the entry is new)
+        FsAbstractUtils.throwIfReadOnlyQuery(uri);
         const fileName = path.posix.basename(uri.path);
         const parentDir = this.lookupParentDirectory(uri);
 

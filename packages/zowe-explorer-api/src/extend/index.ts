@@ -11,5 +11,6 @@
 
 export * from "./IApiExplorerExtender";
 export * from "./ILocalStorageAccess";
+export * from "./IReadOnlyChangeEvent";
 export * from "./IRegisterClient";
 export * from "./MainframeInteraction";

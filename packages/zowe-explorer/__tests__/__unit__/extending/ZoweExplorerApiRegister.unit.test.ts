@@ -18,6 +18,8 @@ import { ZoweExplorerExtender } from "../../../src/extending/ZoweExplorerExtende
 import { DatasetFSProvider } from "../../../src/trees/dataset/DatasetFSProvider";
 import { JobFSProvider } from "../../../src/trees/job/JobFSProvider";
 import { UssFSProvider } from "../../../src/trees/uss/UssFSProvider";
+import { ReadOnlyManagement } from "../../../src/management/ReadOnlyManagement";
+import { MockedProperty } from "../../__mocks__/mockUtils";
 
 class MockUssApi1 implements MainframeInteraction.IUss {
     public profile?: imperative.IProfileLoaded;
@@ -409,6 +411,67 @@ describe("ZoweExplorerApiRegister unit testing", () => {
                 ZoweExplorerApiRegister.doNotifyFileChanged(uri);
                 expect(invalidateSpy).not.toHaveBeenCalled();
             });
+        });
+    });
+
+    describe("read-only state for extenders", () => {
+        const dsUri = vscode.Uri.from({ scheme: ZoweScheme.DS, path: "/sestest/IBMUSER.JCL" });
+        const ussUri = vscode.Uri.from({ scheme: ZoweScheme.USS, path: "/sestest/z/ibmuser" });
+
+        let originalEmitter: vscode.EventEmitter<unknown>;
+        let originalOnDidChange: vscode.Event<unknown>;
+
+        beforeEach(() => {
+            originalEmitter = (ReadOnlyManagement as any).changeEmitter;
+            originalOnDidChange = ReadOnlyManagement.onDidChange;
+            const emitter = new vscode.EventEmitter();
+            (ReadOnlyManagement as any).changeEmitter = emitter;
+            new MockedProperty(ReadOnlyManagement, "onDidChange", { value: emitter.event, configurable: true });
+        });
+
+        afterEach(() => {
+            (ReadOnlyManagement as any).changeEmitter = originalEmitter;
+            new MockedProperty(ReadOnlyManagement, "onDidChange", { value: originalOnDidChange, configurable: true });
+            (ReadOnlyManagement as any).overrides.clear();
+            vi.restoreAllMocks();
+        });
+
+        it("isReadOnly returns true from Zowe Explorer's read-only state", () => {
+            const isReadOnlySpy = vi.spyOn(ReadOnlyManagement, "isReadOnly").mockReturnValue(true);
+            expect(ZoweExplorerApiRegister.getInstance().isReadOnly(dsUri)).toBe(true);
+            expect(isReadOnlySpy).toHaveBeenCalledWith(dsUri);
+        });
+
+        it("isReadOnly returns false from Zowe Explorer's read-only state", () => {
+            const isReadOnlySpy = vi.spyOn(ReadOnlyManagement, "isReadOnly").mockReturnValue(false);
+            expect(ZoweExplorerApiRegister.getInstance().isReadOnly(dsUri)).toBe(false);
+            expect(isReadOnlySpy).toHaveBeenCalledWith(dsUri);
+        });
+
+        it("isReadOnly includes the user's session overrides for PDSes and directories", () => {
+            ReadOnlyManagement.setReadOnly(dsUri, true);
+            ReadOnlyManagement.setReadOnly(ussUri, true);
+            expect(ZoweExplorerApiRegister.getInstance().isReadOnly(dsUri)).toBe(true);
+            expect(ZoweExplorerApiRegister.getInstance().isReadOnly(ussUri)).toBe(true);
+            expect(ZoweExplorerApiRegister.getInstance().isReadOnly(vscode.Uri.from({ scheme: ZoweScheme.Jobs, path: "/sestest/JOB01234" }))).toBe(
+                false
+            );
+        });
+
+        it("onReadOnlyChanged fires with the changed resource", () => {
+            const listener = vi.fn();
+            const subscription = ZoweExplorerApiRegister.getInstance().onReadOnlyChanged(listener);
+            ReadOnlyManagement.setReadOnly(ussUri, true);
+            expect(listener).toHaveBeenCalledWith({ uri: ussUri.with({ query: "" }) });
+            subscription.dispose();
+        });
+
+        it("onReadOnlyChanged fires with no resource when any resource may have changed", () => {
+            const listener = vi.fn();
+            const subscription = ZoweExplorerApiRegister.getInstance().onReadOnlyChanged(listener);
+            ReadOnlyManagement.notifyChanged();
+            expect(listener).toHaveBeenCalledWith({ uri: undefined });
+            subscription.dispose();
         });
     });
 });
