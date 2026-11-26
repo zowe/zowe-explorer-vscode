@@ -248,7 +248,7 @@ describe("clipboardActions credential guard", () => {
             const { store } = makeEditor();
             store.getState().duplicateProfile("rseProf");
 
-            expect(store.getState().pendingClipboardPrompt).toEqual({ action: "duplicate", profileKey: "rseProf" });
+            expect(store.getState().pendingClipboardPrompt).toEqual({ action: "duplicate", profileKey: "rseProf", configPath });
             expect(draftKeys(store, "rseProf_copy")).toEqual([]);
         });
 
@@ -256,7 +256,7 @@ describe("clipboardActions credential guard", () => {
             const { store } = makeEditor();
             store.getState().copyProfile("rseProf", false);
 
-            expect(store.getState().pendingClipboardPrompt).toEqual({ action: "copy", profileKey: "rseProf" });
+            expect(store.getState().pendingClipboardPrompt).toEqual({ action: "copy", profileKey: "rseProf", configPath });
             expect(store.getState().profileClipboard).toBeNull();
         });
 
@@ -310,6 +310,29 @@ describe("clipboardActions credential guard", () => {
             expect(store.getState().profileClipboard).toBeNull();
         });
 
+        it("cancels the operation when the selected layer changed while the prompt was open", () => {
+            const { store, config } = makeEditor();
+            store.getState().duplicateProfile("rseProf");
+            expect(store.getState().pendingClipboardPrompt?.configPath).toBe(configPath);
+
+            store.setState({ configurations: [config, { ...config, configPath: "/mock/other.json" }], selectedTab: 1 });
+            store.getState().resolveClipboardPrompt(true);
+
+            expect(store.getState().pendingClipboardPrompt).toBeNull();
+            expect(store.getState().pendingChanges).toEqual({});
+            expect(store.getState().profileClipboard).toBeNull();
+        });
+
+        it("cancels the operation when the profile no longer exists after the prompt opened", () => {
+            const { store, config } = makeEditor();
+            store.getState().copyProfile("rseProf", false);
+
+            store.setState({ configurations: [{ ...config, properties: { ...config.properties, profiles: {} } }] });
+            store.getState().resolveClipboardPrompt(true);
+
+            expect(store.getState().profileClipboard).toBeNull();
+        });
+
         it("does nothing when resolving without an open prompt", () => {
             const { store } = makeEditor();
             store.getState().resolveClipboardPrompt(true);
@@ -343,7 +366,7 @@ describe("clipboardActions credential guard", () => {
 
             store.getState().handleChange("profiles.rseProf.profiles.child.properties.host", "x");
             store.getState().duplicateProfile("rseProf.child");
-            expect(store.getState().pendingClipboardPrompt).toEqual({ action: "duplicate", profileKey: "rseProf.child" });
+            expect(store.getState().pendingClipboardPrompt).toEqual({ action: "duplicate", profileKey: "rseProf.child", configPath });
         });
     });
 

@@ -65,8 +65,11 @@ export interface HistoryState {
 
 export interface ClipboardState {
     profileClipboard: ProfileClipboard | null;
-    /** Set while the user is being asked whether a copy or duplicate should carry secure values. */
-    pendingClipboardPrompt: { action: "copy" | "duplicate"; profileKey: string } | null;
+    /**
+     * Set while the user is being asked whether a copy or duplicate should carry secure values.
+     * Bound to the layer (`configPath`) and profile the prompt was opened for.
+     */
+    pendingClipboardPrompt: { action: "copy" | "duplicate"; profileKey: string; configPath: string } | null;
 }
 
 export interface LifecycleState {

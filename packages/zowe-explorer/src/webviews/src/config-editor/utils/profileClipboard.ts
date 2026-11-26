@@ -125,7 +125,8 @@ export function collectClipboardProfiles(params: CollectClipboardProfilesParams)
 }
 
 /**
- * Credential properties that must never be carried over when copying or duplicating a profile.
+ * Credential properties that are stripped when copying or duplicating a profile, unless the user
+ * opts in to keeping secure values. Cut/move operations always keep them.
  * Acts as a fallback for when no schema is loaded, and covers credential-like properties
  * that the schema does not mark as secure: token metadata (tokenType, tokenExpiration) and
  * identity-bound certificate/key references (certFile, certKeyFile, certAccount, privateKey).

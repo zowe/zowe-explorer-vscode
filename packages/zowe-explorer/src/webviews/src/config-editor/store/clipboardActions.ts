@@ -84,7 +84,7 @@ export function createClipboardActions(state: EditorRuntime) {
         if (!config) return;
         const collected = collectProfiles(profileKey);
         if (!isCut && includeSecure === undefined && hasCredentialsInClipboardProfiles(collected, propertySchema)) {
-            state.setPendingClipboardPrompt({ action: "copy", profileKey });
+            state.setPendingClipboardPrompt({ action: "copy", profileKey, configPath: config.configPath });
             return;
         }
         setProfileClipboard({
@@ -107,18 +107,23 @@ export function createClipboardActions(state: EditorRuntime) {
         if (!config) return;
         const collected = collectProfiles(profileKey);
         if (includeSecure === undefined && hasCredentialsInClipboardProfiles(collected, propertySchema)) {
-            state.setPendingClipboardPrompt({ action: "duplicate", profileKey });
+            state.setPendingClipboardPrompt({ action: "duplicate", profileKey, configPath: config.configPath });
             return;
         }
         const destinationKey = uniqueKey(profileKey + "_copy");
         addProfiles(includeSecure ? collected : stripCredentials(collected), profileKey, destinationKey);
     };
 
-    /** Apply the user's answer from the secure-values prompt to the copy or duplicate that opened it. */
+    /**
+     * Apply the user's answer from the secure-values prompt to the copy or duplicate that opened it.
+     * The prompt is bound to the layer and profile it was opened for; if a configuration refresh has since
+     * switched the selected layer or removed the profile, the operation is cancelled instead of being applied elsewhere.
+     */
     const resolveClipboardPrompt = (includeSecure: boolean) => {
         const prompt = state.pendingClipboardPrompt;
         state.setPendingClipboardPrompt(null);
         if (!prompt) return;
+        if (config?.configPath !== prompt.configPath || !profileKeys.includes(prompt.profileKey)) return;
         if (prompt.action === "copy") copyProfile(prompt.profileKey, false, includeSecure);
         else duplicateProfile(prompt.profileKey, includeSecure);
     };

@@ -13,12 +13,20 @@ import { useEffect } from "react";
 import type { useProfileClipboard } from "./useProfileClipboard";
 import { getProfileClipboardShortcut } from "../utils/profileClipboardShortcuts";
 
-/** Owned by ProfileList, which stays mounted when its tree child is displayed. */
+/**
+ * Owned by ProfileList, which stays mounted when its tree child is displayed.
+ * Shortcuts are suspended while the secure-values prompt is open, so an older cut/copy cannot be pasted behind it.
+ */
 export function useProfileClipboardShortcuts(
     selectedProfileKey: string | null,
-    { copyProfile, pasteProfile }: Pick<ReturnType<typeof useProfileClipboard>, "copyProfile" | "pasteProfile">
+    {
+        copyProfile,
+        pasteProfile,
+        pendingClipboardPrompt,
+    }: Pick<ReturnType<typeof useProfileClipboard>, "copyProfile" | "pasteProfile" | "pendingClipboardPrompt">
 ) {
     useEffect(() => {
+        if (pendingClipboardPrompt) return;
         const handleKeyDown = (event: KeyboardEvent) => {
             const action = getProfileClipboardShortcut(event, document.activeElement as HTMLElement | null);
             if (action === "paste") pasteProfile(selectedProfileKey);
@@ -26,5 +34,5 @@ export function useProfileClipboardShortcuts(
         };
         document.addEventListener("keydown", handleKeyDown);
         return () => document.removeEventListener("keydown", handleKeyDown);
-    }, [selectedProfileKey, copyProfile, pasteProfile]);
+    }, [selectedProfileKey, copyProfile, pasteProfile, pendingClipboardPrompt]);
 }
