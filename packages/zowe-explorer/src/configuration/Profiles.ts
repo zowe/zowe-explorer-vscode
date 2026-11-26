@@ -252,6 +252,7 @@ export class Profiles extends ProfilesCache {
                     theProfile = Profiles.getInstance().loadNamedProfile(theProfile.name);
 
                     if (!loggedIn) {
+                        ZoweExplorerApiRegister.getInstance().onProfileInvalidatedEmitter.fire(theProfile);
                         return { ...profileStatus, status: "inactive" };
                     }
                 } catch (error) {
@@ -277,6 +278,7 @@ export class Profiles extends ProfilesCache {
                 theProfile.profile.password = values[1];
             } else {
                 this.validProfile = Validation.ValidationType.INVALID;
+                ZoweExplorerApiRegister.getInstance().onProfileInvalidatedEmitter.fire(theProfile);
                 return { ...profileStatus, status: "inactive" };
             }
         } else if (!usingTokenAuth && !usingBasicAuth && usingCertAuth) {
@@ -298,6 +300,7 @@ export class Profiles extends ProfilesCache {
                         })
                     );
                     this.validProfile = Validation.ValidationType.INVALID;
+                    ZoweExplorerApiRegister.getInstance().onProfileInvalidatedEmitter.fire(theProfile);
                     return { ...profileStatus, status: "inactive" };
                 } else {
                     Profiles.getInstance().updateCachedProfile({
@@ -306,8 +309,6 @@ export class Profiles extends ProfilesCache {
                     });
                 }
             }
-            profileStatus.status = "active";
-            this.profilesForValidation.push(profileStatus);
         }
 
         if (node !== undefined) {
@@ -316,9 +317,6 @@ export class Profiles extends ProfilesCache {
 
         // Profile should have enough information to allow validation
         profileStatus = await this.getProfileSetting(theProfile);
-        if (theProfile.profile.authOrder) {
-            profileStatus.status = "active";
-        }
 
         switch (profileStatus.status) {
             case "unverified":
@@ -638,6 +636,12 @@ export class Profiles extends ProfilesCache {
             const filePath = currentProfile.profLoc.osLoc[0];
             await this.openConfigFile(filePath);
         } else if (chosenProfile) {
+            const addToAllTrees = await Profiles.handleChangeForAllTrees(chosenProfile, true);
+            if (addToAllTrees === undefined) {
+                ZoweLogger.debug(debugMsg);
+                Gui.showMessage(debugMsg);
+                return;
+            }
             ZoweLogger.info(
                 vscode.l10n.t({
                     message: `The profile {0} has been added to the {1} tree.`,
@@ -645,10 +649,7 @@ export class Profiles extends ProfilesCache {
                     comment: ["chosen profile", "tree type"],
                 })
             );
-            await zoweFileProvider.addSession({
-                sessionName: chosenProfile,
-                addToAllTrees: await Profiles.handleChangeForAllTrees(chosenProfile, true),
-            });
+            await zoweFileProvider.addSession({ sessionName: chosenProfile, addToAllTrees });
         } else {
             ZoweLogger.debug(debugMsg);
         }
@@ -945,6 +946,7 @@ export class Profiles extends ProfilesCache {
                             name: theProfile.name,
                         };
                         this.profilesForValidation.push(filteredProfile);
+                        ZoweExplorerApiRegister.getInstance().onProfileValidatedEmitter.fire(theProfile);
                         break;
                     case "inactive":
                         filteredProfile = {
@@ -952,6 +954,7 @@ export class Profiles extends ProfilesCache {
                             name: theProfile.name,
                         };
                         this.profilesForValidation.push(filteredProfile);
+                        ZoweExplorerApiRegister.getInstance().onProfileInvalidatedEmitter.fire(theProfile);
                         break;
                     // default will cover "unverified" and undefined
                     default:
@@ -980,6 +983,7 @@ export class Profiles extends ProfilesCache {
                     name: theProfile.name,
                 };
                 this.profilesForValidation.push(filteredProfile);
+                ZoweExplorerApiRegister.getInstance().onProfileInvalidatedEmitter.fire(theProfile);
             }
         }
 
@@ -1254,9 +1258,11 @@ export class Profiles extends ProfilesCache {
             }
             let logoutOk: boolean;
             const zeRegister = ZoweExplorerApiRegister.getInstance();
+            const isBaseProfile = serviceProfile.type === "base";
 
             // this will handle extenders
             if (
+                !isBaseProfile &&
                 serviceProfile.type !== "zosmf" &&
                 serviceProfile.profile != null &&
                 !serviceProfile.profile.tokenType?.startsWith(imperative.SessConstants.TOKEN_TYPE_APIML)
@@ -1265,7 +1271,9 @@ export class Profiles extends ProfilesCache {
             } else {
                 logoutOk = await ZoweVsCodeExtension.ssoLogout({
                     serviceProfile,
-                    defaultTokenType: zeRegister?.getCommonApi(serviceProfile).getTokenTypeName(),
+                    defaultTokenType: isBaseProfile
+                        ? imperative.SessConstants.TOKEN_TYPE_APIML
+                        : zeRegister?.getCommonApi(serviceProfile).getTokenTypeName(),
                     profileNode: node,
                     zeRegister,
                     zeProfiles: this,

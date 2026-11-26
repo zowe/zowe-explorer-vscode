@@ -9,6 +9,7 @@
  *
  */
 
+import * as path from "path";
 import { vi } from "vitest";
 import { ConfigChangeHandlers, type ChangeEntry } from "../../../../src/utils/ConfigChangeHandlers";
 import { ConfigUtils } from "../../../../src/utils/ConfigUtils";
@@ -132,7 +133,7 @@ describe("ConfigChangeHandlers", () => {
         it("uses the active schema for typed property conversion", async () => {
             vi.mocked(ConfigSchemaHelpers.getProfileProperties).mockReturnValue(new Map([["port", { type: "number", path: "port" }]]));
             await profiles([createEditorChange("profiles.test.properties.port", "443", { configPath: teamPath })]);
-            expect(ConfigSchemaHelpers.getProfileProperties).toHaveBeenCalledWith("/mock/schema.json");
+            expect(ConfigSchemaHelpers.getProfileProperties).toHaveBeenCalledWith(path.sep + ["mock", "schema.json"].join(path.sep));
             expect(memory.config.set).toHaveBeenCalledWith("profiles.test.properties.port", "443", { parseString: true, secure: false });
             expect(memory.config.api.layers.get().properties.profiles.test.properties.port).toBe(443);
         });

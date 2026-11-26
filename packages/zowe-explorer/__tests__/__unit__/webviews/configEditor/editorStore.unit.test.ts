@@ -233,6 +233,28 @@ describe("editorStore", () => {
         await ConfigChangeHandlers.stageChanges(store.getState().formatPendingChanges() as unknown as LayerChangesPayload, memory.config);
         expect(memory.config.layers[0].properties.defaults.base).toBe(expected);
     });
+    it("drops the pending default when Set as Default returns to the saved value", () => {
+        const { store, team } = makeEditor();
+        team.properties.profiles.other = { type: "base" };
+
+        store.getState().handleSetAsDefault("other");
+        expect(store.getState().pendingDefaults[team.configPath]?.base?.value).toBe("other");
+
+        store.getState().handleSetAsDefault("base");
+        expect(store.getState().pendingDefaults).toEqual({});
+        expect(store.getState().hasPendingChanges()).toBe(false);
+    });
+
+    it("stages the same pending default from Set as Default and from the Defaults dropdown", () => {
+        const viaMenu = makeEditor();
+        const viaDropdown = makeEditor();
+        for (const { team } of [viaMenu, viaDropdown]) team.properties.profiles.other = { type: "base" };
+
+        viaMenu.store.getState().handleSetAsDefault("other");
+        viaDropdown.store.getState().handleDefaultsChange("base", "other");
+
+        expect(viaMenu.store.getState().pendingDefaults).toEqual(viaDropdown.store.getState().pendingDefaults);
+    });
 
     it("moves a new profile independently after reusing a saved profile's old name", () => {
         const { store, team } = makeEditor();

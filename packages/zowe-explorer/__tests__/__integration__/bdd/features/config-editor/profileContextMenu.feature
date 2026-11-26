@@ -11,13 +11,14 @@ Feature: Context menu actions on profile tree items
     When the user switches to tree view mode
     And the user opens the context menu on tree profile "nested"
     Then the tree profile context menu offers these options
-      | option    | state    |
-      | Cut       | enabled  |
-      | Copy      | enabled  |
-      | Paste     | disabled |
-      | Duplicate | enabled  |
-      | Rename    | enabled  |
-      | Delete    | enabled  |
+      | option         | state    |
+      | Set as Default | enabled  |
+      | Cut            | enabled  |
+      | Copy           | enabled  |
+      | Paste          | disabled |
+      | Duplicate      | enabled  |
+      | Rename         | enabled  |
+      | Delete         | enabled  |
     When the user dismisses the tree profile context menu
     Then there are no pending changes in the Config Editor
 
@@ -32,6 +33,7 @@ Feature: Context menu actions on profile tree items
     When the user opens the context menu on tree profile "zosmf2"
     Then the tree profile context menu offers these options
       | option              | state   |
+      | Set as Default      | enabled |
       | Cut                 | enabled |
       | Copy                | enabled |
       | Paste as Child      | enabled |
@@ -108,10 +110,9 @@ Feature: Context menu actions on profile tree items
     And the user presses Enter to submit the profile
     And the user saves the changes
     And the user selects the "Global Team" configuration tab
-    Given the defaults section is expanded for context menu testing
-    When the user selects "nested" in the base default dropdown
-    And the user selects "nested.child1" in the zosmf default dropdown
-    And the user selects "nested.child2" in the ssh default dropdown
+    When the user sets tree profile "nested" as the default profile
+    And the user sets tree profile "nested.child1" as the default profile
+    And the user sets tree profile "nested.child2" as the default profile
     And the user saves the changes
     Given the saved subtree "nested" in "Global Team" is captured for context menu testing
     When the user opens the context menu on tree profile "nested"
@@ -133,13 +134,14 @@ Feature: Context menu actions on profile tree items
     And no defaults in "Global Team" point to the subtree "nested"
     When the user opens the context menu on tree profile "clipboard-target"
     Then the tree profile context menu offers these options
-      | option    | state    |
-      | Cut       | enabled  |
-      | Copy      | enabled  |
-      | Paste     | disabled |
-      | Duplicate | enabled  |
-      | Rename    | enabled  |
-      | Delete    | enabled  |
+      | option         | state    |
+      | Set as Default | enabled  |
+      | Cut            | enabled  |
+      | Copy           | enabled  |
+      | Paste          | disabled |
+      | Duplicate      | enabled  |
+      | Rename         | enabled  |
+      | Delete         | enabled  |
     When the user dismisses the tree profile context menu
     And the user selects the "Global Team" configuration tab
     Then tree profile "nested" is absent

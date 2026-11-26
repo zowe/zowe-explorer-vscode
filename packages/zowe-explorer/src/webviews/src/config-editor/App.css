@@ -1369,17 +1369,21 @@ ul {
     flex-shrink: 0;
 }
 
-.profile-tree-default-star {
-    font-size: 16px;
+.profile-default-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: 0 7px;
+    border-radius: 2em;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 18px;
+    white-space: nowrap;
+    color: var(--vscode-badge-foreground);
+    background-color: var(--vscode-badge-background);
+    border: 1px solid var(--vscode-contrastBorder, transparent);
     pointer-events: none;
-}
-
-.profile-tree-default-star--active {
-    color: var(--vscode-textPreformat-foreground);
-}
-
-.profile-tree-default-star--inactive {
-    color: var(--vscode-disabledForeground);
 }
 
 .modal-body {
@@ -2897,14 +2901,6 @@ vscode-single-select.wizard-select {
     color: var(--vscode-descriptionForeground);
 }
 
-.profile-star-button:hover .codicon-star-full {
-    color: var(--vscode-disabledForeground) !important;
-}
-
-.profile-star-button:hover .codicon-star-empty {
-    color: var(--vscode-textPreformat-foreground) !important;
-}
-
 /* Clickable header styles for property sorting */
 .header-level-1[style*="cursor: pointer"] {
     transition: color 0.2s ease;
@@ -3142,35 +3138,6 @@ body.vscode-high-contrast-light .profile-action-button:focus-visible {
     outline-offset: 1px !important;
 }
 
-/* Ensure favorite star icons are fully visible in High Contrast themes, with interactive hover feedback */
-body.vscode-high-contrast .profile-star-button .codicon-star-empty,
-body.vscode-high-contrast .profile-tree-default-star--inactive,
-body.vscode-high-contrast-light .profile-star-button .codicon-star-empty,
-body.vscode-high-contrast-light .profile-tree-default-star--inactive {
-    color: var(--vscode-contrastBorder, #808080) !important;
-}
-
-body.vscode-high-contrast .profile-star-button .codicon-star-full,
-body.vscode-high-contrast .profile-tree-default-star--active,
-body.vscode-high-contrast-light .profile-star-button .codicon-star-full,
-body.vscode-high-contrast-light .profile-tree-default-star--active {
-    color: var(--vscode-contrastActiveBorder, #ffffff) !important;
-}
-
-body.vscode-high-contrast .profile-star-button:hover .codicon-star-empty,
-body.vscode-high-contrast .profile-tree-icon-button:hover .profile-tree-default-star--inactive,
-body.vscode-high-contrast-light .profile-star-button:hover .codicon-star-empty,
-body.vscode-high-contrast-light .profile-tree-icon-button:hover .profile-tree-default-star--inactive {
-    color: var(--vscode-contrastActiveBorder, #ffffff) !important;
-}
-
-body.vscode-high-contrast .profile-star-button:hover .codicon-star-full,
-body.vscode-high-contrast .profile-tree-icon-button:hover .profile-tree-default-star--active,
-body.vscode-high-contrast-light .profile-star-button:hover .codicon-star-full,
-body.vscode-high-contrast-light .profile-tree-icon-button:hover .profile-tree-default-star--active {
-    color: var(--vscode-contrastBorder, #808080) !important;
-}
-
 /* Prevent gray/custom background highlights from conflicting with native High Contrast borders on hover */
 body.vscode-high-contrast .profile-list-item:hover,
 body.vscode-high-contrast .profile-tree-item:hover,
@@ -3181,9 +3148,7 @@ body.vscode-high-contrast .action-button:hover,
 body.vscode-high-contrast .profile-action-button:hover,
 body.vscode-high-contrast-light .ce-icon-button:hover,
 body.vscode-high-contrast-light .action-button:hover,
-body.vscode-high-contrast-light .profile-action-button:hover,
-body.vscode-high-contrast .profile-star-button:hover,
-body.vscode-high-contrast-light .profile-star-button:hover {
+body.vscode-high-contrast-light .profile-action-button:hover {
     background-color: transparent !important;
     background: none !important;
 }
