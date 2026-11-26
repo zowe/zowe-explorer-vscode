@@ -24,6 +24,7 @@ import { ProfilesCache } from "../profiles/ProfilesCache";
 import { VscSettings } from "../vscode/doc/VscSettings";
 import { IZosmfListResponse, IZosFilesResponse } from "@zowe/zos-files-for-zowe-sdk";
 import { IDataSetCount } from "../dataset/IDataSetCount";
+import { IChangePasswordResponse } from "./IChangePasswordResponse";
 
 /**
  * Implementations of Zowe Explorer API for z/OSMF profiles
@@ -108,6 +109,11 @@ import { IDataSetCount } from "../dataset/IDataSetCount";
         public logout(session: imperative.Session): Promise<void> {
             return Logout.apimlLogout(session);
         }
+
+        public changePassword(session: imperative.Session, newPassword: string): Promise<IChangePasswordResponse> {
+            return zosmf.ZosmfChangePassword.changePassword(session, newPassword);
+        }
+
         /**
          * z/OSMF supports cert-pem authentication.
          * @returns True

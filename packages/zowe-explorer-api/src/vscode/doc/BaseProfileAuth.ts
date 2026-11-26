@@ -21,6 +21,7 @@ export interface BaseProfileAuthOptions {
      * The service profile used to perform the auth operation
      * If the specified value is a string, we use it as the profile name. Note: Nested profiles are allowed here, e.g. lpar.service.
      * If the specified value is a loaded profile, it should contain all properties already merged by the ProfileInfo APIs
+     * For logout, a base profile may also be supplied to revoke its API ML token directly.
      */
     serviceProfile: string | imperative.IProfileLoaded;
 

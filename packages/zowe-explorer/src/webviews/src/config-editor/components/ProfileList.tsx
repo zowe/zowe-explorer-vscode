@@ -9,7 +9,7 @@ import { ProfileTree } from "./ProfileTree";
 import { useIsLightTheme } from "../hooks/useIsLightTheme";
 import { useScrollToSelected } from "../hooks/useScrollToSelected";
 import { ProfileTypeBadge } from "./ProfileTypeBadge";
-import { DefaultStarButton } from "./DefaultStarButton";
+import { DefaultBadge } from "./DefaultBadge";
 import { useEditorStore } from "../context/EditorStoreContext";
 
 interface ProfileListProps {
@@ -37,7 +37,6 @@ interface ProfileListProps {
   configurations?: any[];
   selectedTab?: number | null;
   renames?: { [configPath: string]: { [originalKey: string]: string } };
-  setPendingDefaults?: React.Dispatch<React.SetStateAction<{ [configPath: string]: { [key: string]: { value: string; path: string[] } } }>>;
   onViewModeToggle?: () => void;
 }
 
@@ -62,7 +61,6 @@ export function ProfileList({
   configurations,
   selectedTab,
   renames,
-  setPendingDefaults,
   onViewModeToggle,
 }: ProfileListProps) {
   const searchTerm = useEditorStore((state) => state.profileSearchTerm);
@@ -285,7 +283,6 @@ export function ProfileList({
             selectedTab={selectedTab}
             renames={renames}
             onSetAsDefault={onSetAsDefault}
-            setPendingDefaults={setPendingDefaults}
             onFilterChange={onFilterChange}
             filterType={filterType}
           />
@@ -392,16 +389,7 @@ export function ProfileList({
                       />
                     )}
                     {getProfileType(profileKey) && (
-                      <DefaultStarButton
-                        variant="flat"
-                        profileKey={profileKey}
-                        profileType={getProfileType(profileKey)}
-                        isDefault={isProfileDefault(profileKey)}
-                        configurations={configurations}
-                        selectedTab={selectedTab}
-                        setPendingDefaults={setPendingDefaults}
-                        onSetAsDefault={onSetAsDefault}
-                      />
+                      <DefaultBadge profileKey={profileKey} profileType={getProfileType(profileKey)!} isDefault={isProfileDefault(profileKey)} />
                     )}
                   </div>
                 </div>
@@ -418,6 +406,9 @@ export function ProfileList({
           onClose={() => setContextMenu(null)}
           onProfileSelect={onProfileSelect}
           onDeleteProfile={onDeleteProfile}
+          onSetAsDefault={onSetAsDefault}
+          isProfileDefault={isProfileDefault}
+          getProfileType={getProfileType}
         />
       )}
     </div>
