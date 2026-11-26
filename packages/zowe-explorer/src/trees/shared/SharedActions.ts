@@ -450,22 +450,22 @@ export class SharedActions {
     /**
      * Makes a tree node or editor read-only or writable
      */
-    public static async toggleReadOnly(target: IZoweTreeNode | vscode.Uri | undefined, readOnly: boolean): Promise<void> {
+    public static async setReadOnly(target: IZoweTreeNode | vscode.Uri | undefined, readOnly: boolean): Promise<void> {
         if (target == null) {
-            return SharedActions.toggleEditorReadOnly(vscode.window.activeTextEditor?.document.uri, readOnly);
+            return SharedActions.setEditorReadOnly(vscode.window.activeTextEditor?.document.uri, readOnly);
         }
         if (target instanceof vscode.Uri) {
-            return SharedActions.toggleEditorReadOnly(target, readOnly);
+            return SharedActions.setEditorReadOnly(target, readOnly);
         }
-        return SharedActions.toggleNodeReadOnly(target, readOnly);
+        return SharedActions.setNodeReadOnly(target, readOnly);
     }
 
     /**
-     * Flip between the editor's data set, member or USS file being read-only or writable
+     * Makes the editor's data set, member or USS file read-only or writable
      */
-    public static async toggleEditorReadOnly(uri: vscode.Uri | undefined, readOnly: boolean): Promise<void> {
-        ZoweLogger.trace("SharedActions.toggleEditorReadOnly called.");
-        // If file is opened with readonly=true parameter, don't allow the toggle to be clicked (when clause on menu items disables from UI side)
+    public static async setEditorReadOnly(uri: vscode.Uri | undefined, readOnly: boolean): Promise<void> {
+        ZoweLogger.trace("SharedActions.setEditorReadOnly called.");
+        // If file is opened with readonly=true parameter, don't allow it to be changed (when clause on menu items disables from UI side)
         if (!ReadOnlyManagement.isSupportedUri(uri) || FsAbstractUtils.hasReadOnlyQuery(uri)) {
             return;
         }
@@ -498,10 +498,10 @@ export class SharedActions {
     }
 
     /**
-     * Flip between the tree node being read-only or writable
+     * Makes the tree node read-only or writable
      */
-    public static async toggleNodeReadOnly(node: IZoweTreeNode, readOnly: boolean): Promise<void> {
-        ZoweLogger.trace("SharedActions.toggleNodeReadOnly called.");
+    public static async setNodeReadOnly(node: IZoweTreeNode, readOnly: boolean): Promise<void> {
+        ZoweLogger.trace("SharedActions.setNodeReadOnly called.");
         if (!ReadOnlyManagement.isEligibleNode(node)) {
             return;
         }

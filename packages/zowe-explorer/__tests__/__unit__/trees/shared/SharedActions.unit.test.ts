@@ -1199,7 +1199,7 @@ describe("Shared Actions Unit Tests - Function updateSchemaCommand", () => {
     });
 });
 
-describe("Shared Actions Unit Tests - Function toggleNodeReadOnly", () => {
+describe("Shared Actions Unit Tests - Function setNodeReadOnly", () => {
     afterEach(() => {
         vi.restoreAllMocks();
     });
@@ -1207,7 +1207,7 @@ describe("Shared Actions Unit Tests - Function toggleNodeReadOnly", () => {
     it("does nothing for a node that cannot be made read-only", async () => {
         vi.spyOn(ReadOnlyManagement, "isEligibleNode").mockReturnValue(false);
         const setReadOnlySpy = vi.spyOn(ReadOnlyManagement, "setReadOnly").mockResolvedValue(undefined);
-        await SharedActions.toggleNodeReadOnly({} as IZoweTreeNode, true);
+        await SharedActions.setNodeReadOnly({} as IZoweTreeNode, true);
         expect(setReadOnlySpy).not.toHaveBeenCalled();
     });
 
@@ -1218,7 +1218,7 @@ describe("Shared Actions Unit Tests - Function toggleNodeReadOnly", () => {
         vi.spyOn(ReadOnlyManagement, "isEligibleNode").mockReturnValue(true);
         const setReadOnlySpy = vi.spyOn(ReadOnlyManagement, "setReadOnly").mockResolvedValue(undefined);
         vi.spyOn(SharedTreeProviders, "getProviderForNode").mockReturnValue({ nodeDataChanged } as any);
-        await SharedActions.toggleNodeReadOnly(node, readOnly);
+        await SharedActions.setNodeReadOnly(node, readOnly);
         expect(setReadOnlySpy).toHaveBeenCalledWith(resourceUri, readOnly);
         expect(nodeDataChanged).toHaveBeenCalledWith(node);
     });
@@ -1232,55 +1232,55 @@ describe("Shared Actions Unit Tests - Function toggleNodeReadOnly", () => {
         vi.spyOn(ReadOnlyManagement, "isEligibleNode").mockReturnValue(true);
         const setReadOnlySpy = vi.spyOn(ReadOnlyManagement, "setReadOnly").mockResolvedValue(undefined);
         vi.spyOn(SharedTreeProviders, "getProviderForNode").mockReturnValue({ nodeDataChanged: vi.fn() } as any);
-        await SharedActions.toggleNodeReadOnly(node, false);
+        await SharedActions.setNodeReadOnly(node, false);
         expect(setReadOnlySpy.mock.calls[0][0].path).toBe("/sestest/z/ibmuser");
     });
 });
 
-describe("Shared Actions Unit Tests - Function toggleReadOnly", () => {
+describe("Shared Actions Unit Tests - Function setReadOnly", () => {
     afterEach(() => {
         vi.restoreAllMocks();
     });
 
     it("uses the tree node from the tree context menu", async () => {
-        const toggleNodeSpy = vi.spyOn(SharedActions, "toggleNodeReadOnly").mockResolvedValue(undefined);
-        const toggleEditorSpy = vi.spyOn(SharedActions, "toggleEditorReadOnly").mockResolvedValue(undefined);
+        const setNodeSpy = vi.spyOn(SharedActions, "setNodeReadOnly").mockResolvedValue(undefined);
+        const setEditorSpy = vi.spyOn(SharedActions, "setEditorReadOnly").mockResolvedValue(undefined);
         const node = { resourceUri: vscode.Uri.from({ scheme: "zowe-ds", path: "/sestest/USER.DATA.PDS" }) } as IZoweTreeNode;
-        await SharedActions.toggleReadOnly(node, true);
-        expect(toggleNodeSpy).toHaveBeenCalledWith(node, true);
-        expect(toggleEditorSpy).not.toHaveBeenCalled();
+        await SharedActions.setReadOnly(node, true);
+        expect(setNodeSpy).toHaveBeenCalledWith(node, true);
+        expect(setEditorSpy).not.toHaveBeenCalled();
     });
 
     it("uses the URI from the editor title bar or tab context menu", async () => {
-        const toggleNodeSpy = vi.spyOn(SharedActions, "toggleNodeReadOnly").mockResolvedValue(undefined);
-        const toggleEditorSpy = vi.spyOn(SharedActions, "toggleEditorReadOnly").mockResolvedValue(undefined);
+        const setNodeSpy = vi.spyOn(SharedActions, "setNodeReadOnly").mockResolvedValue(undefined);
+        const setEditorSpy = vi.spyOn(SharedActions, "setEditorReadOnly").mockResolvedValue(undefined);
         const uri = vscode.Uri.from({ scheme: "zowe-uss", path: "/sestest/z/ibmuser/hello.txt" });
-        await SharedActions.toggleReadOnly(uri, false);
-        expect(toggleEditorSpy).toHaveBeenCalledWith(uri, false);
-        expect(toggleNodeSpy).not.toHaveBeenCalled();
+        await SharedActions.setReadOnly(uri, false);
+        expect(setEditorSpy).toHaveBeenCalledWith(uri, false);
+        expect(setNodeSpy).not.toHaveBeenCalled();
     });
 
     it("uses the active editor from the command palette", async () => {
-        const toggleEditorSpy = vi.spyOn(SharedActions, "toggleEditorReadOnly").mockResolvedValue(undefined);
+        const setEditorSpy = vi.spyOn(SharedActions, "setEditorReadOnly").mockResolvedValue(undefined);
         const uri = vscode.Uri.from({ scheme: "zowe-ds", path: "/sestest/USER.DATA.PDS/MEMBER1" });
         Object.defineProperty(vscode.window, "activeTextEditor", { value: { document: { uri } }, configurable: true });
         try {
-            await SharedActions.toggleReadOnly(undefined, true);
+            await SharedActions.setReadOnly(undefined, true);
         } finally {
             delete (vscode.window as any).activeTextEditor;
         }
-        expect(toggleEditorSpy).toHaveBeenCalledWith(uri, true);
+        expect(setEditorSpy).toHaveBeenCalledWith(uri, true);
     });
 
     it("does nothing from the command palette when no editor is open", async () => {
         const setReadOnlySpy = vi.spyOn(ReadOnlyManagement, "setReadOnly").mockReturnValue(undefined);
         expect(vscode.window.activeTextEditor).toBeUndefined();
-        await SharedActions.toggleReadOnly(undefined, true);
+        await SharedActions.setReadOnly(undefined, true);
         expect(setReadOnlySpy).not.toHaveBeenCalled();
     });
 });
 
-describe("Shared Actions Unit Tests - Function toggleEditorReadOnly", () => {
+describe("Shared Actions Unit Tests - Function setEditorReadOnly", () => {
     const dsUri = (path: string, query?: string): vscode.Uri => vscode.Uri.from({ scheme: "zowe-ds", path, query });
     const ussUri = (path: string, query?: string): vscode.Uri => vscode.Uri.from({ scheme: "zowe-uss", path, query });
     const fakeNode = (uri: vscode.Uri | undefined, children: IZoweTreeNode[] = []): IZoweTreeNode =>
@@ -1318,7 +1318,7 @@ describe("Shared Actions Unit Tests - Function toggleEditorReadOnly", () => {
         const pds = fakeNode(dsUri("/sestest/USER.DATA.PDS"), [sibling, member]);
         dsTree.mSessionNodes = [fakeNode(dsUri("/sestest"), [fakeNode(dsUri("/sestest/USER.SEQ")), pds])];
 
-        await SharedActions.toggleEditorReadOnly(dsUri("/sestest/USER.DATA.PDS/MEMBER1"), readOnly);
+        await SharedActions.setEditorReadOnly(dsUri("/sestest/USER.DATA.PDS/MEMBER1"), readOnly);
 
         expect(setReadOnlySpy).toHaveBeenCalledWith(dsUri("/sestest/USER.DATA.PDS/MEMBER1"), readOnly);
         expect(dsTree.nodeDataChanged).toHaveBeenCalledTimes(1);
@@ -1333,7 +1333,7 @@ describe("Shared Actions Unit Tests - Function toggleEditorReadOnly", () => {
         ussTree.mSessionNodes = [fakeNode(undefined), fakeNode(ussUri("/sestest"), [fakeNode(ussUri("/sestest/z/ibmuser/cobol")), file])];
         ussTree.mFavorites = [fakeNode(ussUri("/sestest"), [favFile])];
 
-        await SharedActions.toggleEditorReadOnly(ussUri("/sestest/z/ibmuser/hello.txt"), false);
+        await SharedActions.setEditorReadOnly(ussUri("/sestest/z/ibmuser/hello.txt"), false);
 
         expect(ussTree.nodeDataChanged).toHaveBeenCalledTimes(2);
         const refreshedNodes = ussTree.nodeDataChanged.mock.calls.map(([node]) => node);
@@ -1348,14 +1348,14 @@ describe("Shared Actions Unit Tests - Function toggleEditorReadOnly", () => {
         Object.defineProperty(otherPds, "children", { get: childrenSpy });
         dsTree.mSessionNodes = [fakeNode(dsUri("/sestest"), [otherPds]), fakeNode(dsUri("/othertest"))];
 
-        await SharedActions.toggleEditorReadOnly(dsUri("/sestest/USER.DATA.PDS/MEMBER1"), true);
+        await SharedActions.setEditorReadOnly(dsUri("/sestest/USER.DATA.PDS/MEMBER1"), true);
 
         expect(childrenSpy).not.toHaveBeenCalled();
         expect(dsTree.nodeDataChanged).not.toHaveBeenCalled();
     });
 
     it("still sets the state when the file is not loaded in the tree", async () => {
-        await SharedActions.toggleEditorReadOnly(ussUri("/sestest/z/ibmuser/hello.txt"), true);
+        await SharedActions.setEditorReadOnly(ussUri("/sestest/z/ibmuser/hello.txt"), true);
         expect(setReadOnlySpy).toHaveBeenCalled();
         expect(ussTree.nodeDataChanged).not.toHaveBeenCalled();
     });
@@ -1365,7 +1365,7 @@ describe("Shared Actions Unit Tests - Function toggleEditorReadOnly", () => {
         [false, "Making {0} writable..."],
     ])("shows a progress notification until the file is re-checked with the server when setting read-only to %s", async (readOnly, title) => {
         const uri = dsUri("/sestest/USER.DATA.PDS/MEMBER1");
-        await SharedActions.toggleEditorReadOnly(uri, readOnly);
+        await SharedActions.setEditorReadOnly(uri, readOnly);
         expect(withProgressSpy).toHaveBeenCalledWith({ location: vscode.ProgressLocation.Notification, title }, expect.any(Function));
         expect(statSpy).toHaveBeenCalledWith(uri);
     });
@@ -1377,20 +1377,20 @@ describe("Shared Actions Unit Tests - Function toggleEditorReadOnly", () => {
             expect(dsTree.nodeDataChanged).toHaveBeenCalledWith(member);
             return Promise.resolve({} as vscode.FileStat);
         });
-        await SharedActions.toggleEditorReadOnly(dsUri("/sestest/USER.DATA.PDS/MEMBER1"), false);
+        await SharedActions.setEditorReadOnly(dsUri("/sestest/USER.DATA.PDS/MEMBER1"), false);
         expect(statSpy).toHaveBeenCalled();
     });
 
     it("logs a warning and keeps the new state if re-checking the file fails", async () => {
         const warnSpy = vi.spyOn(ZoweLogger, "warn").mockReturnValue(undefined);
         statSpy.mockRejectedValue(new Error("Connection timed out"));
-        await expect(SharedActions.toggleEditorReadOnly(ussUri("/sestest/z/ibmuser/hello.txt"), false)).resolves.toBeUndefined();
+        await expect(SharedActions.setEditorReadOnly(ussUri("/sestest/z/ibmuser/hello.txt"), false)).resolves.toBeUndefined();
         expect(setReadOnlySpy).toHaveBeenCalledWith(ussUri("/sestest/z/ibmuser/hello.txt"), false);
         expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("Connection timed out"));
     });
 
     it("does nothing for a file opened with Open read-only", async () => {
-        await SharedActions.toggleEditorReadOnly(ussUri("/sestest/z/ibmuser/hello.txt", "readonly=true"), false);
+        await SharedActions.setEditorReadOnly(ussUri("/sestest/z/ibmuser/hello.txt", "readonly=true"), false);
         expect(setReadOnlySpy).not.toHaveBeenCalled();
     });
 
@@ -1399,7 +1399,7 @@ describe("Shared Actions Unit Tests - Function toggleEditorReadOnly", () => {
         ["a local file", vscode.Uri.file("/z/ibmuser/hello.txt")],
         ["no editor", undefined],
     ])("does nothing for %s", async (_desc, uri) => {
-        await SharedActions.toggleEditorReadOnly(uri, true);
+        await SharedActions.setEditorReadOnly(uri, true);
         expect(setReadOnlySpy).not.toHaveBeenCalled();
         expect(withProgressSpy).not.toHaveBeenCalled();
         expect(dsTree.nodeDataChanged).not.toHaveBeenCalled();
