@@ -12,7 +12,7 @@
 import { getRelevantPropertySchemas, collectSchemaPropertyKeys, collectSchemaPropertyDescriptions } from "./schemaProperties";
 import { extractProfileKeyFromPath, flattenProfiles } from "./configUtils";
 import { getProfileType } from "./profileUtils";
-import { SchemaContext, FullConfigContext, RenamesMap, DeletionsMap, SchemaValidationsMap } from "../types";
+import { SchemaContext, FullConfigContext, RenamesMap, DeletionsMap, SchemaValidationsMap, MergedPropertiesMap } from "../types";
 
 interface PropertyTypeFromSchemaParams {
     propertyKey: string;
@@ -118,24 +118,33 @@ export function isPropertyPendingDeletion(params: IsPropertyPendingDeletionParam
     return false;
 }
 
-interface FetchTypeOptionsParams extends FullConfigContext {
+interface FetchAllPropertyKeysParams extends SchemaContext {
     path: string[];
-    schemaValidations: SchemaValidationsMap;
 }
 
-export function fetchTypeOptions(params: FetchTypeOptionsParams): string[] {
-    const { path, selectedTab, configurations, schemaValidations, pendingChanges, renames, deletions } = params;
+export function fetchAllPropertyKeys(params: FetchAllPropertyKeysParams): string[] {
+    const { path, selectedTab, configurations, schemaValidations, pendingChanges, renames } = params;
 
-    const { configPath } = configurations[selectedTab!]!;
+    if (selectedTab === null || !configurations[selectedTab]) return [];
+
+    const { configPath } = configurations[selectedTab]!;
     const profileKey = extractProfileKeyFromPath(path);
     const resolvedType = getProfileType({ profileKey, selectedTab, configurations, pendingChanges, renames });
 
     const propertySchema = schemaValidations[configPath]?.propertySchema || {};
-    const allPropertyKeys = collectSchemaPropertyKeys(getRelevantPropertySchemas(propertySchema, resolvedType));
+    return collectSchemaPropertyKeys(getRelevantPropertySchemas(propertySchema, resolvedType));
+}
+
+export function fetchExistingPropertyKeys(params: FullConfigContext & { path: string[] }): string[] {
+    const { path, selectedTab, configurations, pendingChanges, renames, deletions } = params;
+    if (selectedTab === null || !configurations[selectedTab]) return [];
+
+    const { configPath } = configurations[selectedTab]!;
+    const profileKey = extractProfileKeyFromPath(path);
 
     const existingProperties = new Set<string>();
 
-    const config = configurations[selectedTab!].properties;
+    const config = configurations[selectedTab].properties;
     const flatProfiles = flattenProfiles(config.profiles);
     const currentProfile = flatProfiles[profileKey];
     if (currentProfile && currentProfile.properties) {
@@ -166,7 +175,102 @@ export function fetchTypeOptions(params: FetchTypeOptionsParams): string[] {
         }
     });
 
-    return allPropertyKeys.filter((key) => !existingProperties.has(key));
+    return Array.from(existingProperties);
+}
+
+export function fetchInheritedPropertyKeys(params: { mergedProperties?: MergedPropertiesMap | null; existingProperties?: string[] }): string[] {
+    const { mergedProperties, existingProperties = [] } = params;
+    if (!mergedProperties) return [];
+
+    const existingSet = new Set(existingProperties);
+    const inheritedKeys: string[] = [];
+
+    Object.keys(mergedProperties).forEach((key) => {
+        if (key !== "type" && key !== "name" && !existingSet.has(key)) {
+            inheritedKeys.push(key);
+        }
+    });
+
+    return inheritedKeys;
+}
+
+interface FetchTypeOptionsParams extends FullConfigContext {
+    path: string[];
+    schemaValidations: SchemaValidationsMap;
+    mergedProperties?: MergedPropertiesMap | null;
+}
+
+export function fetchTypeOptions(params: FetchTypeOptionsParams): string[] {
+    const allPropertyKeys = fetchAllPropertyKeys(params);
+    const existingProperties = new Set(fetchExistingPropertyKeys(params));
+    const inheritedProperties = new Set(
+        fetchInheritedPropertyKeys({
+            mergedProperties: params.mergedProperties,
+            existingProperties: Array.from(existingProperties),
+        })
+    );
+    return allPropertyKeys.filter((key) => !existingProperties.has(key) && !inheritedProperties.has(key));
+}
+
+export interface ValidateProfilePropertyKeyParams extends FullConfigContext {
+    path: string[];
+    propertyKey: string;
+    isEditingExisting?: boolean;
+    mergedProperties?: MergedPropertiesMap | null;
+}
+
+export interface PropertyKeyValidationResult {
+    isValid: boolean;
+    error?: string;
+    warning?: string;
+}
+
+export function validateProfilePropertyKey(params: ValidateProfilePropertyKeyParams): PropertyKeyValidationResult {
+    const { propertyKey, isEditingExisting = false, mergedProperties } = params;
+    const trimmedKey = propertyKey.trim();
+
+    if (!trimmedKey) {
+        return { isValid: false };
+    }
+
+    const existingProperties = fetchExistingPropertyKeys(params);
+    if (existingProperties.includes(trimmedKey)) {
+        if (isEditingExisting) {
+            return { isValid: true };
+        }
+        return {
+            isValid: false,
+            error: "Property key already exists",
+        };
+    }
+
+    const inheritedProperties = fetchInheritedPropertyKeys({
+        mergedProperties,
+        existingProperties,
+    });
+    if (inheritedProperties.includes(trimmedKey)) {
+        if (isEditingExisting) {
+            return { isValid: true };
+        }
+        return {
+            isValid: false,
+            error: "Inherited property, change from the parent",
+        };
+    }
+
+    const allPropertyKeys = fetchAllPropertyKeys(params);
+    if (allPropertyKeys.includes(trimmedKey)) {
+        return { isValid: true };
+    }
+
+    if (allPropertyKeys.length > 0) {
+        return {
+            isValid: true,
+            warning: "Property is not defined in the schema for this profile",
+        };
+    }
+
+    return { isValid: true };
 }
 
 export function isFileProperty(key: string): boolean {

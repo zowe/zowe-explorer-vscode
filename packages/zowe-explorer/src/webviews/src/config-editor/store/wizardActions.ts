@@ -89,14 +89,15 @@ export function createWizardActions(state: EditorRuntime) {
     };
 
     const handleWizardAddProperty = () => {
-        if (!wizardNewPropertyKey.trim()) return;
+        const trimmedKey = wizardNewPropertyKey.trim();
+        if (!trimmedKey) return;
 
-        const keyExists = wizardProperties.some((prop) => prop.key === wizardNewPropertyKey.trim());
+        const keyExists = wizardProperties.some((prop) => prop.key === trimmedKey);
         if (keyExists) {
             return;
         }
 
-        const propertyType = getPropertyType(wizardNewPropertyKey.trim());
+        const propertyType = getPropertyType(trimmedKey);
         const parsedValue = parseValueByType(wizardNewPropertyValue, propertyType);
 
         setWizardProperties((prev) => [

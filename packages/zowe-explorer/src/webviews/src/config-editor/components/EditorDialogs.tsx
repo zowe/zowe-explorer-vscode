@@ -6,7 +6,14 @@ import { ConfigParseErrorsModal } from "./modals/ConfigParseErrorsModal";
 import { RenameProfileModal } from "./modals/RenameProfileModal";
 import { useEditorFields } from "../context/EditorStoreContext";
 import { useUtilityHelpers } from "../hooks/useUtilityHelpers";
-import { getPropertyTypeForAddProfile, fetchTypeOptions, getPropertyDescriptions } from "../utils/propertyUtils";
+import {
+  getPropertyTypeForAddProfile,
+  fetchTypeOptions,
+  fetchAllPropertyKeys,
+  fetchExistingPropertyKeys,
+  fetchInheritedPropertyKeys,
+  getPropertyDescriptions,
+} from "../utils/propertyUtils";
 import { getAllQualifiedProfileKeys } from "../utils";
 
 export function EditorDialogs() {
@@ -48,6 +55,7 @@ export function EditorDialogs() {
     handleAddConfig,
     handleCancelAddConfig,
     handleRenameProfile,
+    mergedProperties,
   } = useEditorFields(
     "configurations",
     "selectedTab",
@@ -85,9 +93,23 @@ export function EditorDialogs() {
     "handleAddNewLayer",
     "handleAddConfig",
     "handleCancelAddConfig",
-    "handleRenameProfile"
+    "handleRenameProfile",
+    "mergedProperties"
   );
   const utilityHelpers = useUtilityHelpers();
+  const existingPropertyKeys = newProfileKeyPath
+    ? fetchExistingPropertyKeys({
+        path: newProfileKeyPath,
+        selectedTab,
+        configurations,
+        schemaValidations,
+        pendingChanges,
+        renames,
+        deletions,
+      })
+    : [];
+  const inheritedPropertyKeys = newProfileKeyPath ? fetchInheritedPropertyKeys({ mergedProperties, existingProperties: existingPropertyKeys }) : [];
+
   return (
     <>
       <ConfigParseErrorsModal errors={configParseErrors} vscodeApi={vscodeApi} />
@@ -103,6 +125,13 @@ export function EditorDialogs() {
             ? fetchTypeOptions({ path: newProfileKeyPath, selectedTab, configurations, schemaValidations, pendingChanges, renames, deletions })
             : []
         }
+        allPropertyKeys={
+          newProfileKeyPath
+            ? fetchAllPropertyKeys({ path: newProfileKeyPath, selectedTab, configurations, schemaValidations, pendingChanges, renames })
+            : []
+        }
+        existingPropertyKeys={existingPropertyKeys}
+        inheritedPropertyKeys={inheritedPropertyKeys}
         propertyDescriptions={
           newProfileKeyPath
             ? getPropertyDescriptions({ path: newProfileKeyPath, selectedTab, configurations, schemaValidations, pendingChanges, renames })

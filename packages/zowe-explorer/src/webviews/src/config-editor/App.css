@@ -5,6 +5,8 @@
     --ce-font-family: var(--vscode-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
     --ce-error-color: var(--vscode-errorForeground);
     --ce-error-border: var(--vscode-inputValidation-errorBorder, var(--vscode-errorForeground));
+    --ce-warning-color: var(--vscode-inputValidation-warningForeground, var(--vscode-editorWarning-foreground, #cca700));
+    --ce-warning-border: var(--vscode-inputValidation-warningBorder, var(--vscode-editorWarning-foreground, #cca700));
     --ce-field-bg: var(--vscode-input-background);
     --ce-field-border: var(--vscode-input-border);
     --ce-field-fg: var(--vscode-input-foreground);
@@ -1396,6 +1398,15 @@ ul {
     margin-top: 4px;
 }
 
+.modal-warning {
+    color: var(--ce-warning-color);
+    font-size: 12px;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
 .modal-hint {
     color: var(--vscode-descriptionForeground);
     font-size: 12px;
@@ -1405,6 +1416,10 @@ ul {
 
 .modal-input.error {
     border-color: var(--vscode-inputValidation-errorBorder);
+}
+
+.modal-input.warning {
+    border-color: var(--ce-warning-border);
 }
 
 .codicon {
@@ -1904,10 +1919,23 @@ vscode-single-select.wizard-select {
     border-color: var(--ce-error-border);
 }
 
+.wizard-input.warning {
+    border-color: var(--ce-warning-border);
+}
+
 .wizard-error {
     font-size: 0.8em;
     color: var(--ce-error-color);
     margin-top: 2px;
+}
+
+.wizard-warning {
+    font-size: 0.8em;
+    color: var(--ce-warning-color);
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
 .wizard-hint {
