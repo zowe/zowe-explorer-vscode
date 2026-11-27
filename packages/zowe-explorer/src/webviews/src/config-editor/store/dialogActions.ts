@@ -16,6 +16,7 @@ export function createDialogActions(state: EditorRuntime) {
             state.setNewProfileKeyPath(path);
             state.setNewProfileKey(key);
             state.setNewProfileValue(value);
+            state.setFocusValueInput(Boolean(key));
             state.setNewProfileModalOpen(true);
         },
         handleAddNewLayer: () => {

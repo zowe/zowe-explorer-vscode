@@ -8,6 +8,7 @@ import { useEditorFields } from "../context/EditorStoreContext";
 import { useUtilityHelpers } from "../hooks/useUtilityHelpers";
 import {
   getPropertyTypeForAddProfile,
+  fetchTypeOptions,
   fetchAllPropertyKeys,
   fetchExistingPropertyKeys,
   fetchInheritedPropertyKeys,
@@ -107,12 +108,7 @@ export function EditorDialogs() {
         deletions,
       })
     : [];
-  const inheritedPropertyKeys = newProfileKeyPath
-    ? fetchInheritedPropertyKeys({
-        mergedProperties,
-        existingProperties: existingPropertyKeys,
-      })
-    : [];
+  const inheritedPropertyKeys = newProfileKeyPath ? fetchInheritedPropertyKeys({ mergedProperties, existingProperties: existingPropertyKeys }) : [];
 
   return (
     <>
@@ -126,7 +122,7 @@ export function EditorDialogs() {
         showDropdown={showDropdown}
         typeOptions={
           newProfileKeyPath
-            ? fetchAllPropertyKeys({ path: newProfileKeyPath, selectedTab, configurations, schemaValidations, pendingChanges, renames })
+            ? fetchTypeOptions({ path: newProfileKeyPath, selectedTab, configurations, schemaValidations, pendingChanges, renames, deletions })
             : []
         }
         allPropertyKeys={

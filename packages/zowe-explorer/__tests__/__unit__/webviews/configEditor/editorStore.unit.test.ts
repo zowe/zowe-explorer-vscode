@@ -432,15 +432,28 @@ describe("editorStore", () => {
         expect(store.getState().undoStack).toBe(undoStack);
     });
 
-    it("rejects duplicate property key when adding new profile property", () => {
-        const { store, team } = makeEditor();
-        store.setState({
-            newProfileKey: "host",
-            newProfileValue: "new-host",
+    it("opens the add property modal in edit mode when a key is provided", () => {
+        const { store } = makeEditor();
+        store.getState().openAddProfileModalAtPath(["profiles", "base", "properties"], "authOrder", "basic");
+        expect(store.getState()).toMatchObject({
+            newProfileModalOpen: true,
+            newProfileKey: "authOrder",
+            newProfileValue: "basic",
             newProfileKeyPath: ["profiles", "base", "properties"],
+            focusValueInput: true,
         });
-        store.getState().handleAddNewProfileKey();
-        expect(store.getState().pendingChanges[team.configPath]).toBeUndefined();
+    });
+
+    it("opens the add property modal in add mode when no key is provided", () => {
+        const { store } = makeEditor();
+        store.setState({ focusValueInput: true });
+        store.getState().openAddProfileModalAtPath(["profiles", "base", "properties"]);
+        expect(store.getState()).toMatchObject({
+            newProfileModalOpen: true,
+            newProfileKey: "",
+            newProfileValue: "",
+            focusValueInput: false,
+        });
     });
 
     it("adds property when adding new schema or custom property key", () => {

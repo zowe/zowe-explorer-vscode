@@ -58,26 +58,22 @@ export function AddProfileModal({
   if (!isOpen) return null;
 
   const trimmedKey = newProfileKey.trim();
-  let keyValidationError: string | undefined;
   let keyValidationWarning: string | undefined;
-
   if (trimmedKey) {
     if (existingPropertyKeys.includes(trimmedKey)) {
       if (!focusValueInput) {
-        keyValidationError = l10n.t("Property key already exists");
+        keyValidationWarning = l10n.t("Property already exists in this profile");
       }
     } else if (inheritedPropertyKeys.includes(trimmedKey)) {
       if (!focusValueInput) {
-        keyValidationError = l10n.t("Inherited property, change from the parent");
+        keyValidationWarning = l10n.t("Property is inherited from a parent profile");
       }
     } else if (allPropertyKeys.length > 0 && !allPropertyKeys.includes(trimmedKey)) {
       keyValidationWarning = l10n.t("Property is not defined in the schema for this profile");
     }
   }
 
-  const isKeyValid = trimmedKey.length > 0 && !keyValidationError;
-  const isAuthOrderValid = !isAuthOrderProperty(trimmedKey) || isValidAuthOrder(newProfileValue);
-  const isAddDisabled = !isKeyValid || !isAuthOrderValid;
+  const isAddDisabled = isAuthOrderProperty(trimmedKey) && !isValidAuthOrder(newProfileValue);
 
   const handleKeyDown = (e: any) => {
     if (e.key === "Enter") {
@@ -107,7 +103,7 @@ export function AddProfileModal({
           onFocus={() => onShowDropdownChange(true)}
           onBlur={() => setTimeout(() => onShowDropdownChange(false), 100)}
           onKeyDown={handleKeyDown}
-          className={`modal-input ${keyValidationError ? "error" : keyValidationWarning ? "warning" : ""}`}
+          className={`modal-input ${keyValidationWarning ? "warning" : ""}`}
           placeholder={l10n.t("New Key")}
           style={{ paddingRight: "2rem" }}
         />
@@ -142,12 +138,6 @@ export function AddProfileModal({
           </ul>
         )}
       </div>
-
-      {keyValidationError && (
-        <div className="modal-error" id="property-key-error" style={{ marginBottom: "8px" }}>
-          {keyValidationError}
-        </div>
-      )}
 
       {keyValidationWarning && (
         <div className="modal-warning" id="property-key-warning" style={{ marginBottom: "8px" }}>
