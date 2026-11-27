@@ -4,6 +4,7 @@ import { NewLayerModal } from "./modals/NewLayerModal";
 import { AddConfigModal } from "./modals/AddConfigModal";
 import { ConfigParseErrorsModal } from "./modals/ConfigParseErrorsModal";
 import { RenameProfileModal } from "./modals/RenameProfileModal";
+import { CopySecureValuesModal } from "./modals/CopySecureValuesModal";
 import { useEditorFields } from "../context/EditorStoreContext";
 import { useUtilityHelpers } from "../hooks/useUtilityHelpers";
 import { getPropertyTypeForAddProfile, fetchTypeOptions, getPropertyDescriptions } from "../utils/propertyUtils";
@@ -43,6 +44,9 @@ export function EditorDialogs() {
     hasWorkspace,
     renameProfileModalOpen,
     setRenameProfileModalOpen,
+    pendingClipboardPrompt,
+    setPendingClipboardPrompt,
+    resolveClipboardPrompt,
     handleAddNewProfileKey,
     handleAddNewLayer,
     handleAddConfig,
@@ -81,6 +85,9 @@ export function EditorDialogs() {
     "hasWorkspace",
     "renameProfileModalOpen",
     "setRenameProfileModalOpen",
+    "pendingClipboardPrompt",
+    "setPendingClipboardPrompt",
+    "resolveClipboardPrompt",
     "handleAddNewProfileKey",
     "handleAddNewLayer",
     "handleAddConfig",
@@ -192,6 +199,16 @@ export function EditorDialogs() {
           }
         }}
         onCancel={() => setRenameProfileModalOpen(false)}
+      />
+
+      <CopySecureValuesModal
+        key={`copy-secure-values-${pendingClipboardPrompt?.action}-${pendingClipboardPrompt?.profileKey}`}
+        isOpen={pendingClipboardPrompt !== null}
+        action={pendingClipboardPrompt?.action ?? "copy"}
+        profileName={pendingClipboardPrompt?.profileKey ?? ""}
+        onWithoutSecure={() => resolveClipboardPrompt(false)}
+        onWithSecure={() => resolveClipboardPrompt(true)}
+        onCancel={() => setPendingClipboardPrompt(null)}
       />
     </>
   );

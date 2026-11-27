@@ -29,6 +29,7 @@ Feature: Context menu actions on profile tree items
     Given the saved subtree "nested" in "Global Team" is captured for context menu testing
     When the user opens the context menu on tree profile "nested"
     And the user chooses "Copy" from the tree profile context menu
+    And the user chooses to include secure values in the secure values prompt
     Then there are no pending changes in the Config Editor
     When the user opens the context menu on tree profile "zosmf2"
     Then the tree profile context menu offers these options
@@ -62,6 +63,7 @@ Feature: Context menu actions on profile tree items
     Given the saved subtree "nested" in "Global Team" is captured for context menu testing
     When the user opens the context menu on tree profile "nested"
     And the user chooses "Duplicate" from the tree profile context menu
+    And the user chooses to include secure values in the secure values prompt
     Then tree profile "nested_copy.child1" is visible
     And tree profile "nested_copy.child2" is visible
     When the user saves the changes

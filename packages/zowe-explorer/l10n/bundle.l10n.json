@@ -473,7 +473,10 @@
   "Continue": "Continue",
   "Convert existing profiles": "Convert existing profiles",
   "Copy": "Copy",
+  "Copy Profile": "Copy Profile",
   "Copy job info as JSON": "Copy job info as JSON",
+  "Copy with secure values": "Copy with secure values",
+  "Copy without secure values": "Copy without secure values",
   "Copying data set(s)": "Copying data set(s)",
   "Copying data sets is not supported.": "Copying data sets is not supported.",
   "Copying file structure...": "Copying file structure...",
@@ -634,6 +637,9 @@
   "Downloading members": "Downloading members",
   "Downloads files and directories using uppercase names. When disabled, names are converted to lowercase": "Downloads files and directories using uppercase names. When disabled, names are converted to lowercase",
   "Duplicate": "Duplicate",
+  "Duplicate Profile": "Duplicate Profile",
+  "Duplicate with secure values": "Duplicate with secure values",
+  "Duplicate without secure values": "Duplicate without secure values",
   "Duplicated profile schema writing on repeated Team Config file initialization:": "Duplicated profile schema writing on repeated Team Config file initialization:",
   "EBCDIC": "EBCDIC",
   "Easily search for data in filtered data sets and partitioned data sets with the new Search Filtered Data Sets and Search PDS Members functionality. <a>#3306</a>": "Easily search for data in filtered data sets and partitioned data sets with the new Search Filtered Data Sets and Search PDS Members functionality. <a>#3306</a>",
@@ -2487,6 +2493,7 @@
   "The paste operation is not supported for this node.": "The paste operation is not supported for this node.",
   "The physical sequential (PS) data set already exists.\nDo you want to replace it?": "The physical sequential (PS) data set already exists.\nDo you want to replace it?",
   "The polling interval must be greater than or equal to 1000ms.": "The polling interval must be greater than or equal to 1000ms.",
+  "The profile \"{0}\" contains secure values such as credentials, tokens, or certificate references. Do you want to include them in the new profile?": "The profile \"{0}\" contains secure values such as credentials, tokens, or certificate references. Do you want to include them in the new profile?",
   "The profile {0} has been added to the {1} tree./chosen profiletree type": {
     "message": "The profile {0} has been added to the {1} tree.",
     "comment": [

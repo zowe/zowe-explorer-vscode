@@ -26,6 +26,7 @@ import type {
     PendingChangesMap,
     PendingDefaultsMap,
     ProfileClipboard,
+    ProfileSchemaMap,
 } from "../types";
 
 interface CollectClipboardProfilesParams extends ConfigStateContext {
@@ -121,6 +122,61 @@ export function collectClipboardProfiles(params: CollectClipboardProfilesParams)
         };
     }
     return structuredClone(profiles);
+}
+
+/**
+ * Credential properties that are stripped when copying or duplicating a profile, unless the user
+ * opts in to keeping secure values. Cut/move operations always keep them.
+ * Acts as a fallback for when no schema is loaded, and covers credential-like properties
+ * that the schema does not mark as secure: token metadata (tokenType, tokenExpiration) and
+ * identity-bound certificate/key references (certFile, certKeyFile, certAccount, privateKey).
+ */
+export const DUPLICATE_EXCLUDED_PROPERTIES = [
+    "user",
+    "password",
+    "tokenType",
+    "tokenValue",
+    "tokenExpiration",
+    "certFile",
+    "certKeyFile",
+    "certAccount",
+    "privateKey",
+];
+
+/** Property names treated as credentials for one profile: the fixed list, the profile's secure array, and the schema's secure flags. */
+function getCredentialPropertyNames(profile: ProfileClipboard["profiles"][string], propertySchema: ProfileSchemaMap): Set<string> {
+    const schemaSecure = Object.entries((profile.type && propertySchema[profile.type]) || {})
+        .filter(([, entry]) => entry?.secure === true)
+        .map(([propertyKey]) => propertyKey);
+    return new Set([...DUPLICATE_EXCLUDED_PROPERTIES, ...schemaSecure, ...profile.secure]);
+}
+
+/** True when any profile in the snapshot holds a value that {@link stripCredentialsFromClipboardProfiles} would remove. */
+export function hasCredentialsInClipboardProfiles(profiles: ProfileClipboard["profiles"], propertySchema: ProfileSchemaMap = {}): boolean {
+    return Object.values(profiles).some((profile) => {
+        const present = new Set([...Object.keys(profile.properties), ...profile.secure, ...Object.keys(profile.secureSources ?? {})]);
+        return [...getCredentialPropertyNames(profile, propertySchema)].some((propertyKey) => present.has(propertyKey));
+    });
+}
+
+/**
+ * Drop credentials from every profile in a clipboard snapshot, for copy and duplicate.
+ * A property is dropped if it is in the fixed credential list, flagged secure on the profile,
+ * or marked secure by the schema for the profile's type.
+ */
+export function stripCredentialsFromClipboardProfiles(
+    profiles: ProfileClipboard["profiles"],
+    propertySchema: ProfileSchemaMap = {}
+): ProfileClipboard["profiles"] {
+    const result = structuredClone(profiles);
+    for (const profile of Object.values(result)) {
+        for (const propertyKey of getCredentialPropertyNames(profile, propertySchema)) {
+            delete profile.properties[propertyKey];
+            if (profile.secureSources) delete profile.secureSources[propertyKey];
+        }
+        profile.secure = [];
+    }
+    return result;
 }
 
 export function getUniqueProfileKey(proposedKey: string, existingKeys: string[]): string {

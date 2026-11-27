@@ -106,6 +106,10 @@ When("the user chooses {string} from the tree profile context menu", async (opti
     await contextMenu.choose(option);
 });
 
+When("the user chooses to include secure values in the secure values prompt", async () => {
+    await contextMenu.answerSecureValuesPrompt(true);
+});
+
 When("the user dismisses the tree profile context menu", async () => {
     await contextMenu.dismiss();
 });

@@ -117,6 +117,14 @@ export class ConfigEditorContextMenu {
         throw new Error(`Context menu option ${option} was not found`);
     }
 
+    /** Answers the secure-values prompt shown when copying or duplicating a profile that holds credentials. */
+    public async answerSecureValuesPrompt(includeSecure: boolean): Promise<void> {
+        const button = await browser.$(includeSecure ? "#copy-secure-with-button" : "#copy-secure-without-button");
+        await button.waitForDisplayed({ timeout: TIMEOUT });
+        await button.click();
+        await (await browser.$("#copy-secure-values-modal-title")).waitForExist({ timeout: TIMEOUT, reverse: true });
+    }
+
     public async dismiss(): Promise<void> {
         await browser.keys("Escape");
         await (await browser.$(".tab-context-menu")).waitForExist({ timeout: TIMEOUT, reverse: true });

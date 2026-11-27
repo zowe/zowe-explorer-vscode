@@ -26,7 +26,7 @@ export type EditorStoreState = EditorRuntime &
     ReturnType<typeof createDialogActions> &
     ReturnType<typeof createWizardActions> &
     ReturnType<typeof createProfileUtils> &
-    Pick<ReturnType<typeof createClipboardActions>, "copyProfile" | "duplicateProfile" | "pasteProfile">;
+    Pick<ReturnType<typeof createClipboardActions>, "copyProfile" | "duplicateProfile" | "pasteProfile" | "resolveClipboardPrompt">;
 export type EditorStore = StoreApi<EditorStoreState>;
 export type { EditorData, EditorRuntime, StateUpdate } from "./types";
 
@@ -194,7 +194,7 @@ export function createEditorStore(vscodeApi: ConfigEditorWebviewApi = { postMess
                 ],
                 false
             ),
-            ...bind(createClipboardActions, ["copyProfile", "duplicateProfile", "pasteProfile"]),
+            ...bind(createClipboardActions, ["copyProfile", "duplicateProfile", "pasteProfile", "resolveClipboardPrompt"]),
         };
     });
     return { ...store, getState: () => read() };
