@@ -897,9 +897,13 @@ export class DatasetActions {
         );
     }
 
-    private static resolveMemberExtension(datasetName: string, overrideExtension?: string): string {
-        const resolvedExtension = overrideExtension ?? DatasetUtils.getExtension(datasetName) ?? zosfiles.ZosFilesUtils.DEFAULT_FILE_EXTENSION;
+    private static resolveDownloadExtension(datasetName: string, overrideExtension?: string): string {
+        const resolvedExtension = overrideExtension || DatasetUtils.getExtension(datasetName) || "";
         return resolvedExtension.startsWith(".") ? resolvedExtension.slice(1) : resolvedExtension;
+    }
+
+    private static appendExtension(fileName: string, extension: string): string {
+        return extension ? `${fileName}.${extension}` : fileName;
     }
 
     private static buildMemberExtensionMap(membersToDownload: string[], uppercaseNames: boolean, extension: string): { [key: string]: string } {
@@ -993,7 +997,7 @@ export class DatasetActions {
                 const maxConcurrentRequests = profile.profile?.maxConcurrentRequests || 1;
 
                 const membersToDownload = children.map((child) => String(child.member ?? ""));
-                const extension = DatasetActions.resolveMemberExtension(datasetName, overrideExtension ? fileExtension : undefined);
+                const extension = DatasetActions.resolveDownloadExtension(datasetName, overrideExtension ? fileExtension : undefined);
                 const extensionMap = DatasetActions.buildMemberExtensionMap(membersToDownload, uppercaseNames, extension);
 
                 const generatedFileDirectory = DatasetActions.generateDirectoryPath(datasetName, selectedPath, generateDirectory, uppercaseNames);
@@ -1001,7 +1005,10 @@ export class DatasetActions {
                 for (const memberName of membersToDownload) {
                     SharedUtils.validateDownloadName(memberName);
                     const fileName = uppercaseNames ? memberName : memberName.toLowerCase();
-                    SharedUtils.validateDownloadPath(selectedPath.fsPath, path.join(generatedFileDirectory, `${fileName}.${extension}`));
+                    SharedUtils.validateDownloadPath(
+                        selectedPath.fsPath,
+                        path.join(generatedFileDirectory, DatasetActions.appendExtension(fileName, extension))
+                    );
                 }
 
                 const isRecordEncoding = encoding?.kind === "other" && encoding.codepage?.toLowerCase() === "record";
@@ -1048,7 +1055,7 @@ export class DatasetActions {
         const targetDirectory = generateDirectory
             ? DatasetActions.generateDirectoryPath(datasetName, selectedPath, generateDirectory, uppercaseNames)
             : selectedPath.fsPath;
-        const filePath = path.join(targetDirectory, `${fileName}.${extension}`);
+        const filePath = path.join(targetDirectory, DatasetActions.appendExtension(fileName, extension));
         SharedUtils.validateDownloadPath(selectedPath.fsPath, filePath);
 
         const isRecordEncoding = encoding?.kind === "other" && encoding.codepage?.toLowerCase() === "record";
@@ -1085,7 +1092,7 @@ export class DatasetActions {
 
         const parent = node.getParent() as IZoweDatasetTreeNode;
         const datasetName = parent.getLabel() as string;
-        const extension = DatasetActions.resolveMemberExtension(
+        const extension = DatasetActions.resolveDownloadExtension(
             datasetName,
             dataSetDownloadOptions.overrideExtension ? dataSetDownloadOptions.fileExtension : undefined
         );
@@ -1167,7 +1174,7 @@ export class DatasetActions {
                     try {
                         const parent = selectedNode.getParent() as IZoweDatasetTreeNode;
                         const datasetName = parent.getLabel() as string;
-                        const extension = DatasetActions.resolveMemberExtension(
+                        const extension = DatasetActions.resolveDownloadExtension(
                             datasetName,
                             dataSetDownloadOptions.overrideExtension ? dataSetDownloadOptions.fileExtension : undefined
                         );
@@ -1268,14 +1275,13 @@ export class DatasetActions {
                     targetDirectory = selectedPath.fsPath;
                 }
 
-                let extension: string;
-                if (overrideExtension && fileExtension) {
-                    extension = fileExtension;
-                } else {
-                    extension = DatasetUtils.getExtension(datasetName) ?? zosfiles.ZosFilesUtils.DEFAULT_FILE_EXTENSION;
+                let extension = DatasetActions.resolveDownloadExtension(datasetName, overrideExtension ? fileExtension : undefined);
+                // Download with default extension if not generating directory structure (where final file contains no periods)
+                // Otherwise, the downloaded name is MY.DATASET where .DATASET is the "extension"
+                if (!extension && !generateDirectory) {
+                    extension = zosfiles.ZosFilesUtils.DEFAULT_FILE_EXTENSION;
                 }
-
-                const filePath = path.join(targetDirectory, `${fileName}.${extension}`);
+                const filePath = path.join(targetDirectory, DatasetActions.appendExtension(fileName, extension));
                 SharedUtils.validateDownloadName(extension);
                 SharedUtils.validateDownloadPath(selectedPath.fsPath, filePath);
 
