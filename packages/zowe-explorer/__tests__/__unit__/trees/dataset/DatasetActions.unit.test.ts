@@ -6934,6 +6934,40 @@ describe("DatasetActions - downloading functions", () => {
             );
         });
 
+        it("should download members without an extension when none can be determined and no override is set", async () => {
+            using _mockGetExtension = new MockedProperty(DatasetUtils, "getExtension", undefined, vi.fn().mockReturnValue(undefined));
+            mockGetDataSetDownloadOptions.mock.mockResolvedValue({ ...defaultDownloadOptions, overrideExtension: false });
+
+            const pdsNode = new ZoweDatasetNode({
+                label: "TEST.PDS",
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                parentNode: testMocks.datasetSessionNode,
+                profile: defaultTestProfile,
+            });
+            pdsNode.getProfile = vi.fn().mockReturnValue(defaultTestProfile);
+            pdsNode.getLabel = vi.fn().mockReturnValue("TEST.PDS");
+
+            mocked(testMocks.mvsApi.allMembers).mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: { items: [{ member: "MEMBER1" }, { member: "MEMBER2" }] },
+            });
+            const downloadAllMembersSpy = vi.spyOn(testMocks.mvsApi, "downloadAllMembers").mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: {},
+            });
+
+            await DatasetActions.downloadAllMembers(pdsNode);
+
+            expect(downloadAllMembersSpy).toHaveBeenCalledWith(
+                "TEST.PDS",
+                expect.objectContaining({
+                    extensionMap: { member1: "", member2: "" },
+                })
+            );
+        });
+
         it("should report progress correctly", async () => {
             const pdsNode = new ZoweDatasetNode({
                 label: "TEST.PDS",
@@ -7131,6 +7165,21 @@ describe("DatasetActions - downloading functions", () => {
                 })
             );
             expect(result.downloadedPath).toMatch(/member1\.txt$/);
+        });
+
+        it("should download a PDS member without a file extension when the extension is empty", async () => {
+            const { memberNode } = createMemberNodes("TEST.PDS", "MEMBER1");
+
+            const getContentsSpy = vi.spyOn(testMocks.mvsApi, "getContents").mockResolvedValue({
+                success: true,
+                commandResponse: "",
+                apiResponse: { etag: "123" },
+            });
+
+            const result = await (DatasetActions as any).downloadSingleMember(memberNode, { ...defaultDownloadOptions }, "");
+
+            expect(getContentsSpy).toHaveBeenCalledWith("TEST.PDS(MEMBER1)", expect.objectContaining({ file: expect.stringMatching(/member1$/) }));
+            expect(result.downloadedPath).toMatch(/member1$/);
         });
 
         it("should handle member with preserve case and generate directory options - typical DS & member name", async () => {
@@ -8266,6 +8315,66 @@ describe("DatasetActions - downloading functions", () => {
                     overwrite: true,
                     responseTimeout: 30000,
                 })
+            );
+        });
+
+        it("should download a sequential data set without an extension when none can be determined and no override is set", async () => {
+            mockGetDataSetDownloadOptions.mock.mockResolvedValue({
+                ...defaultDownloadOptions,
+                generateDirectory: true,
+                uppercaseNames: true,
+                overrideExtension: false,
+            });
+            mockGetExtension.mock.mockReturnValue(undefined);
+
+            const dsNode = new ZoweDatasetNode({
+                label: "TEST.MULTI.LEVEL.DATASET",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: testMocks.datasetSessionNode,
+                profile: defaultTestProfile,
+            });
+            dsNode.getLabel = vi.fn().mockReturnValue("TEST.MULTI.LEVEL.DATASET");
+            dsNode.getProfile = vi.fn().mockReturnValue(defaultTestProfile);
+
+            const getContentsSpy = vi.spyOn(testMocks.mvsApi, "getContents").mockResolvedValue(undefined);
+
+            await DatasetActions.downloadDataSet(dsNode);
+            const downloadFn = mockExecuteDownloadWithProgress.mock.mock.calls[0][1];
+            await downloadFn();
+
+            expect(getContentsSpy).toHaveBeenCalledWith(
+                "TEST.MULTI.LEVEL.DATASET",
+                expect.objectContaining({ file: expect.stringMatching(/[/\\]DATASET$/) })
+            );
+        });
+
+        it("should download a sequential data set with the default extension when none can be determined and directory generation is disabled", async () => {
+            mockGetDataSetDownloadOptions.mock.mockResolvedValue({
+                ...defaultDownloadOptions,
+                generateDirectory: false,
+                uppercaseNames: true,
+                overrideExtension: false,
+            });
+            mockGetExtension.mock.mockReturnValue(undefined);
+
+            const dsNode = new ZoweDatasetNode({
+                label: "TEST.MULTI.LEVEL.DATASET",
+                collapsibleState: vscode.TreeItemCollapsibleState.None,
+                parentNode: testMocks.datasetSessionNode,
+                profile: defaultTestProfile,
+            });
+            dsNode.getLabel = vi.fn().mockReturnValue("TEST.MULTI.LEVEL.DATASET");
+            dsNode.getProfile = vi.fn().mockReturnValue(defaultTestProfile);
+
+            const getContentsSpy = vi.spyOn(testMocks.mvsApi, "getContents").mockResolvedValue(undefined);
+
+            await DatasetActions.downloadDataSet(dsNode);
+            const downloadFn = mockExecuteDownloadWithProgress.mock.mock.calls[0][1];
+            await downloadFn();
+
+            expect(getContentsSpy).toHaveBeenCalledWith(
+                "TEST.MULTI.LEVEL.DATASET",
+                expect.objectContaining({ file: expect.stringMatching(/[/\\]TEST\.MULTI\.LEVEL\.DATASET\.txt$/) })
             );
         });
 
