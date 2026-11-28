@@ -748,13 +748,6 @@ export class DatasetActions {
             return vscode.l10n.t("Choose encoding for download (current: EBCDIC)");
         };
 
-        const getExtensionDescription = (): string => {
-            if (dataSetDownloadOptions.fileExtension) {
-                return vscode.l10n.t("Override file extension (current: {0})", dataSetDownloadOptions.fileExtension);
-            }
-            return vscode.l10n.t("Override file extension");
-        };
-
         const optionItems: vscode.QuickPickItem[] = [
             {
                 label: vscode.l10n.t("Overwrite"),
@@ -773,7 +766,7 @@ export class DatasetActions {
             },
             {
                 label: vscode.l10n.t("Override File Extension"),
-                description: getExtensionDescription(),
+                description: vscode.l10n.t("Override file extension"),
                 picked: dataSetDownloadOptions.overrideExtension,
             },
             {

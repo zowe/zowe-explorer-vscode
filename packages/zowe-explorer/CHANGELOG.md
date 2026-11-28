@@ -19,6 +19,7 @@ All notable changes to the "vscode-extension-for-zowe" extension will be documen
 - Migrated webviews from the deprecated Webview UI Toolkit to VS Code Elements. [#3443](https://github.com/zowe/zowe-explorer-vscode/issues/3443)
 - Added support for changing the password on the remote system, which then also updates the locally stored password. Currently only supports the z/OSMF profile type. [#1538](https://github.com/zowe/zowe-explorer-vscode/issues/1538)
 - Replaced confusing "SSH server" terminology with "zo server" in deployment prompts, status messages, settings descriptions, and Command Palette labels. [#4583](https://github.com/zowe/zowe-explorer-vscode/issues/4583)
+- The "Override File Extension" download option no longer shows the last used extension in its description. [#4259](https://github.com/zowe/zowe-explorer-vscode/issues/4259)
 
 ### Bug fixes
 
